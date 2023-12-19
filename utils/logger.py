@@ -27,7 +27,7 @@ console_formatter = colorlog.ColoredFormatter(
     "%(log_color)s%(asctime)s - %(filename)s:%(lineno)d - %(levelname)s - %(message)s",
     log_colors={
         "DEBUG": "bold_green",
-        "INFO": "bold_white",
+        "INFO": "bold_green",
         "WARNING": "bold_yellow",
         "ERROR": "bold_red"
     }

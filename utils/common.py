@@ -225,13 +225,19 @@ def get_code_modifier(file_path: str, line_number: int) -> str:
         str: Email address of the code modifier.
     """
     command = f"git blame --line-porcelain -L {line_number},{line_number} {file_path}"
-    output = os.popen(command).read()
-    try:
-        author_mail = output.split("\n")[2].split()[1][1:-1]
-    except Exception as e:
-        return f"no record ({e})"
 
-    return author_mail
+    try:
+        result = subprocess.run(command, shell=True, capture_output=True, encoding='utf-8')
+        if result.returncode != 0:
+            logging.info(f"No git info in un-versioned file. Please ignore. [exit status {result.returncode}]")
+            return "No git info in un-versioned file."
+        else:
+            output = result.stdout
+            author_mail = output.split("\n")[2].split()[1][1:-1]
+            return author_mail
+    except subprocess.CalledProcessError as e:
+        logging.error(f"Error occurred during command execution: {e}")
+        return "An error occurred during command execution."
 
 
 def get_csv_data(csv_name: str) -> List[List[str]]:
