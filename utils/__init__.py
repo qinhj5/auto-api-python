@@ -2,6 +2,7 @@
 import os
 import sys
 import logging
+import colorlog
 from utils.logger import logger
 from utils.common import (get_env,
                           set_env,

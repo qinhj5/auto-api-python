@@ -6,6 +6,7 @@ import time
 import yaml
 import allure
 import datetime
+import subprocess
 from utils import logger
 from typing import Any, List
 
