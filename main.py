@@ -92,7 +92,7 @@ def main():
 
     args = get_parse_args()
     set_env(args.env)
-    print(f"current env is {args.env}.")
+    logger.info(f"current env is {args.env}.")
 
     exe_test(cases_dir=args.cases_dir,
              slowest_cases=args.slowest_cases,
