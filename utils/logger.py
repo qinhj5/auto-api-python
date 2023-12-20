@@ -14,17 +14,20 @@ log_dir = os.path.abspath(os.path.join(project_path, "log"))
 os.makedirs(log_dir, exist_ok=True)
 log_path = os.path.abspath(os.path.join(log_dir, "test.log"))
 
+# Set log format
+log_format = "%(asctime)s - P:%(process)s - T:%(thread)s - %(filename)s:%(lineno)d - [%(levelname)s] - %(message)s"
+
 # File handler
 file_handler = logging.FileHandler(log_path)
 file_handler.setLevel(logging.DEBUG)
-file_formatter = logging.Formatter("%(asctime)s - %(filename)s:%(lineno)d - %(levelname)s - %(message)s")
+file_formatter = logging.Formatter(log_format)
 file_handler.setFormatter(file_formatter)
 
 # Console handler
 console_handler = logging.StreamHandler()
 console_handler.setLevel(logging.DEBUG)
 console_formatter = colorlog.ColoredFormatter(
-    "%(log_color)s%(asctime)s - %(filename)s:%(lineno)d - %(levelname)s - %(message)s",
+    f"%(log_color)s{log_format}",
     log_colors={
         "DEBUG": "bold_green",
         "INFO": "bold_green",
