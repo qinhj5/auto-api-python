@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-import requests
 import curlify
-from typing import Any, Dict, Optional, Union
+import requests
 from http import HTTPStatus
+from typing import Any, Dict
 from utils import set_allure_and_console_output, get_current_datetime, is_json_string, loads_json_string
 
 
@@ -23,10 +23,10 @@ class BaseAPI:
 
     def send_prepared_request(self, uri: str,
                               method: str,
-                              data: Optional[Dict[str, Any]] = None,
-                              params: Optional[Dict[str, Any]] = None,
-                              json: Optional[Dict[str, Any]] = None,
-                              headers: Optional[Dict[str, Any]] = None,
+                              data: Dict[str, Any] = None,
+                              params: Dict[str, Any] = None,
+                              json: Dict[str, Any] = None,
+                              headers: Dict[str, Any] = None,
                               files: Any = None) -> Dict[str, Any]:
         """
         Send a prepared request.
@@ -34,11 +34,11 @@ class BaseAPI:
         Args:
             uri (str): The URI of the request.
             method (str): The method of the request.
-            data (Dict[str, Any]): The data of the request as a dictionary.
-            params (Dict[str, Any]): The URL parameters of the request as a dictionary.
-            json (Dict[str, Any]): The JSON data of the request as a dictionary.
-            headers (Dict[str, Any]): The header information of the request as a dictionary.
-            files: The files to be included in the request.
+            data (Dict[str, Any], optional): The data of the request as a dictionary.
+            params (Dict[str, Any], optional): The URL parameters of the request as a dictionary.
+            json (Dict[str, Any], optional): The JSON data of the request as a dictionary.
+            headers (Dict[str, Any], optional): The header information of the request as a dictionary.
+            files (Any, optional): The files to be included in the request.
 
         Returns:
             Dict[str, Any]: The response content of the request as a dictionary.
