@@ -29,7 +29,7 @@ console_handler.setLevel(logging.DEBUG)
 console_formatter = colorlog.ColoredFormatter(
     f"%(log_color)s{log_format}",
     log_colors={
-        "DEBUG": "bold_green",
+        "DEBUG": "bold_blue",
         "INFO": "bold_green",
         "WARNING": "bold_yellow",
         "ERROR": "bold_red"
