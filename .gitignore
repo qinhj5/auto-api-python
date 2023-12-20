@@ -3,9 +3,8 @@ __pycache__/
 .DS_Store/
 .idea/
 venv/
-raw/
-html/
+report/
+log/
+tmp/
 *.pyc
-*.zip
-*.log
 !.gitkeep
