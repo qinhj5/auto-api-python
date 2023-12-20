@@ -8,7 +8,7 @@ import allure
 import datetime
 import subprocess
 from utils import logger
-from typing import Any, List
+from typing import Any, List, Union, Dict
 
 
 def set_env(env: str) -> None:
@@ -40,7 +40,7 @@ def get_conf(name: str = None) -> dict:
     Get configuration information.
 
     Args:
-        name (str): Configuration item name. Defaults to None.
+        name (str, optional): Configuration item name. Defaults to None.
 
     Returns:
         dict: Configuration information dictionary.
@@ -102,7 +102,7 @@ def is_json_string(string: str) -> bool:
     Check if a string is a JSON string.
 
     Args:
-        string: String.
+        string (str): String.
 
     Returns:
         bool: True if the string is a valid JSON string; False otherwise.
@@ -119,7 +119,7 @@ def loads_json_string(string: str) -> Any:
     Parse a JSON string into an object.
 
     Args:
-        string: JSON string.
+        string (str): JSON string.
 
     Returns:
         Any: Parsed object.
@@ -133,7 +133,7 @@ def get_formatted_json_string(data: dict) -> str:
     Get the formatted JSON string.
 
     Args:
-        data: Dictionary data.
+        data (dict): Dictionary data.
 
     Returns:
         str: The formatted JSON string.
@@ -147,7 +147,7 @@ def print_formatted_json_string(data: dict) -> None:
     Print the formatted JSON string.
 
     Args:
-        data: Dictionary data.
+        data (dict): Dictionary data.
 
     Returns:
         None
@@ -161,8 +161,8 @@ def set_console_detail(name: str, body: Any) -> None:
     Set detailed information for console output.
 
     Args:
-        name: Name.
-        body: Content.
+        name (str): Name.
+        body (Any): Content.
 
     Returns:
         None
@@ -183,8 +183,8 @@ def set_allure_detail(name: str, body: Any) -> None:
     Set detailed information for Allure report output.
 
     Args:
-        name: Name.
-        body: Content.
+        name (str): Name.
+        body (Any): Content.
 
     Returns:
         None
@@ -204,8 +204,8 @@ def set_allure_and_console_output(name: str, body: Any) -> None:
     Set detailed information for both Allure report and console output.
 
     Args:
-        name: Name.
-        body: Content.
+        name (str): Name.
+        body (Any): Content.
 
     Returns:
         None
@@ -219,8 +219,8 @@ def get_code_modifier(file_path: str, line_number: int) -> str:
     Get the email address of the code modifier.
 
     Args:
-        file_path: File path.
-        line_number: Line number.
+        file_path (str): File path.
+        line_number (int): Line number.
 
     Returns:
         str: Email address of the code modifier.
@@ -246,7 +246,7 @@ def get_csv_data(csv_name: str) -> List[List[str]]:
     Get the data from a CSV file.
 
     Args:
-        csv_name: Name of the CSV file (without the extension).
+        csv_name (str): Name of the CSV file (without the extension).
 
     Returns:
         List[List[str]]: List of rows in the CSV file, where each row is a list of strings.
@@ -260,4 +260,26 @@ def get_csv_data(csv_name: str) -> List[List[str]]:
         reader = csv.reader(f)
         for index, row in enumerate(reader, 1):
             res.append(row)
+    return res
+
+
+def get_json_data(json_name: str) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
+    """
+    Get the data from a json file.
+
+    Args:
+        json_name (str): Name of the json file (without the extension).
+
+    Returns:
+        Union[Dict[str, Any], List[Dict[str, Any]]]: The data from the json file, which can be a dict or a list of dict.
+    """
+    res = None
+    utils_dir = os.path.dirname(__file__)
+    data_dir = os.path.abspath(os.path.join(utils_dir, "../data"))
+    json_path = os.path.abspath(os.path.join(data_dir, f"{json_name}.json"))
+    logger.info(f"read json file: {json_path}")
+    with open(json_path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+        if isinstance(data, (dict, list)):
+            res = data
     return res
