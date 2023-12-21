@@ -531,7 +531,8 @@ def get_testcases_code(module: str, api: dict) -> Tuple[str, str]:
     param_str = ", ".join([f"{name}={name}" for name in name_list]) if name_list else ""
     testcases_code += f"    res = {module}_api.{api_func_name}({param_str})\n"
 
-    testcases_code += f"""    assert res["status_code"] == 200\n"""
+    testcases_code += """    assert res["status_code"] == 200, \
+                        f\"\"\"expected: 200, actual: {res["status_code"]}\"\"\"\n"""
 
     if name_list:
         header_code += "import pytest\n\n\n"
