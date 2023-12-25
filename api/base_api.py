@@ -71,11 +71,14 @@ class BaseAPI:
             status = f"name: {HTTPStatus(r.status_code).name}, code: {r.status_code}"
             set_allure_and_console_output(name="status code", body=status)
 
-            if is_json_string(r.text):
-                response_body = loads_json_string(r.text)
-                response_body.update({"status_code": r.status_code})
+            if len(r.text) < 20480:
+                if is_json_string(r.text):
+                    response_body = loads_json_string(r.text)
+                    response_body.update({"status_code": r.status_code})
+                else:
+                    response_body = {"status_code": r.status_code, "text": r.text}
             else:
-                response_body = {"status_code": r.status_code, "text": r.text}
+                response_body = {"status_code": r.status_code, "text": "response is too long to display"}
             set_allure_and_console_output(name="response body", body=response_body)
 
             set_allure_and_console_output(name="end time", body=get_current_datetime())
