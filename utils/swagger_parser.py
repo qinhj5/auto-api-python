@@ -498,8 +498,14 @@ def get_testcases_code(module: str, api: dict) -> Tuple[str, str]:
     """
     header_code = ""
     header_code += "# -*- coding: utf-8 -*-\n"
+    header_code += "import allure\n"
+    header_code += "import pytest\n"
+    header_code += "from utils import logger, set_assertion_error\n\n\n"
 
     testcases_code = ""
+    testcases_code += "@allure.severity(\"normal\")\n"
+    testcases_code += "@pytest.mark.normal\n"
+
     method = api["method"]
     snake_name = pascal_to_snake(api["detail"]["operationId"])
     if snake_name.startswith(method):
@@ -530,14 +536,11 @@ def get_testcases_code(module: str, api: dict) -> Tuple[str, str]:
 
     param_str = ", ".join([f"{name}={name}" for name in name_list]) if name_list else ""
     testcases_code += f"    res = {module}_api.{api_func_name}({param_str})\n"
-
     testcases_code += "    actual_code = res[\"status_code\"]\n"
+    testcases_code += "    logger.info(f\"%s status code: {actual_code}\")\n" % api_func_name
     testcases_code += "    expected_code = 200\n"
     testcases_code += "    assert actual_code == expected_code, \
-                        f\"actual: {actual_code}, expected: {expected_code}\"\n"
-
-    if name_list:
-        header_code += "import pytest\n\n\n"
+                        set_assertion_error(f\"actual: {actual_code}, expected: {expected_code}\")\n"
 
     testcases_code = header_code + testcases_code
 
