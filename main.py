@@ -10,7 +10,12 @@ project_dir = os.path.dirname(__file__)
 sys.path.append(project_dir)
 
 
-def exe_test(cases_dir="testcases", slowest_cases=100, output_mode="-s", process_num=3, generate_report=False):
+def exe_test(cases_dir="testcases",
+             slowest_cases=100,
+             output_mode="-s",
+             process_num=3,
+             generate_report=False,
+             marker=None):
 
     report_dir = os.path.abspath(os.path.join(project_dir, "report"))
     if os.path.exists(report_dir):
@@ -29,7 +34,10 @@ def exe_test(cases_dir="testcases", slowest_cases=100, output_mode="-s", process
     if process_num:
         args.extend(["-n", f"{process_num}", "--dist", "loadfile"])
 
-    logger.info(f"pytest args: {args}")
+    if marker is not None:
+        args.extend(["-m", marker])
+
+    logger.info(f"""pytest args: {" ".join(args)}""")
 
     pytest.main(args)
 
@@ -85,6 +93,13 @@ def get_parse_args():
         help="Environment (e.g. live or staging or test)",
     )
 
+    parser.add_argument(
+        "--marker",
+        type=str,
+        default=None,
+        help="Run testcases with the specified marker",
+    )
+
     return parser.parse_args()
 
 
@@ -98,7 +113,8 @@ def main():
              slowest_cases=args.slowest_cases,
              output_mode=args.output_mode,
              process_num=args.process_num,
-             generate_report=args.generate_report)
+             generate_report=args.generate_report,
+             marker=args.marker)
 
 
 if __name__ == "__main__":
