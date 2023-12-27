@@ -3,8 +3,6 @@ import os
 import csv
 import json
 import time
-from io import StringIO
-
 import yaml
 import allure
 import logging
