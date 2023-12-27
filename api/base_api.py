@@ -71,7 +71,7 @@ class BaseAPI:
             status = f"name: {HTTPStatus(r.status_code).name}, code: {r.status_code}"
             set_allure_and_console_output(name="status code", body=status)
 
-            if len(r.text) < 20480:
+            if len(r.text) < 1024 * 256:
                 if is_json_string(r.text):
                     response_body = loads_json_string(r.text)
                     response_body.update({"status_code": r.status_code})
