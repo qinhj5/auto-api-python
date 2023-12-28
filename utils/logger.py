@@ -4,7 +4,7 @@ import logging
 import colorlog
 
 # Logger setup
-logger = logging.getLogger("my_logger")
+logger = logging.getLogger("utils.logger")
 logger.setLevel(logging.DEBUG)
 
 # Directory setup
