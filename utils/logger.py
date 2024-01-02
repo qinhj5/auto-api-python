@@ -9,8 +9,8 @@ logger.setLevel(logging.DEBUG)
 
 # Directory setup
 utils_dir = os.path.dirname(__file__)
-project_path = os.path.abspath(os.path.join(utils_dir, ".."))
-log_dir = os.path.abspath(os.path.join(project_path, "log"))
+project_dir = os.path.abspath(os.path.join(utils_dir, ".."))
+log_dir = os.path.abspath(os.path.join(project_dir, "log"))
 os.makedirs(log_dir, exist_ok=True)
 log_path = os.path.abspath(os.path.join(log_dir, "test.log"))
 
