@@ -37,7 +37,8 @@ def pytest_terminal_summary(terminalreporter, config):
 
     project_dir = os.path.dirname(os.path.abspath(__file__))
     log_dir = os.path.abspath(os.path.join(project_dir, "log"))
-    log_path = os.path.abspath(os.path.join(log_dir, f"""summary_{process_name}.log"""))
+    os.makedirs(log_dir, exist_ok=True)
+    log_path = os.path.abspath(os.path.join(log_dir, f"summary_{process_name}.log"))
 
     num_passed = len(terminalreporter.stats.get("passed", []))
     num_failed = len(terminalreporter.stats.get("failed", []))
