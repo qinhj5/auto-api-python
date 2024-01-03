@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 import os
 import sys
-from utils.logger import logger
 from utils.decorators import singleton
+from utils.logger import logger, file_formatter
 from utils.common import (get_env,
                           set_env,
                           get_conf,
@@ -16,7 +16,7 @@ from utils.common import (get_env,
                           set_allure_and_console_output,
                           )
 
-# Path setup
+# setup project directory
 utils_dir = os.path.dirname(__file__)
-project_path = os.path.abspath(os.path.join(utils_dir, ".."))
-sys.path.append(project_path)
+project_dir = os.path.abspath(os.path.join(utils_dir, ".."))
+sys.path.append(project_dir)
