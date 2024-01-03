@@ -15,7 +15,7 @@ os.makedirs(log_dir, exist_ok=True)
 test_log_path = os.path.abspath(os.path.join(log_dir, "test.log"))
 
 # setup formatter
-log_format = "%(asctime)s - P:%(process)s - T:%(thread)s - %(filename)s:%(lineno)d - [%(levelname)s] - %(message)s"
+log_format = "%(asctime)s - PID:%(process)s - TID:%(thread)s - %(filename)s:%(lineno)d - [%(levelname)s] - %(message)s"
 file_formatter = logging.Formatter(log_format)
 
 # build console handler
