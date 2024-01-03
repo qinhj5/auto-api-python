@@ -5,9 +5,9 @@ import json
 import time
 import yaml
 import allure
-import logging
 import datetime
 import subprocess
+from utils import logger
 from typing import Any, List, Union, Dict
 
 
@@ -230,14 +230,14 @@ def get_code_modifier(file_path: str, line_number: int) -> str:
     try:
         result = subprocess.run(command, shell=True, capture_output=True, encoding='utf-8')
         if result.returncode != 0:
-            logging.info(f"No git info in un-versioned file. Please ignore. [exit status {result.returncode}]")
+            logger.info(f"No git info in un-versioned file. Please ignore. [exit status {result.returncode}]")
             return "No git info in un-versioned file."
         else:
             output = result.stdout
             author_mail = output.split("\n")[2].split()[1][1:-1]
             return author_mail
     except subprocess.CalledProcessError as e:
-        logging.error(f"Error occurred during command execution: {e}")
+        logger.error(f"Error occurred during command execution: {e}")
         return "An error occurred during command execution."
 
 
@@ -255,7 +255,7 @@ def get_csv_data(csv_name: str) -> List[List[str]]:
     utils_dir = os.path.dirname(__file__)
     data_dir = os.path.abspath(os.path.join(utils_dir, "../data"))
     csv_path = os.path.abspath(os.path.join(data_dir, f"{csv_name}.csv"))
-    logging.info(f"read csv file: {csv_path}")
+    logger.info(f"read csv file: {csv_path}")
     with open(csv_path, "r", encoding="utf-8") as f:
         reader = csv.reader(f)
         for index, row in enumerate(reader, 1):
@@ -277,7 +277,7 @@ def get_json_data(json_name: str) -> Union[Dict[str, Any], List[Dict[str, Any]]]
     utils_dir = os.path.dirname(__file__)
     data_dir = os.path.abspath(os.path.join(utils_dir, "../data"))
     json_path = os.path.abspath(os.path.join(data_dir, f"{json_name}.json"))
-    logging.info(f"read json file: {json_path}")
+    logger.info(f"read json file: {json_path}")
     with open(json_path, "r", encoding="utf-8") as f:
         data = json.load(f)
         if isinstance(data, (dict, list)):
