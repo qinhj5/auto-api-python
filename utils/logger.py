@@ -2,28 +2,22 @@
 import os
 import logging
 import colorlog
+from concurrent_log_handler import ConcurrentRotatingFileHandler
 
-# Logger setup
-logger = logging.getLogger("utils.logger")
-logger.setLevel(logging.DEBUG)
-
-# Directory setup
+# setup directory
 utils_dir = os.path.dirname(__file__)
 project_dir = os.path.abspath(os.path.join(utils_dir, ".."))
 log_dir = os.path.abspath(os.path.join(project_dir, "log"))
 os.makedirs(log_dir, exist_ok=True)
-log_path = os.path.abspath(os.path.join(log_dir, "test.log"))
 
-# Set log format
+# setup file
+test_log_path = os.path.abspath(os.path.join(log_dir, "test.log"))
+
+# setup formatter
 log_format = "%(asctime)s - P:%(process)s - T:%(thread)s - %(filename)s:%(lineno)d - [%(levelname)s] - %(message)s"
-
-# File handler
-file_handler = logging.FileHandler(log_path)
-file_handler.setLevel(logging.DEBUG)
 file_formatter = logging.Formatter(log_format)
-file_handler.setFormatter(file_formatter)
 
-# Console handler
+# build console handler
 console_handler = logging.StreamHandler()
 console_handler.setLevel(logging.DEBUG)
 console_formatter = colorlog.ColoredFormatter(
@@ -37,6 +31,17 @@ console_formatter = colorlog.ColoredFormatter(
 )
 console_handler.setFormatter(console_formatter)
 
-# Adding handlers to the logger
+# build file handler
+file_handler = ConcurrentRotatingFileHandler(test_log_path,
+                                             maxBytes=1024 * 1024 * 10,
+                                             backupCount=3,
+                                             mode="a",
+                                             encoding="utf-8")
+file_handler.setLevel(logging.DEBUG)
+file_handler.setFormatter(file_formatter)
+
+# setup logger
+logger = logging.getLogger("utils.logger")
+logger.setLevel(logging.DEBUG)
 logger.addHandler(console_handler)
 logger.addHandler(file_handler)
