@@ -2,7 +2,8 @@
 import os
 import logging
 import colorlog
-from concurrent_log_handler import ConcurrentRotatingFileHandler
+import multiprocessing
+from logging.handlers import RotatingFileHandler
 
 # setup directory
 utils_dir = os.path.dirname(__file__)
@@ -19,7 +20,7 @@ file_formatter = logging.Formatter(log_format)
 
 # build console handler
 console_handler = logging.StreamHandler()
-console_handler.setLevel(logging.DEBUG)
+console_handler.setLevel(logging.INFO)
 console_formatter = colorlog.ColoredFormatter(
     f"%(log_color)s{log_format}",
     log_colors={
@@ -32,16 +33,16 @@ console_formatter = colorlog.ColoredFormatter(
 console_handler.setFormatter(console_formatter)
 
 # build file handler
-file_handler = ConcurrentRotatingFileHandler(test_log_path,
-                                             maxBytes=1024 * 1024 * 10,
-                                             backupCount=3,
-                                             mode="a",
-                                             encoding="utf-8")
+file_handler = RotatingFileHandler(test_log_path,
+                                   maxBytes=1024 * 1024 * 10,
+                                   backupCount=3,
+                                   mode="a",
+                                   encoding="utf-8")
 file_handler.setLevel(logging.DEBUG)
 file_handler.setFormatter(file_formatter)
 
 # setup logger
-logger = logging.getLogger("utils.logger")
+logger = multiprocessing.get_logger()
 logger.setLevel(logging.DEBUG)
 logger.addHandler(console_handler)
 logger.addHandler(file_handler)
