@@ -55,3 +55,37 @@ def pytest_terminal_summary(terminalreporter, config):
 
         duration = time.time() - terminalreporter._sessionstarttime
         f.writelines("Duration (seconds): {:.2f}".format(duration))
+
+
+@pytest.fixture(scope="session", autouse=True)
+def configure_logging(request):
+
+    if request.config.pluginmanager.get_plugin("xdist"):
+        if hasattr(request.config, "workerinput"):
+            process_name = request.config.workerinput["workerid"]
+        elif hasattr(request.config, "slaveinput"):
+            process_name = request.config.slaveinput["slaveid"]
+        else:
+            process_name = "main"
+    else:
+        process_name = "main"
+
+    project_dir = os.path.dirname(os.path.abspath(__file__))
+    log_dir = os.path.abspath(os.path.join(project_dir, "log"))
+    os.makedirs(log_dir, exist_ok=True)
+    log_path = os.path.abspath(os.path.join(log_dir, f"request_{process_name}.log"))
+
+    request_file_handler = logging.FileHandler(log_path, mode="w", encoding="utf-8")
+    request_file_handler.setLevel(logging.DEBUG)
+    request_file_handler.setFormatter(file_formatter)
+
+    request_logger = logging.getLogger("urllib3")
+    request_logger.setLevel(logging.DEBUG)
+    request_logger.propagate = False
+    request_logger.addHandler(request_file_handler)
+
+    yield
+
+    request_logger.removeHandler(request_file_handler)
+    request_file_handler.close()
+
