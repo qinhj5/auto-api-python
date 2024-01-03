@@ -4,9 +4,8 @@ import time
 import pytest
 import inspect
 import logging
-from utils.logger import file_formatter
 from connection.mysql_connection import MysqlConnection
-from utils import set_allure_and_console_output, get_code_modifier
+from utils import set_allure_and_console_output, get_code_modifier, file_formatter
 
 
 @pytest.fixture(scope="session")
@@ -90,4 +89,3 @@ def configure_logging(request):
 
     request_logger.removeHandler(request_file_handler)
     request_file_handler.close()
-
