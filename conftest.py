@@ -3,6 +3,7 @@ import os
 import time
 import pytest
 import inspect
+from utils.logger import file_formatter
 from connection.mysql_connection import MysqlConnection
 from utils import set_allure_and_console_output, get_code_modifier
 
