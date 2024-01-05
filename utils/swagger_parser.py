@@ -341,7 +341,7 @@ def get_api_func(api: dict) -> Tuple[str, bool]:
     func_body = "        \"\"\"\n        %s\n\n" % summary
     func_body += "        Args:\n            self\n"
     for item in params_list:
-        func_body += (f"""            {next(iter(item.keys()))}({item[next(iter(item.keys()))]["type"]}): """ +
+        func_body += (f"""            {next(iter(item.keys()))} ({item[next(iter(item.keys()))]["type"]}): """ +
                       f"""{get_wrapped_string(item[next(iter(item.keys()))]["desc"], 
                                               length=70, indent=12, replace_colon=True)}\n""")
     func_body += "\n        Returns:\n            Dict[str, Any]: The response content of the request as a dictionary.\
