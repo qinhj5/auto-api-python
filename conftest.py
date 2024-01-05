@@ -16,7 +16,7 @@ def db():
 
 
 @pytest.fixture(scope="function", autouse=True)
-def code_modifier(request):
+def case_info(request):
     function_path = inspect.getfile(request.function.__code__)
     set_allure_and_console_output(name="function path", body=function_path)
 
