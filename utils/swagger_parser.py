@@ -537,7 +537,7 @@ def get_testcases_code(module: str, api: dict) -> Tuple[str, str]:
     param_str = ", ".join([f"{name}={name}" for name in name_list]) if name_list else ""
     testcases_code += f"    res = {module}_api.{api_func_name}({param_str})\n"
     testcases_code += "    actual_code = res[\"status_code\"]\n"
-    testcases_code += "    logger.info(f\"%s status code: {actual_code}\")\n" % api_func_name
+    testcases_code += "    logger.info(f\"%s status code: {actual_code}\")\n\n" % api_func_name
     testcases_code += "    expected_code = 200\n"
     testcases_code += "    assert actual_code == expected_code, \
                         set_assertion_error(f\"actual: {actual_code}, expected: {expected_code}\")\n"
