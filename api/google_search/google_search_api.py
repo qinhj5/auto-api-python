@@ -16,6 +16,6 @@ class GoogleSearchAPI(BaseAPI):
             Dict[str, Any]: The response content of the request as a dictionary.
         """
         params_dict = {"q": keyword}
-        return self.send_prepared_request(
+        return self._send_request(
             uri="/search", method="GET", params=params_dict
         )
