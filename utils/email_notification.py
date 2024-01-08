@@ -99,5 +99,5 @@ class EmailNotification:
         smtp.quit()
 
 
-if __name__ == "__main__":
+def send_email():
     EmailNotification(**EMAIL_CONF).send_email()
