@@ -82,8 +82,8 @@ class SwaggerParser:
         Returns:
             str: The modified string with non-alphabetic characters removed from the start.
         """
-        pattern = r'^[^a-zA-Z]+'
-        result = re.sub(pattern, '', string)
+        pattern = r"^[^a-zA-Z]+"
+        result = re.sub(pattern, "", string)
         return result
 
     @staticmethod
