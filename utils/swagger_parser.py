@@ -363,7 +363,7 @@ class SwaggerParser:
         if len(request_list):
             request_str = ", " + ", ".join(request_list)
 
-        func_tail = f"""        return self.send_prepared_request(uri=f"{uri}", 
+        func_tail = f"""        return self._send_request(uri=f"{uri}", 
         method="{method.upper()}"{request_str})\n"""
 
         return func_header + func_body + func_tail, use_list
