@@ -229,7 +229,7 @@ def get_code_modifier(file_path: str, line_number: int) -> str:
     command = f"git blame --line-porcelain -L {line_number},{line_number} {file_path}"
 
     try:
-        result = subprocess.run(command, shell=True, capture_output=True, encoding='utf-8')
+        result = subprocess.run(command, shell=True, capture_output=True, encoding="utf-8")
         if result.returncode != 0:
             logger.info(f"No git info in un-versioned file. Please ignore. [exit status {result.returncode}]")
             return "No git info in un-versioned file."
@@ -312,7 +312,7 @@ def clean_logs() -> None:
     utils_dir: str = os.path.dirname(__file__)
     log_dir: str = os.path.abspath(os.path.join(utils_dir, "../log"))
 
-    for file_path in glob.glob(os.path.join(log_dir, '*.log')):
+    for file_path in glob.glob(os.path.join(log_dir, "*.log")):
         file_name: str = os.path.basename(file_path)
 
         if "request" in file_name or "summary" in file_name:
