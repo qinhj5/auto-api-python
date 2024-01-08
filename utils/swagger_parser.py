@@ -188,7 +188,7 @@ class SwaggerParser:
         return path
 
     @staticmethod
-    def _deduplicated_params(params: list) -> list:
+    def _get_deduplicated_params(params: list) -> list:
         """
         Deduplicate parameters by removing duplicates based on snake_case names.
 
@@ -199,7 +199,7 @@ class SwaggerParser:
             list: Deduplicated list of Swagger API parameters.
         """
         params.reverse()
-        ret_params = []
+        deduplicated_params = []
         snake_names = []
         for param in params:
             if param.get("name") is None:
@@ -208,10 +208,10 @@ class SwaggerParser:
                 param.update({"required": False})
             snake_name = SwaggerParser._pascal_to_snake(param["name"])
             if snake_name not in snake_names:
-                ret_params.append(param)
+                deduplicated_params.append(param)
                 snake_names.append(snake_name)
 
-        return ret_params
+        return deduplicated_params
 
     @staticmethod
     def _get_wrapped_string(long_string: str, length: int = 110, indent: int = 8, replace_colon: bool = False) -> str:
@@ -289,7 +289,7 @@ class SwaggerParser:
 
         params = api["detail"].get("parameters", [])
         if params:
-            params = SwaggerParser._deduplicated_params(params)
+            params = SwaggerParser._get_deduplicated_params(params)
             params = sorted(params, key=lambda x: x["required"], reverse=True)
 
         params_list = []
@@ -513,7 +513,7 @@ class SwaggerParser:
 
         params = api["detail"].get("parameters", [])
         if params:
-            params = SwaggerParser._deduplicated_params(params)
+            params = SwaggerParser._get_deduplicated_params(params)
             params = [param for param in params if param["required"]]
 
         name_list = []
