@@ -4,8 +4,11 @@ import time
 import pytest
 import inspect
 import logging
-from connection.mysql_connection import MysqlConnection
-from utils import set_allure_and_console_output, get_code_modifier, file_formatter
+from utils import (file_formatter, 
+                   MysqlConnection,
+                   get_code_modifier, 
+                   set_allure_and_console_output,
+                   )
 
 
 @pytest.fixture(scope="session")
