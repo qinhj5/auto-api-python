@@ -4,7 +4,7 @@ import sys
 import shutil
 import pytest
 import argparse
-from utils import logger, set_env
+from utils import logger, set_env, clean_logs, send_email
 
 project_dir = os.path.dirname(__file__)
 sys.path.append(project_dir)
@@ -16,7 +16,6 @@ def exe_test(cases_dir="testcases",
              process_num=3,
              generate_report=False,
              marker=None):
-
     report_dir = os.path.abspath(os.path.join(project_dir, "report"))
     if os.path.exists(report_dir):
         shutil.rmtree(report_dir)
@@ -103,8 +102,18 @@ def get_parse_args():
     return parser.parse_args()
 
 
-def main():
+def pre_action():
+    clean_logs()
 
+
+def post_action():
+    send_email()
+
+
+def main():
+    
+    pre_action()
+    
     args = get_parse_args()
     set_env(args.env)
     logger.info(f"current env is {args.env}.")
