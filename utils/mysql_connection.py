@@ -11,7 +11,7 @@ pymysql.install_as_MySQLdb()
 
 @singleton
 class MysqlConnection:
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize an instance of the MysqlConnection class.
 
