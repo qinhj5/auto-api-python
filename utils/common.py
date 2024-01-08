@@ -4,6 +4,7 @@ import csv
 import json
 import time
 import yaml
+import glob
 import allure
 import datetime
 import subprocess
@@ -297,3 +298,22 @@ def set_assertion_error(detail: str) -> str:
     """
     set_allure_and_console_output(name="assertion error", body=detail)
     return detail
+
+
+def clean_logs() -> None:
+    """
+    Clean up log files in the log directory.
+
+    Removes log files with names containing "request" or "summary" from the log directory.
+
+    Returns:
+        None
+    """
+    utils_dir: str = os.path.dirname(__file__)
+    log_dir: str = os.path.abspath(os.path.join(utils_dir, "../log"))
+
+    for file_path in glob.glob(os.path.join(log_dir, '*.log')):
+        file_name: str = os.path.basename(file_path)
+
+        if "request" in file_name or "summary" in file_name:
+            os.remove(file_path)
