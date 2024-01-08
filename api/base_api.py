@@ -18,16 +18,17 @@ class BaseAPI:
         Returns:
             None
         """
-        self.base_url = base_url
-        self.headers = headers
+        self._base_url = base_url
+        self._headers = headers
 
-    def send_prepared_request(self, uri: str,
-                              method: str,
-                              data: Dict[str, Any] = None,
-                              params: Dict[str, Any] = None,
-                              json: Dict[str, Any] = None,
-                              headers: Dict[str, Any] = None,
-                              files: Any = None) -> Dict[str, Any]:
+    def _send_request(self,
+                      uri: str,
+                      method: str,
+                      data: Dict[str, Any] = None,
+                      params: Dict[str, Any] = None,
+                      json: Dict[str, Any] = None,
+                      headers: Dict[str, Any] = None,
+                      files: Any = None) -> Dict[str, Any]:
         """
         Send a prepared request.
 
@@ -43,11 +44,11 @@ class BaseAPI:
         Returns:
             Dict[str, Any]: The response content of the request as a dictionary.
         """
-        total_headers = self.headers.copy()
+        total_headers = self._headers.copy()
         if headers:
             total_headers.update(headers)
 
-        url = f"{self.base_url}{uri}"
+        url = f"{self._base_url}{uri}"
         set_allure_and_console_output(name="url", body=url)
         set_allure_and_console_output(name="headers", body=total_headers)
         set_allure_and_console_output(name="request body", body=params or data or json)
