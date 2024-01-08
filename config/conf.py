@@ -4,9 +4,9 @@ from connection.mysql_connection import MysqlConnection
 
 
 class Constants:
-    _CONF = get_conf(name="portal")
-    BASE_URL = _CONF["base_url"]
-    HEADERS = _CONF["headers"]
+    _PORTAL_CONF = get_conf(name="portal")
+    BASE_URL = _PORTAL_CONF["base_url"]
+    HEADERS = _PORTAL_CONF["headers"]
 
 
 class Global:
