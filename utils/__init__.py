@@ -4,8 +4,8 @@ import sys
 from typing import Any
 from utils.decorators import singleton
 from utils.logger import logger, file_formatter
+from utils.email_notification import send_email
 from utils.mysql_connection import MysqlConnection
-from utils.email_notification import EmailNotification
 from utils.common import (get_env,
                           set_env,
                           get_conf,
