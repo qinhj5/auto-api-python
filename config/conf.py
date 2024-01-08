@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-from utils import get_conf
-from connection.mysql_connection import MysqlConnection
+from utils import get_conf, MysqlConnection
 
 
 class Constants:
