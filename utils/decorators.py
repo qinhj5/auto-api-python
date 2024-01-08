@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
-def singleton(cls):
+from typing import Type, Callable
+
+
+def singleton(cls: Type) -> Callable:
     instances = {}
 
     def wrapper(*args, **kwargs):
