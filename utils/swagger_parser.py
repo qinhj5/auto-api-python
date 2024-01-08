@@ -588,4 +588,4 @@ class SwaggerParser:
 
 if __name__ == "__main__":
     # swagger_url is the link to the swagger api-docs
-    SwaggerParser(swagger_url="https://datasuite.staging.shopee.io/ram/api/v1/v2/api-docs").generate_templates()
+    SwaggerParser(swagger_url="").generate_templates()
