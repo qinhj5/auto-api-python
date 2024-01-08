@@ -410,7 +410,7 @@ class SwaggerParser:
         with open(init_path, "w", encoding="utf-8") as f:
             f.write("# -*- coding: utf-8 -*-\n")
 
-    def generate_api_templates(self, swagger_dict: dict) -> None:
+    def _generate_api_templates(self, swagger_dict: dict) -> None:
         """
         Generate API templates based on Swagger data and write them to files.
 
@@ -556,7 +556,7 @@ class SwaggerParser:
         with open(testcases_path, "w+", encoding="utf-8") as f:
             f.write(formatted_code)
 
-    def generate_testcases_templates(self, swagger_dict: dict) -> None:
+    def _generate_testcases_templates(self, swagger_dict: dict) -> None:
         """
         Generate test function templates based on Swagger data and write them to files.
 
@@ -582,8 +582,8 @@ class SwaggerParser:
         """
         self._clear_tmp_dir()
         swagger_dict = self._get_swagger_dict()
-        self.generate_api_templates(swagger_dict)
-        self.generate_testcases_templates(swagger_dict)
+        self._generate_api_templates(swagger_dict)
+        self._generate_testcases_templates(swagger_dict)
 
 
 if __name__ == "__main__":
