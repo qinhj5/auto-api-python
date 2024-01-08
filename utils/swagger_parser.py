@@ -12,7 +12,7 @@ from typing import Tuple, Generator
 
 
 class SwaggerParser:
-    def __init__(self, swagger_url):
+    def __init__(self, swagger_url: str) -> None:
         self._swagger_url = swagger_url
         self._current_dir = os.path.dirname(__file__)
 
