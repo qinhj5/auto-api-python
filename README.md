@@ -67,10 +67,10 @@ APIAuto/
 └── requirements.txt
 ```
 
+<br>
+
 ## 四、使用教程
 （Ubuntu 20.04 LTS x64, Python3.7）
-
-<br>
 
 ### 1.安装工具
 ```
