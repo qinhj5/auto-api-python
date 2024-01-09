@@ -24,7 +24,50 @@
 
 <br>
 
-## 三、使用教程
+## 三、目录结构
+
+```
+APIAuto/
+├── api/
+│   ├── __init__.py
+│   ├── base_api.py
+│   └── google_search/
+│       ├── __init__.py
+│       └── google_search_api.py
+├── config/
+│   ├── __init__.py
+│   ├── conf.py
+│   └── conf_staging.yml
+├── data/
+│   └── keyword.csv
+├── log/
+├── report/
+├── testcases/
+│   ├── __init__.py
+│   └── google_search/
+│       ├── __init__.py
+│       ├── conftest.py
+│       └── test_google_search_by_keyword.py
+├── utils/
+│   ├── __init__.py
+│   ├── common.py
+│   ├── decorators.py
+│   ├── email_notification.py
+│   ├── enums.py
+│   ├── logger.py
+│   ├── mysql_connection.py
+│   └── swagger_parser.py
+├── conftest.py
+├── Dockerfile
+├── Jenkinsfile
+├── main.py
+├── pytest.ini
+├── README.md
+├── report.sh
+└── requirements.txt
+```
+
+## 四、使用教程
 （Ubuntu 20.04 LTS x64, Python3.7）
 
 <br>
