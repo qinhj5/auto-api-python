@@ -35,11 +35,11 @@ class BaseAPI:
         Args:
             uri (str): The URI of the request.
             method (str): The method of the request.
-            data (Dict[str, Any], optional): The data of the request as a dictionary.
-            params (Dict[str, Any], optional): The URL parameters of the request as a dictionary.
-            json (Dict[str, Any], optional): The JSON data of the request as a dictionary.
-            headers (Dict[str, Any], optional): The header information of the request as a dictionary.
-            files (Any, optional): The files to be included in the request.
+            data (Dict[str, Any]): The data of the request as a dictionary.
+            params (Dict[str, Any]): The URL parameters of the request as a dictionary.
+            json (Dict[str, Any]): The JSON data of the request as a dictionary.
+            headers (Dict[str, Any]): The header information of the request as a dictionary.
+            files (Any): The files to be included in the request.
 
         Returns:
             Dict[str, Any]: The response content of the request as a dictionary.
