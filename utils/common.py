@@ -41,7 +41,7 @@ def get_conf(name: str = None) -> dict:
     Get configuration information.
 
     Args:
-        name (str, optional): Configuration item name. Defaults to None.
+        name (str): Configuration item name. Defaults to None.
 
     Returns:
         dict: Configuration information dictionary.
