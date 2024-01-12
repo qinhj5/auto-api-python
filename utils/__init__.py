@@ -2,6 +2,7 @@
 import os
 import sys
 from typing import Any
+from utils.ssh_tunnel import SSHTunel
 from utils.decorators import singleton
 from utils.logger import logger, file_formatter
 from utils.email_notification import send_email
