@@ -87,12 +87,12 @@ class SSHTunel:
         with self._lock:
             stdin, stdout, stderr = self._execute(command)
             logger.info(f"executed command: {command}")
-            output = stdout.read().decode("utf-8")
-            error = stderr.read().decode("utf-8")
+            output = stdout.read().decode("utf-8").strip()
+            error = stderr.read().decode("utf-8").strip()
             if output:
-                logger.info(f"""standard output: {output.strip()}""")
+                logger.info(f"""standard output: {output}""")
             if error:
-                logger.error(f"""standard error: {error.strip()}""")
+                logger.error(f"""standard error: {error}""")
             return stdin
 
     def close(self) -> None:
