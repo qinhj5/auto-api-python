@@ -220,9 +220,9 @@ class SwaggerParser:
 
         Args:
             long_string (str): The long string to be split.
-            length (int, optional): The maximum length of each segment. Defaults to 110.
-            indent (int, optional): The number of spaces to indent each segment. Defaults to 8.
-            replace_colon (bool, optional): Whether to replace colons in the string. Defaults to False.
+            length (int): The maximum length of each segment. Defaults to 110.
+            indent (int): The number of spaces to indent each segment. Defaults to 8.
+            replace_colon (bool): Whether to replace colons in the string. Defaults to False.
 
         Returns:
             str: The wrapped string with each segment smaller than the specified length.
