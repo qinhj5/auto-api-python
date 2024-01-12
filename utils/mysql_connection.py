@@ -4,7 +4,7 @@ import threading
 from utils import get_conf, logger
 from pymysql import cursors, Connection
 from sshtunnel import SSHTunnelForwarder
-from typing import Tuple, Any, List, Dict, Optional
+from typing import Tuple, List, Dict, Optional
 
 pymysql.install_as_MySQLdb()
 
