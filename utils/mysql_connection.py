@@ -1,16 +1,28 @@
 # -*- coding: utf-8 -*-
 import pymysql
 import threading
-from pymysql import cursors
-from utils import get_conf, singleton
+from utils import get_conf, logger
+from pymysql import cursors, Connection
 from sshtunnel import SSHTunnelForwarder
-from typing import Tuple, Any, Optional, List, Dict
+from typing import Tuple, Any, List, Dict, Optional
 
 pymysql.install_as_MySQLdb()
 
 
-@singleton
 class MysqlConnection:
+    _instance = None
+
+    def __new__(cls, *args, **kwargs) -> None:
+        """
+        Implement singleton mode.
+
+        Returns:
+            None
+        """
+        if not cls._instance:
+            cls._instance = super().__new__(cls, *args, **kwargs)
+        return cls._instance
+
     def __init__(self) -> None:
         """
         Initialize an instance of the MysqlConnection class.
@@ -25,7 +37,9 @@ class MysqlConnection:
         self._lock = threading.Lock()
 
     @staticmethod
-    def create_mysql_connection(mysql_conf: dict, ssh_conf: dict = None, use_tunnel: bool = True) -> Tuple[Any, Any]:
+    def _create_mysql_connection(mysql_conf: dict,
+                                 ssh_conf: dict = None,
+                                 use_tunnel: bool = True) -> Tuple[Connection, Optional[SSHTunnelForwarder]]:
         """
         Create a MySQL connection.
 
@@ -35,12 +49,8 @@ class MysqlConnection:
             use_tunnel (bool): Whether to use an SSH tunnel. Defaults to True.
 
         Returns:
-            Tuple[Any, Any]: MySQL connection object and SSH tunnel object (if using an SSH tunnel).
-
-        Raises:
-            Exception: Raised when connection creation fails.
+            Tuple[Connection, Optional[SSHTunnelForwarder]]: MySQL connection object and/or SSH tunnel object.
         """
-
         if use_tunnel:
             tunnel = SSHTunnelForwarder(
                 ssh_address=(ssh_conf["ssh_host"], ssh_conf["ssh_port"]),
@@ -69,7 +79,7 @@ class MysqlConnection:
             )
             return connection, None
 
-    def _execute_sql(self, sql: str) -> Tuple[int, Any]:
+    def _execute_sql(self, sql: str) -> Tuple[int, cursors.DictCursor]:
         """
         Execute the SQL statement.
 
@@ -77,13 +87,14 @@ class MysqlConnection:
             sql (str): SQL statement.
 
         Returns:
-            Tuple[int, Any]: Number of affected rows and cursor object.
+            Tuple[int, cursors.DictCursor]: Number of affected rows and cursor object.
         """
         if self._connection is None:
-            self._connection, self._tunnel = MysqlConnection.create_mysql_connection(mysql_conf=self._mysql_conf,
-                                                                                     ssh_conf=self._ssh_conf)
+            self._connection, self._tunnel = MysqlConnection._create_mysql_connection(mysql_conf=self._mysql_conf,
+                                                                                      ssh_conf=self._ssh_conf)
         with self._connection.cursor(cursors.DictCursor) as cursor:
             rows = cursor.execute(sql)
+            logger.info(f"executed sql: {sql}")
             return rows, cursor
 
     def execute(self, sql: str) -> None:
@@ -100,7 +111,7 @@ class MysqlConnection:
             self._execute_sql(sql)
             self._connection.commit()
 
-    def fetchone(self, sql: str) -> Optional[Dict]:
+    def fetchone(self, sql: str) -> Dict:
         """
         Fetch a single query result.
 
@@ -108,13 +119,13 @@ class MysqlConnection:
             sql (str): SQL statement.
 
         Returns:
-            Optional[Dict]: Query result in dictionary form. Returns None if the query result is empty.
+            Dict: Query result in dictionary form. Returns None if the query result is empty.
         """
         with self._lock:
             rows, cursor = self._execute_sql(sql)
             return cursor.fetchone() if rows > 0 else None
 
-    def fetchall(self, sql: str) -> Optional[List[Dict]]:
+    def fetchall(self, sql: str) -> List[Dict]:
         """
         Fetch multiple query results.
 
@@ -122,13 +133,13 @@ class MysqlConnection:
             sql (str): SQL statement.
 
         Returns:
-            Optional[List[Dict]]: Query result in list form. Returns an empty list if the query result is empty.
+            List[Dict]: Query result in list form. Returns an empty list if the query result is empty.
         """
         with self._lock:
             rows, cursor = self._execute_sql(sql)
             return cursor.fetchall() if rows > 0 else []
 
-    def close(self):
+    def close(self) -> None:
         """
         Close the database connection.
 
