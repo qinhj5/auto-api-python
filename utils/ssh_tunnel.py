@@ -6,7 +6,7 @@ from utils import get_conf, logger
 from paramiko.channel import ChannelStdinFile, ChannelFile, ChannelStderrFile
 
 
-class SSHTunel:
+class SSHTunnel:
     _instance = None
 
     def __new__(cls, *args, **kwargs) -> None:
@@ -22,7 +22,7 @@ class SSHTunel:
 
     def __init__(self) -> None:
         """
-        Initialize an instance of the SSHTunel class.
+        Initialize an instance of the SSHTunnel class.
 
         Returns:
             None
@@ -70,7 +70,7 @@ class SSHTunel:
             Tuple[ChannelStdinFile, ChannelFile, ChannelStderrFile]: A tuple contained the input, output, and error.
         """
         if self._ssh_tunnel is None:
-            self._ssh_tunnel = SSHTunel._create_ssh_tunnel(self._ssh_conf)
+            self._ssh_tunnel = SSHTunnel._create_ssh_tunnel(self._ssh_conf)
         stdin, stdout, stderr = self._ssh_tunnel.exec_command(command)
         return stdin, stdout, stderr
 
