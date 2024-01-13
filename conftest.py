@@ -4,7 +4,7 @@ import time
 import pytest
 import inspect
 import logging
-from utils import (SSHTunel,
+from utils import (SSHTunnel,
                    file_formatter, 
                    MysqlConnection,
                    get_code_modifier, 
@@ -21,7 +21,7 @@ def db():
 
 @pytest.fixture(scope="session")
 def tunnel():
-    tunnel = SSHTunel()
+    tunnel = SSHTunnel()
     yield tunnel
     tunnel.close()
 
