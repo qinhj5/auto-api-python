@@ -4,6 +4,7 @@ import sys
 from typing import Any
 from utils.ssh_tunnel import SSHTunnel
 from utils.decorators import singleton
+from utils.driver_client import DriverClient
 from utils.logger import logger, file_formatter
 from utils.email_notification import send_email
 from utils.mysql_connection import MysqlConnection
