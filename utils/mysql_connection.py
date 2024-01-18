@@ -1,15 +1,19 @@
 # -*- coding: utf-8 -*-
-import paramiko
+import pymysql
 import traceback
 import threading
-from typing import Tuple
 from types import TracebackType
 from utils import get_conf, logger
-from paramiko.channel import ChannelStdinFile, ChannelFile, ChannelStderrFile
+from typing import Tuple, List, Dict
+from pymysql import cursors, Connection
+from sshtunnel import SSHTunnelForwarder
+
+pymysql.install_as_MySQLdb()
 
 
-class SSHTunnel:
+class MysqlConnection:
     _instance = None
+    _lock = threading.Lock()
 
     def __new__(cls, *args, **kwargs) -> None:
         """
@@ -18,27 +22,28 @@ class SSHTunnel:
         Returns:
             None
         """
-        if not cls._instance:
-            cls._instance = super().__new__(cls, *args, **kwargs)
+        with cls._lock:
+            if not cls._instance:
+                cls._instance = super().__new__(cls)
         return cls._instance
 
     def __init__(self) -> None:
         """
-        Initialize an instance of the SSHTunnel class.
+        Initialize an instance of the MysqlConnection class.
 
         Returns:
             None
         """
+        self._mysql_conf = get_conf(name="mysql")
         self._ssh_conf = get_conf(name="ssh")
-        self._ssh_tunnel = None
-        self._lock = threading.Lock()
+        self._connection = None
 
-    def __enter__(self) -> 'SSHTunnel':
+    def __enter__(self) -> 'MysqlConnection':
         """
         Context manager method for entering the context.
 
         Returns:
-            SSHTunnel: The current instance of the SSHTunnel class.
+            MysqlConnection: The current instance of the MysqlConnection class.
         """
         return self
 
@@ -63,76 +68,120 @@ class SSHTunnel:
         self.close()
 
     @staticmethod
-    def _create_ssh_tunnel(ssh_conf: dict) -> paramiko.SSHClient:
+    def _create_mysql_connection(mysql_conf: dict,
+                                 ssh_conf: dict = None,
+                                 use_tunnel: bool = True) -> Connection:
         """
-        Create an SSH tunnel connection.
+        Create a MySQL connection.
 
         Args:
+            mysql_conf (dict): MySQL configuration information.
             ssh_conf (dict): SSH configuration information.
+            use_tunnel (bool): Whether to use an SSH tunnel. Defaults to True.
 
         Returns:
-            paramiko.SSHClient: SSH tunnel object.
+            Connection: MySQL connection object.
         """
-        ssh_tunnel = paramiko.SSHClient()
-        ssh_tunnel.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        ssh_key = ssh_conf.get("ssh_key")
+        if use_tunnel:
+            forwarder = SSHTunnelForwarder(
+                ssh_address=(ssh_conf["ssh_host"], ssh_conf["ssh_port"]),
+                ssh_username=ssh_conf["ssh_user"],
+                ssh_pkey=ssh_conf.get("ssh_key"),
+                ssh_password=ssh_conf.get("ssh_password"),
+                remote_bind_address=(mysql_conf["host"], mysql_conf["port"])
+            )
+            forwarder.start()
 
-        if ssh_key is None:
-            private_key = None
+            connection = pymysql.connect(
+                host="localhost",
+                port=forwarder.local_bind_port,
+                user=mysql_conf["user"],
+                password=mysql_conf["password"],
+                database=mysql_conf["database"]
+            )
+            return connection
         else:
-            private_key = paramiko.RSAKey.from_private_key_file(ssh_conf.get("ssh_key"))
+            connection = pymysql.connect(
+                host=mysql_conf["host"],
+                port=mysql_conf["port"],
+                user=mysql_conf["user"],
+                password=mysql_conf["password"],
+                database=mysql_conf["database"],
+            )
+            return connection
 
-        ssh_tunnel.connect(hostname=ssh_conf["ssh_host"],
-                           port=ssh_conf["ssh_port"],
-                           username=ssh_conf["ssh_user"],
-                           pkey=private_key,
-                           password=ssh_conf.get("ssh_password"))
-
-        return ssh_tunnel
-
-    def _execute(self, command: str) -> Tuple[ChannelStdinFile, ChannelFile, ChannelStderrFile]:
+    def _execute_sql(self, sql: str) -> Tuple[int, cursors.DictCursor]:
         """
-        Execute a command on the SSH tunnel.
+        Execute the SQL statement.
 
         Args:
-            command (str): The command to execute.
+            sql (str): SQL statement.
 
         Returns:
-            Tuple[ChannelStdinFile, ChannelFile, ChannelStderrFile]: A tuple contained the input, output, and error.
+            Tuple[int, cursors.DictCursor]: Number of affected rows and cursor object.
         """
-        if self._ssh_tunnel is None:
-            self._ssh_tunnel = SSHTunnel._create_ssh_tunnel(self._ssh_conf)
-        stdin, stdout, stderr = self._ssh_tunnel.exec_command(command)
-        return stdin, stdout, stderr
+        try:
+            if self._connection is None:
+                self._connection = MysqlConnection._create_mysql_connection(mysql_conf=self._mysql_conf,
+                                                                            ssh_conf=self._ssh_conf)
+        except Exception as e:
+            logger.error(f"{e}\n{traceback.format_exc()}")
+            self.close()
+        else:
+            with self._connection.cursor(cursors.DictCursor) as cursor:
+                rows = cursor.execute(sql)
+                logger.info(f"executed sql: {sql}")
+                return rows, cursor
 
-    def execute_command(self, command: str) -> ChannelStdinFile:
+    def execute(self, sql: str) -> None:
         """
-        Execute a command and log the output.
+        Execute the SQL statement.
 
         Args:
-            command (str): The command to execute.
-
-        Returns:
-            ChannelStdinFile: The input channel of the SSH tunnel.
-        """
-        with self._lock:
-            stdin, stdout, stderr = self._execute(command)
-            logger.info(f"executed command: {command}")
-            output = stdout.read().decode("utf-8").strip()
-            error = stderr.read().decode("utf-8").strip()
-            if output:
-                logger.info(f"""standard output: {output}""")
-            if error:
-                logger.error(f"""standard error: {error}""")
-            return stdin
-
-    def close(self) -> None:
-        """
-        Close the ssh tunnel.
+            sql (str): SQL statement.
 
         Returns:
             None
         """
-        with self._lock:
-            if self._ssh_tunnel:
-                self._ssh_tunnel.close()
+        with MysqlConnection._lock:
+            self._execute_sql(sql)
+            self._connection.commit()
+
+    def fetchone(self, sql: str) -> Dict:
+        """
+        Fetch a single query result.
+
+        Args:
+            sql (str): SQL statement.
+
+        Returns:
+            Dict: Query result in dictionary form. Returns None if the query result is empty.
+        """
+        with MysqlConnection._lock:
+            rows, cursor = self._execute_sql(sql)
+            return cursor.fetchone() if rows > 0 else None
+
+    def fetchall(self, sql: str) -> List[Dict]:
+        """
+        Fetch multiple query results.
+
+        Args:
+            sql (str): SQL statement.
+
+        Returns:
+            List[Dict]: Query result in list form. Returns an empty list if the query result is empty.
+        """
+        with MysqlConnection._lock:
+            rows, cursor = self._execute_sql(sql)
+            return cursor.fetchall() if rows > 0 else []
+
+    def close(self) -> None:
+        """
+        Close the database connection.
+
+        Returns:
+            None
+        """
+        with MysqlConnection._lock:
+            if self._connection:
+                self._connection.close()
