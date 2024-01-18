@@ -5,9 +5,10 @@ import pytest
 import inspect
 import logging
 from utils import (SSHTunnel,
-                   file_formatter, 
+                   DriverClient,
+                   file_formatter,
                    MysqlConnection,
-                   get_code_modifier, 
+                   get_code_modifier,
                    set_allure_and_console_output,
                    )
 
@@ -24,6 +25,13 @@ def tunnel():
     tunnel = SSHTunnel()
     yield tunnel
     tunnel.close()
+
+
+@pytest.fixture(scope="session")
+def driver():
+    driver = DriverClient()
+    yield driver
+    driver.close()
 
 
 @pytest.fixture(scope="function", autouse=True)
@@ -71,7 +79,6 @@ def pytest_terminal_summary(terminalreporter, config):
 
 @pytest.fixture(scope="session", autouse=True)
 def configure_logging(request):
-
     if request.config.pluginmanager.get_plugin("xdist"):
         if hasattr(request.config, "workerinput"):
             process_name = request.config.workerinput["workerid"]
