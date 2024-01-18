@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from utils import get_conf, SSHTunnel, MysqlConnection
+from utils import get_conf, SSHTunnel, DriverClient, MysqlConnection
 
 
 class Constants:
@@ -11,4 +11,5 @@ class Constants:
 class Global:
     constants = Constants()
     tunnel = SSHTunnel()
+    driver = DriverClient()
     db = MysqlConnection()
