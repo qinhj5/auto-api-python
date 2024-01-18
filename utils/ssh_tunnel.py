@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 import paramiko
+import traceback
 import threading
 from typing import Tuple
+from types import TracebackType
 from utils import get_conf, logger
 from paramiko.channel import ChannelStdinFile, ChannelFile, ChannelStderrFile
 
@@ -30,6 +32,35 @@ class SSHTunnel:
         self._ssh_conf = get_conf(name="ssh")
         self._ssh_tunnel = None
         self._lock = threading.Lock()
+
+    def __enter__(self) -> 'SSHTunnel':
+        """
+        Context manager method for entering the context.
+
+        Returns:
+            SSHTunnel: The current instance of the SSHTunnel class.
+        """
+        return self
+
+    def __exit__(self, exc_type: type, exc_val: BaseException, exc_tb: TracebackType) -> None:
+        """
+        Context manager method for exiting the context.
+
+        Args:
+            exc_type (type): The type of the exception (if any) that occurred within the context.
+            exc_val (BaseException): The exception object (if any) that occurred within the context.
+            exc_tb (TracebackType): The traceback object (if any) associated with the exception.
+
+        Returns:
+            None
+        """
+        if exc_type:
+            logger.error(f"an exception of type {exc_type} occurred: {exc_val}")
+
+        if exc_tb:
+            logger.error("".join(traceback.format_tb(exc_tb)))
+
+        self.close()
 
     @staticmethod
     def _create_ssh_tunnel(ssh_conf: dict) -> paramiko.SSHClient:
