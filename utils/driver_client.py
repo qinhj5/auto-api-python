@@ -1,0 +1,158 @@
+# -*- coding: utf-8 -*-
+import paramiko
+import threading
+import traceback
+from typing import Tuple
+from types import TracebackType
+from utils import get_conf, logger
+from sshtunnel import SSHTunnelForwarder
+from paramiko.channel import ChannelStdinFile, ChannelFile, ChannelStderrFile
+
+
+class DriverClient:
+    _instance = None
+    _lock = threading.Lock()
+
+    def __new__(cls, *args, **kwargs) -> None:
+        """
+        Implement singleton mode.
+
+        Returns:
+            None
+        """
+        with cls._lock:
+            if not cls._instance:
+                cls._instance = super().__new__(cls)
+        return cls._instance
+
+    def __init__(self) -> None:
+        """
+        Initialize an instance of the DriverClient class.
+
+        Returns:
+            None
+        """
+        self._ip = get_conf(name="driver_ip")
+        self._ssh_conf = get_conf(name="ssh")
+        self._driver_client = None
+
+    def __enter__(self) -> 'DriverClient':
+        """
+        Context manager method for entering the context.
+
+        Returns:
+            DriverClient: The current instance of the DriverClient class.
+        """
+        return self
+
+    def __exit__(self, exc_type: type, exc_val: BaseException, exc_tb: TracebackType) -> None:
+        """
+        Context manager method for exiting the context.
+
+        Args:
+            exc_type (type): The type of the exception (if any) that occurred within the context.
+            exc_val (BaseException): The exception object (if any) that occurred within the context.
+            exc_tb (TracebackType): The traceback object (if any) associated with the exception.
+
+        Returns:
+            None
+        """
+        if exc_type:
+            logger.error(f"an exception of type {exc_type} occurred: {exc_val}")
+
+        if exc_tb:
+            logger.error("".join(traceback.format_tb(exc_tb)))
+
+        self.close()
+
+    @staticmethod
+    def _create_driver_client(ssh_conf: dict, ip: str) -> paramiko.SSHClient:
+        """
+        Create a driver client connection.
+
+        Args:
+            ssh_conf (dict): SSH configuration information.
+            ip (str): The IP of driver.
+
+        Returns:
+            paramiko.SSHClient: Driver client object.
+        """
+        driver_client = paramiko.SSHClient()
+        driver_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        driver_client.load_system_host_keys()
+        ssh_key = ssh_conf.get("ssh_key")
+
+        if ssh_key is None:
+            private_key = None
+        else:
+            private_key = paramiko.RSAKey.from_private_key_file(ssh_conf.get("ssh_key"))
+
+        forwarder = SSHTunnelForwarder(
+            (ssh_conf["ssh_host"], ssh_conf["ssh_port"]),
+            ssh_username=ssh_conf["ssh_user"],
+            ssh_pkey=private_key,
+            remote_bind_address=(ip, 22),
+        )
+        forwarder.start()
+
+        driver_client.connect(
+            hostname="127.0.0.1",
+            port=forwarder.local_bind_port,
+            username=ssh_conf["ssh_user"],
+            pkey=private_key,
+            password=ssh_conf.get("ssh_password")
+        )
+
+        return driver_client
+
+    def _execute(self, command: str) -> Tuple[ChannelStdinFile, ChannelFile, ChannelStderrFile]:
+        """
+        Execute a command on the driver client.
+
+        Args:
+            command (str): The command to execute.
+
+        Returns:
+            Tuple[ChannelStdinFile, ChannelFile, ChannelStderrFile]: A tuple contained the input, output, and error.
+        """
+        try:
+            if self._driver_client is None:
+                self._driver_client = DriverClient._create_driver_client(self._ssh_conf, self._ip)
+        except Exception as e:
+            logger.error(f"{e}\n{traceback.format_exc()}")
+            self.close()
+        else:
+            stdin, stdout, stderr = self._driver_client.exec_command(command)
+            return stdin, stdout, stderr
+
+    def execute_command(self, command: str) -> ChannelStdinFile:
+        """
+        Execute a command and log the output.
+
+        Args:
+            command (str): The command to execute.
+
+        Returns:
+            ChannelStdinFile: The input channel of the driver client.
+        """
+        with DriverClient._lock:
+            stdin, stdout, stderr = self._execute(command)
+            logger.info(f"executed command: {command}")
+            output = stdout.read().decode("utf-8").strip()
+            error = stderr.read().decode("utf-8").strip()
+            if output:
+                logger.info(f"""standard output: {output}""")
+            if error:
+                logger.error(f"""standard error: {error}""")
+            return stdin
+
+    def close(self) -> None:
+        """
+        Close the driver client.
+
+        Returns:
+            None
+        """
+        with DriverClient._lock:
+            if self._driver_client:
+                self._driver_client.close()
