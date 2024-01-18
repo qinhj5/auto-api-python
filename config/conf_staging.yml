@@ -16,3 +16,5 @@ ssh:
   ssh_user: null
   ssh_key: /Users/null/.ssh/id_rsa
   ssh_password: null
+
+driver_ip: 1.2.3.4
