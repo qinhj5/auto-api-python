@@ -10,6 +10,7 @@ from paramiko.channel import ChannelStdinFile, ChannelFile, ChannelStderrFile
 
 class SSHTunnel:
     _instance = None
+    _lock = threading.Lock()
 
     def __new__(cls, *args, **kwargs) -> None:
         """
@@ -18,8 +19,9 @@ class SSHTunnel:
         Returns:
             None
         """
-        if not cls._instance:
-            cls._instance = super().__new__(cls, *args, **kwargs)
+        with cls._lock:
+            if not cls._instance:
+                cls._instance = super().__new__(cls)
         return cls._instance
 
     def __init__(self) -> None:
@@ -31,7 +33,6 @@ class SSHTunnel:
         """
         self._ssh_conf = get_conf(name="ssh")
         self._ssh_tunnel = None
-        self._lock = threading.Lock()
 
     def __enter__(self) -> 'SSHTunnel':
         """
@@ -100,10 +101,15 @@ class SSHTunnel:
         Returns:
             Tuple[ChannelStdinFile, ChannelFile, ChannelStderrFile]: A tuple contained the input, output, and error.
         """
-        if self._ssh_tunnel is None:
-            self._ssh_tunnel = SSHTunnel._create_ssh_tunnel(self._ssh_conf)
-        stdin, stdout, stderr = self._ssh_tunnel.exec_command(command)
-        return stdin, stdout, stderr
+        try:
+            if self._ssh_tunnel is None:
+                self._ssh_tunnel = SSHTunnel._create_ssh_tunnel(self._ssh_conf)
+        except Exception as e:
+            logger.error(f"{e}\n{traceback.format_exc()}")
+            self.close()
+        else:
+            stdin, stdout, stderr = self._ssh_tunnel.exec_command(command)
+            return stdin, stdout, stderr
 
     def execute_command(self, command: str) -> ChannelStdinFile:
         """
@@ -115,7 +121,7 @@ class SSHTunnel:
         Returns:
             ChannelStdinFile: The input channel of the SSH tunnel.
         """
-        with self._lock:
+        with SSHTunnel._lock:
             stdin, stdout, stderr = self._execute(command)
             logger.info(f"executed command: {command}")
             output = stdout.read().decode("utf-8").strip()
@@ -133,6 +139,6 @@ class SSHTunnel:
         Returns:
             None
         """
-        with self._lock:
+        with SSHTunnel._lock:
             if self._ssh_tunnel:
                 self._ssh_tunnel.close()
