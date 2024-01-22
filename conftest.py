@@ -6,7 +6,6 @@ import inspect
 import logging
 from utils import (SSHTunnel,
                    DriverClient,
-                   file_formatter,
                    MysqlConnection,
                    get_code_modifier,
                    set_allure_and_console_output,
@@ -96,7 +95,6 @@ def configure_logging(request):
 
     request_file_handler = logging.FileHandler(log_path, mode="w", encoding="utf-8")
     request_file_handler.setLevel(logging.DEBUG)
-    request_file_handler.setFormatter(file_formatter)
 
     request_logger = logging.getLogger("urllib3")
     request_logger.setLevel(logging.DEBUG)
