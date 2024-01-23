@@ -13,6 +13,15 @@ from typing import Tuple, Generator
 
 class SwaggerParser:
     def __init__(self, swagger_url: str) -> None:
+        """
+        Initialize the class.
+
+        Args:
+            swagger_url (str): The URL of the Swagger file.
+
+        Returns:
+            None
+        """
         self._swagger_url = swagger_url
         self._current_dir = os.path.dirname(__file__)
 
