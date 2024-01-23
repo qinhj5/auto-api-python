@@ -21,6 +21,7 @@
 * 提供Dockerfile以支持在自定义镜像中执行测试
 * 提供Jenkinsfile以支持自动构建并运行测试项目
 * 提供基于swagger一键生成api和testcases模版的脚本
+* 提供基于swagger和log一键统计api覆盖情况的脚本
 
 <br>
 
@@ -58,6 +59,7 @@ APIAuto/
 │   ├── mysql_connection.py
 │   ├── driver_client.py
 │   ├── ssh_tunnel.py
+│   ├── api_coverage.py
 │   └── swagger_parser.py
 ├── conftest.py
 ├── Dockerfile
