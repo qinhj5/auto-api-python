@@ -459,7 +459,7 @@ class SwaggerParser:
         conf_code = ""
         conf_code += "# -*- coding: utf-8 -*-\n"
         conf_code += "import pytest\n"
-        conf_code += "from config import Global\n"
+        conf_code += "from config.conf import Global\n"
         conf_code += f"from tmp.api.{module}.{module}_api import {api_cls}\n\n\n"
         conf_code += f"""@pytest.fixture(scope="package")\n"""
         conf_code += f"def {module}_api():\n"
