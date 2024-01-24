@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import pytest
-from config import Global
+from config.conf import Global
 from api.google_search.google_search_api import GoogleSearchAPI
 
 
