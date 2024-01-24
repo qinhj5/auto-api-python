@@ -2,25 +2,6 @@
 import os
 import sys
 from typing import Any
-from utils.ssh_tunnel import SSHTunnel
-from utils.decorators import singleton
-from utils.driver_client import DriverClient
-from utils.logger import logger, file_formatter
-from utils.email_notification import send_email
-from utils.mysql_connection import MysqlConnection
-from utils.common import (get_env,
-                          set_env,
-                          get_conf,
-                          clean_logs,
-                          get_csv_data,
-                          get_json_data,
-                          is_json_string,
-                          get_code_modifier,
-                          loads_json_string,
-                          set_assertion_error,
-                          get_current_datetime,
-                          set_allure_and_console_output,
-                          )
 
 # setup project directory
 utils_dir = os.path.dirname(__file__)
