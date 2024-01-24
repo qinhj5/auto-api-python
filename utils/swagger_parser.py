@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
 import re
+import sys
 import json
 import black
 import shutil
@@ -8,6 +9,7 @@ import keyword
 import requests
 import builtins
 from config import Global
+from utils import logger
 from typing import Tuple, Generator
 
 
@@ -151,12 +153,13 @@ class SwaggerParser:
             try:
                 response.json()
             except ValueError:
-                print(f"Please check Swagger URL response: {response.text}")
+                logger.error(f"Please check Swagger URL response: {response.text}")
             else:
                 for api, api_details in response.json().get("paths", dict()).items():
                     yield api, api_details
         else:
-            print("Failed to request Swagger URL")
+            logger.error("Failed to request Swagger URL")
+            sys.exit(1)
 
     def _get_swagger_dict(self) -> dict:
         """
@@ -288,7 +291,7 @@ class SwaggerParser:
         else:
             func_name = f"""{method}_{SwaggerParser._pascal_to_snake(api["detail"]["operationId"])}"""
 
-        print(json.dumps(api["detail"]))
+        logger.debug(json.dumps(api["detail"]))
 
         summary = api["detail"].get("summary", "Null")
 
@@ -593,6 +596,7 @@ class SwaggerParser:
         swagger_dict = self._get_swagger_dict()
         self._generate_api_templates(swagger_dict)
         self._generate_testcases_templates(swagger_dict)
+        logger.info(f"""template dir: {os.path.abspath(os.path.join(self._current_dir, "../tmp"))}""")
 
 
 if __name__ == "__main__":
