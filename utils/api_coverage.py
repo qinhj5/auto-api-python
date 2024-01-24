@@ -6,6 +6,7 @@ import requests
 from config import Global
 from utils import logger
 from openpyxl import Workbook
+from openpyxl.worksheet.worksheet import Worksheet
 from typing import List, Dict, Union, Optional, Tuple
 
 
@@ -162,6 +163,29 @@ class ApiCoverage:
 
         return request_list, swagger_dict
 
+    @staticmethod
+    def _set_column_width(worksheet: Worksheet) -> None:
+        """
+        Adjusts the column width in the worksheet.
+
+        Args:
+            worksheet (Worksheet): The worksheet to adjust the column width.
+
+        Returns:
+            None
+        """
+        for column_cells in worksheet.columns:
+            max_length = 0
+            column = column_cells[0].column_letter
+            for cell in column_cells:
+                try:
+                    if len(str(cell.value)) > max_length:
+                        max_length = len(cell.value)
+                except Exception as e:
+                    logger.error(e)
+            adjusted_width = (max_length + 2)
+            worksheet.column_dimensions[column].width = adjusted_width
+
     def get_coverage_summary(self) -> None:
         """
         Generate and save the API coverage summary report.
@@ -169,12 +193,17 @@ class ApiCoverage:
         Returns:
             None
         """
-        workbook = Workbook(write_only=True)
+        workbook = Workbook()
+        default_sheet = workbook.active
+        workbook.remove(default_sheet)
 
+        coverage_summary_sheet = workbook.create_sheet("coverage_summary")
         fully_covered_sheet = workbook.create_sheet("fully_covered")
         likely_covered_sheet = workbook.create_sheet("likely_covered")
         never_cover_sheet = workbook.create_sheet("never_cover")
         unknown_request_sheet = workbook.create_sheet("unknown_request")
+
+        coverage_summary_sheet.append(["ratio", "percentage (%)"])
 
         for sheet in [fully_covered_sheet, likely_covered_sheet]:
             sheet.append(["url", "method", "cases"])
@@ -183,6 +212,10 @@ class ApiCoverage:
             sheet.append(["url", "method"])
 
         request_list, swagger_dict = self._process()
+
+        total_num = len(swagger_dict["static_url_list"]) + len(swagger_dict["dynamic_url_list"])
+        covered_num = len([request_url["matched"] for request_url in request_list if request_url["matched"]])
+        coverage_summary_sheet.append([f"{covered_num} / {total_num}", f"%.2f" % (covered_num / total_num * 100)])
 
         for swagger_url in swagger_dict["static_url_list"]:
             if swagger_url["count"]:
@@ -206,6 +239,9 @@ class ApiCoverage:
             if not request_url["matched"]:
                 unknown_request_sheet.append([request_url["url"],
                                               request_url["method"]])
+
+        for sheet_name in workbook.sheetnames:
+            ApiCoverage._set_column_width(workbook[sheet_name])
 
         report_dir = os.path.abspath(os.path.join(self._utils_dir, "../report"))
         xlsx_path = os.path.abspath(os.path.join(report_dir, "api_coverage.xlsx"))
