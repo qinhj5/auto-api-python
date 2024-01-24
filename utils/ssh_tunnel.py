@@ -3,8 +3,9 @@ import paramiko
 import traceback
 import threading
 from typing import Tuple
+from utils.logger import logger
 from types import TracebackType
-from utils import get_conf, logger
+from utils.common import get_conf
 from paramiko.channel import ChannelStdinFile, ChannelFile, ChannelStderrFile
 
 
