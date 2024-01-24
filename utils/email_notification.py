@@ -3,7 +3,7 @@ import os
 import time
 import zipfile
 import smtplib
-from utils import get_conf
+from utils.common import get_conf
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.application import MIMEApplication
