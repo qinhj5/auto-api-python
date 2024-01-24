@@ -3,7 +3,7 @@ import curlify
 import requests
 from http import HTTPStatus
 from typing import Any, Dict
-from utils import set_allure_and_console_output, get_current_datetime, is_json_string, loads_json_string
+from utils.common import set_allure_and_console_output, get_current_datetime, is_json_string, loads_json_string
 
 
 class BaseAPI:
