@@ -3,8 +3,8 @@ import os
 import re
 import sys
 import requests
-from config.conf import Global
 from openpyxl import Workbook
+from config.conf import Global
 from utils.logger import logger
 from openpyxl.worksheet.worksheet import Worksheet
 from typing import List, Dict, Union, Optional, Tuple
