@@ -17,4 +17,10 @@ ssh:
   ssh_key: /Users/null/.ssh/id_rsa
   ssh_password: null
 
+email:
+  sender: null 
+  password: null 
+  server: null 
+  recipients: null
+
 driver_ip: 1.2.3.4
