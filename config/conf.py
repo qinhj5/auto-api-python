@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
-from utils import get_conf, SSHTunnel, DriverClient, MysqlConnection
+from utils.common import get_conf
+from utils.ssh_tunnel import SSHTunnel
+from utils.driver_client import DriverClient
+from utils.mysql_connection import MysqlConnection
 
 
 class Constants:
