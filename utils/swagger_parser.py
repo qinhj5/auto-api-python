@@ -8,8 +8,8 @@ import shutil
 import keyword
 import requests
 import builtins
-from config import Global
 from utils import logger
+from config import Global
 from typing import Tuple, Generator
 
 
