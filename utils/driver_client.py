@@ -3,8 +3,9 @@ import paramiko
 import threading
 import traceback
 from typing import Tuple
+from utils.logger import logger
 from types import TracebackType
-from utils import get_conf, logger
+from utils.common import get_conf
 from sshtunnel import SSHTunnelForwarder
 from paramiko.channel import ChannelStdinFile, ChannelFile, ChannelStderrFile
 
