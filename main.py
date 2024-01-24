@@ -4,7 +4,9 @@ import sys
 import shutil
 import pytest
 import argparse
-from utils import logger, set_env, clean_logs, send_email
+from utils.logger import logger
+from utils.common import set_env, clean_logs
+from utils.email_notification import send_email
 
 project_dir = os.path.dirname(__file__)
 sys.path.append(project_dir)
