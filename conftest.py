@@ -4,12 +4,10 @@ import time
 import pytest
 import inspect
 import logging
-from utils import (SSHTunnel,
-                   DriverClient,
-                   MysqlConnection,
-                   get_code_modifier,
-                   set_allure_and_console_output,
-                   )
+from utils.ssh_tunnel import SSHTunnel
+from utils.driver_client import DriverClient
+from utils.mysql_connection import MysqlConnection
+from utils.common import set_allure_and_console_output, get_code_modifier
 
 
 @pytest.fixture(scope="session")
