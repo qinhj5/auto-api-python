@@ -3,9 +3,9 @@ import os
 import re
 import sys
 import requests
-from utils import logger
-from config import Global
+from config.conf import Global
 from openpyxl import Workbook
+from utils.logger import logger
 from openpyxl.worksheet.worksheet import Worksheet
 from typing import List, Dict, Union, Optional, Tuple
 
@@ -90,13 +90,15 @@ class ApiCoverage:
                 swagger_dict["static_url_list"] = []
                 swagger_dict["dynamic_url_list"] = []
                 for path, api_details in r.json().get("paths", dict()).items():
-                    for method in api_details.keys():
+                    for method, detail in api_details.items():
+                        tags = detail.get("tags")
                         if "{" not in path:
                             swagger_dict["static_url_list"].append(
                                 {
                                     "url": Global.constants.BASE_URL + path,
                                     "method": method.upper(),
                                     "count": 0,
+                                    "tag": tags[0] if isinstance(tags, list) and len(tags) else "NULL"
                                 }
                             )
                         else:
@@ -105,6 +107,7 @@ class ApiCoverage:
                                     "url": Global.constants.BASE_URL + path,
                                     "method": method.upper(),
                                     "count": 0,
+                                    "tag": tags[0] if isinstance(tags, list) and len(tags) else "NULL"
                                 }
                             )
 
@@ -206,10 +209,10 @@ class ApiCoverage:
         coverage_summary_sheet.append(["ratio", "percentage (%)"])
 
         for sheet in [fully_covered_sheet, likely_covered_sheet]:
-            sheet.append(["url", "method", "cases"])
+            sheet.append(["module", "url", "method", "cases"])
 
-        for sheet in [never_cover_sheet, unknown_request_sheet]:
-            sheet.append(["url", "method"])
+        never_cover_sheet.append(["module", "url", "method"])
+        unknown_request_sheet.append(["url", "method"])
 
         request_list, swagger_dict = self._process()
 
@@ -219,20 +222,24 @@ class ApiCoverage:
 
         for swagger_url in swagger_dict["static_url_list"]:
             if swagger_url["count"]:
-                fully_covered_sheet.append([swagger_url["url"],
+                fully_covered_sheet.append([swagger_url["tag"],
+                                            swagger_url["url"],
                                             swagger_url["method"],
                                             swagger_url["count"]])
             else:
-                never_cover_sheet.append([swagger_url["url"],
+                never_cover_sheet.append([swagger_url["tag"],
+                                          swagger_url["url"],
                                           swagger_url["method"]])
 
         for swagger_url in swagger_dict["dynamic_url_list"]:
             if swagger_url["count"]:
-                likely_covered_sheet.append([swagger_url["url"],
+                likely_covered_sheet.append([swagger_url["tag"],
+                                             swagger_url["url"],
                                              swagger_url["method"],
                                              swagger_url["count"]])
             else:
-                never_cover_sheet.append([swagger_url["url"],
+                never_cover_sheet.append([swagger_url["tag"],
+                                          swagger_url["url"],
                                           swagger_url["method"]])
 
         for request_url in request_list:
