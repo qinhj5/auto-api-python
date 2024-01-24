@@ -2,8 +2,9 @@
 import pymysql
 import traceback
 import threading
+from utils.logger import logger
 from types import TracebackType
-from utils import get_conf, logger
+from utils.common import get_conf
 from typing import Tuple, List, Dict
 from pymysql import cursors, Connection
 from sshtunnel import SSHTunnelForwarder
