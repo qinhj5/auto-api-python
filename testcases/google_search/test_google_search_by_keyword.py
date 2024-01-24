@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 import allure
 import pytest
-from utils import logger, get_csv_data, set_assertion_error
+from utils.logger import logger
+from utils.common import get_csv_data, set_assertion_error
 
 
 @allure.severity("normal")
