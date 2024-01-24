@@ -8,8 +8,8 @@ import shutil
 import keyword
 import requests
 import builtins
-from utils import logger
-from config import Global
+from config.conf import Global
+from utils.logger import logger
 from typing import Tuple, Generator
 
 
@@ -291,7 +291,7 @@ class SwaggerParser:
         else:
             func_name = f"""{method}_{SwaggerParser._pascal_to_snake(api["detail"]["operationId"])}"""
 
-        logger.debug(json.dumps(api["detail"]))
+        logger.info(json.dumps(api["detail"]))
 
         summary = api["detail"].get("summary", "Null")
 
@@ -347,8 +347,8 @@ class SwaggerParser:
         func_body += "        Args:\n            self\n"
         for item in params_list:
             func_body += (f"""            {next(iter(item.keys()))} ({item[next(iter(item.keys()))]["type"]}): """ +
-                          f"""{SwaggerParser._get_wrapped_string(item[next(iter(item.keys()))]["desc"], 
-                                                  length=70, indent=12, replace_colon=True)}\n""")
+                          f"""{SwaggerParser._get_wrapped_string(item[next(iter(item.keys()))]["desc"],
+                                                                 length=70, indent=12, replace_colon=True)}\n""")
         func_body += "\n        Returns:\n            Dict[str, Any]: " \
                      "The response content of the request as a dictionary.\
                       \n        \"\"\"\n"
@@ -441,7 +441,7 @@ class SwaggerParser:
                     import_list = True
                 module_code += func_code
             module_code = SwaggerParser._get_api_header(SwaggerParser._snake_to_pascal(module) + "API",
-                                                       import_list) + module_code
+                                                        import_list) + module_code
             self._write_api_file(module, module_code)
 
     @staticmethod
@@ -504,7 +504,8 @@ class SwaggerParser:
         header_code += "# -*- coding: utf-8 -*-\n"
         header_code += "import allure\n"
         header_code += "import pytest\n"
-        header_code += "from utils import logger, set_assertion_error\n\n\n"
+        header_code += "from utils.logger import logger\n"
+        header_code += "from utils.common import set_assertion_error\n\n\n"
 
         testcases_code = ""
         testcases_code += "@allure.severity(\"normal\")\n"
