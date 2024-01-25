@@ -60,6 +60,7 @@ APIAuto/
 │   ├── driver_client.py
 │   ├── ssh_tunnel.py
 │   ├── api_coverage.py
+│   ├── xmind_parser.py
 │   └── swagger_parser.py
 ├── conftest.py
 ├── Dockerfile
