@@ -26,11 +26,11 @@ class XmindParser:
         Returns:
             int: The number of leaf nodes in the given node.
         """
-        if node.get('topics') is None:
+        if node.get("topics") is None:
             return 1
         else:
             count = 0
-            for child in node['topics']:
+            for child in node["topics"]:
                 count += self._count_leaf_nodes(child)
             return count
 
@@ -46,17 +46,17 @@ class XmindParser:
         total_leaf_nodes_count = 0
 
         for sheet in xmind_dict:
-            sheet_title = sheet['title']
-            root_topic = sheet['topic']
+            sheet_title = sheet["title"]
+            root_topic = sheet["topic"]
 
             leaf_nodes_count = self._count_leaf_nodes(root_topic)
-            logger.info(f"Number of leaf nodes for '{sheet_title}': {leaf_nodes_count}")
+            logger.info(f"""Number of leaf nodes for "{sheet_title}": {leaf_nodes_count}""")
 
             total_leaf_nodes_count += leaf_nodes_count
 
         logger.info(f"Total number of leaf nodes across all canvases: {total_leaf_nodes_count}")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # xmind_file_path is the path of your xmind file
     XmindParser(xmind_file_path="").get_leaf_summary()
