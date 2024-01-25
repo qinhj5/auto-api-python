@@ -28,15 +28,19 @@ class MysqlConnection:
                 cls._instance = super().__new__(cls)
         return cls._instance
 
-    def __init__(self) -> None:
+    def __init__(self, mysql_conf_name: str = "mysql", ssh_conf_name: str = "ssh") -> None:
         """
         Initialize an instance of the MysqlConnection class.
+
+        Args:
+            mysql_conf_name (str): The name of the MySQL configuration. Defaults to "mysql".
+            ssh_conf_name (str): The name of the SSH configuration. Defaults to "ssh".
 
         Returns:
             None
         """
-        self._mysql_conf = get_conf(name="mysql")
-        self._ssh_conf = get_conf(name="ssh")
+        self._mysql_conf = get_conf(name=mysql_conf_name)
+        self._ssh_conf = get_conf(name=ssh_conf_name)
         self._connection = None
 
     def __enter__(self) -> 'MysqlConnection':
