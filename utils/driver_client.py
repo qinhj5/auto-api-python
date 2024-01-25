@@ -26,15 +26,19 @@ class DriverClient:
                 cls._instance = super().__new__(cls)
         return cls._instance
 
-    def __init__(self) -> None:
+    def __init__(self, ip_conf_name: str = "driver_ip", ssh_conf_name: str = "ssh") -> None:
         """
         Initialize an instance of the DriverClient class.
+
+        Args:
+            ip_conf_name (str): The name of the IP configuration. Defaults to "driver_ip".
+            ssh_conf_name (str): The name of the SSH configuration. Defaults to "ssh".
 
         Returns:
             None
         """
-        self._ip = get_conf(name="driver_ip")
-        self._ssh_conf = get_conf(name="ssh")
+        self._ip = get_conf(name=ip_conf_name)
+        self._ssh_conf = get_conf(name=ssh_conf_name)
         self._driver_client = None
 
     def __enter__(self) -> 'DriverClient':
