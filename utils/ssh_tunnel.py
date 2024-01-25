@@ -25,14 +25,17 @@ class SSHTunnel:
                 cls._instance = super().__new__(cls)
         return cls._instance
 
-    def __init__(self) -> None:
+    def __init__(self, ssh_conf_name: str = "ssh") -> None:
         """
         Initialize an instance of the SSHTunnel class.
+
+        Args:
+            ssh_conf_name (str): The name of the SSH configuration. Defaults to "ssh".
 
         Returns:
             None
         """
-        self._ssh_conf = get_conf(name="ssh")
+        self._ssh_conf = get_conf(name=ssh_conf_name)
         self._ssh_tunnel = None
 
     def __enter__(self) -> 'SSHTunnel':
