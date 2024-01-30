@@ -6,6 +6,7 @@ import requests
 from openpyxl import Workbook
 from config.conf import Global
 from utils.logger import logger
+from utils.dirs import log_dir, report_dir
 from openpyxl.worksheet.worksheet import Worksheet
 from typing import List, Dict, Union, Optional, Tuple
 
@@ -22,9 +23,7 @@ class ApiCoverage:
             None
         """
         self._swagger_url = swagger_url
-        self._utils_dir = os.path.dirname(__file__)
-        self._log_dir = os.path.abspath(os.path.join(self._utils_dir, "../log"))
-        self._request_log_path = os.path.abspath(os.path.join(self._log_dir, "request.log"))
+        self._request_log_path = os.path.abspath(os.path.join(log_dir, "request.log"))
 
     def _merge_request_logs(self) -> None:
         """
@@ -33,10 +32,10 @@ class ApiCoverage:
         Returns:
             None
         """
-        log_files = [file for file in os.listdir(self._log_dir) if file.startswith("request_")]
+        log_files = [file for file in os.listdir(log_dir) if file.startswith("request_")]
         with open(self._request_log_path, "w", encoding="utf-8") as output_file:
             for log_file in log_files:
-                file_path = os.path.abspath(os.path.join(self._log_dir, log_file))
+                file_path = os.path.abspath(os.path.join(log_dir, log_file))
                 with open(file_path, "r") as input_file:
                     output_file.write(input_file.read().strip())
 
@@ -250,7 +249,6 @@ class ApiCoverage:
         for sheet_name in workbook.sheetnames:
             ApiCoverage._set_column_width(workbook[sheet_name])
 
-        report_dir = os.path.abspath(os.path.join(self._utils_dir, "../report"))
         xlsx_path = os.path.abspath(os.path.join(report_dir, "api_coverage.xlsx"))
         workbook.save(xlsx_path)
         logger.info(f"summary path: {xlsx_path}")
