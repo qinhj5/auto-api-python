@@ -86,7 +86,7 @@ class EmailNotification:
         msg = EmailNotification._add_attachment(msg, log_dir)
 
         for filename in os.listdir(log_dir):
-            if filename == "summary_main.log":
+            if filename == "summary.log":
                 with open(log_dir + "/" + filename, "r", encoding="utf-8") as f:
                     lines = f.readlines()
                     for line in lines:
