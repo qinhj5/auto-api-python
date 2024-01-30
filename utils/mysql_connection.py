@@ -4,6 +4,7 @@ import filelock
 import pymysql
 import traceback
 from utils.logger import logger
+from utils.dirs import lock_dir
 from types import TracebackType
 from utils.common import get_conf
 from typing import Tuple, List, Dict
@@ -15,12 +16,6 @@ pymysql.install_as_MySQLdb()
 
 class MysqlConnection:
     _instance = None
-    _utils_dir = os.path.dirname(__file__)
-    _project_dir = os.path.abspath(os.path.join(_utils_dir, ".."))
-    _lock_dir = os.path.abspath(os.path.join(_project_dir, "lock"))
-    os.makedirs(_lock_dir, exist_ok=True)
-    _lock_path = os.path.abspath(os.path.join(_lock_dir, "db.lock"))
-    _lock = filelock.FileLock(_lock_path)
 
     def __new__(cls, *args, **kwargs) -> None:
         """
@@ -44,6 +39,7 @@ class MysqlConnection:
         Returns:
             None
         """
+        self._lock = filelock.FileLock(os.path.abspath(os.path.join(lock_dir, f"{mysql_conf_name}.lock")))
         self._mysql_conf = get_conf(name=mysql_conf_name)
         self._ssh_conf = get_conf(name=ssh_conf_name)
         self._connection = None
@@ -153,7 +149,7 @@ class MysqlConnection:
         Returns:
             None
         """
-        with MysqlConnection._lock:
+        with self._lock:
             self._execute_sql(sql)
             self._connection.commit()
 
