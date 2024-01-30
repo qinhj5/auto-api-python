@@ -51,7 +51,7 @@ def get_parse_args():
     parser.add_argument(
         "--cases_dir",
         type=str,
-        default="testcases/test_a",
+        default="testcases",
         help="Directory of test cases",
     )
 
