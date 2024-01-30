@@ -54,8 +54,11 @@ def pytest_terminal_summary(terminalreporter, config):
 
     project_dir = os.path.dirname(os.path.abspath(__file__))
     log_dir = os.path.abspath(os.path.join(project_dir, "log"))
-    os.makedirs(log_dir, exist_ok=True)
-    log_path = os.path.abspath(os.path.join(log_dir, f"summary_{process_name}.log"))
+    if process_name == "main":
+        log_name = "summary.log"
+    else:
+        log_name = f"summary_{process_name}.log"
+    log_path = os.path.abspath(os.path.join(log_dir, log_name))
 
     num_passed = len(terminalreporter.stats.get("passed", []))
     num_failed = len(terminalreporter.stats.get("failed", []))
@@ -88,8 +91,11 @@ def configure_logging(request):
 
     project_dir = os.path.dirname(os.path.abspath(__file__))
     log_dir = os.path.abspath(os.path.join(project_dir, "log"))
-    os.makedirs(log_dir, exist_ok=True)
-    log_path = os.path.abspath(os.path.join(log_dir, f"request_{process_name}.log"))
+    if process_name == "main":
+        log_name = "request.log"
+    else:
+        log_name = f"request_{process_name}.log"
+    log_path = os.path.abspath(os.path.join(log_dir, log_name))
 
     request_file_handler = logging.FileHandler(log_path, mode="w", encoding="utf-8")
     request_file_handler.setLevel(logging.DEBUG)
