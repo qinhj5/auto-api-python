@@ -1,13 +1,5 @@
 # -*- coding: utf-8 -*-
-import os
-import sys
 from typing import Any
-
-# setup project directory
-utils_dir = os.path.dirname(__file__)
-project_dir = os.path.abspath(os.path.join(utils_dir, ".."))
-sys.path.append(project_dir)
-
 
 # define a cache
 cache = {}
