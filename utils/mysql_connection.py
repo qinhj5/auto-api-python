@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import pymysql
 import traceback
-import threading
+import multiprocessing
 from utils.logger import logger
 from types import TracebackType
 from utils.common import get_conf
@@ -14,7 +14,7 @@ pymysql.install_as_MySQLdb()
 
 class MysqlConnection:
     _instance = None
-    _lock = threading.Lock()
+    _lock = multiprocessing.Lock()
 
     def __new__(cls, *args, **kwargs) -> None:
         """
