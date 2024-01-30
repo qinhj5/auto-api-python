@@ -10,6 +10,7 @@ import datetime
 import subprocess
 from utils.logger import logger
 from typing import Any, List, Union, Dict
+from utils.dirs import config_dir, data_dir, log_dir
 
 
 def set_env(env: str) -> None:
@@ -36,7 +37,7 @@ def get_env() -> str:
     return env
 
 
-def get_conf(name: str = None) -> dict:
+def get_conf(name: str = None) -> Union[dict, str]:
     """
     Get configuration information.
 
@@ -44,13 +45,13 @@ def get_conf(name: str = None) -> dict:
         name (str): Configuration item name. Defaults to None.
 
     Returns:
-        dict: Configuration information dictionary.
+        Union[dict, str]: Configuration information dictionary if `name` is provided,
+        otherwise the entire configuration dictionary as a string.
 
     Raises:
         FileNotFoundError: Raised when the configuration file does not exist.
     """
-    utils_dir = os.path.dirname(__file__)
-    conf_path = os.path.abspath(os.path.join(utils_dir, f"../config/conf_{get_env()}.yml"))
+    conf_path = os.path.abspath(os.path.join(config_dir, f"conf_{get_env()}.yml"))
 
     with open(conf_path, mode="r", encoding="utf-8") as f:
         conf = yaml.safe_load(f)
@@ -253,8 +254,6 @@ def get_csv_data(csv_name: str) -> List[List[str]]:
         List[List[str]]: List of rows in the CSV file, where each row is a list of strings.
     """
     res = []
-    utils_dir = os.path.dirname(__file__)
-    data_dir = os.path.abspath(os.path.join(utils_dir, "../data"))
     csv_path = os.path.abspath(os.path.join(data_dir, f"{csv_name}.csv"))
     logger.info(f"read csv file: {csv_path}")
     with open(csv_path, "r", encoding="utf-8") as f:
@@ -275,8 +274,6 @@ def get_json_data(json_name: str) -> Union[Dict[str, Any], List[Dict[str, Any]]]
         Union[Dict[str, Any], List[Dict[str, Any]]]: The data from the json file, which can be a dict or a list of dict.
     """
     res = None
-    utils_dir = os.path.dirname(__file__)
-    data_dir = os.path.abspath(os.path.join(utils_dir, "../data"))
     json_path = os.path.abspath(os.path.join(data_dir, f"{json_name}.json"))
     logger.info(f"read json file: {json_path}")
     with open(json_path, "r", encoding="utf-8") as f:
@@ -309,9 +306,6 @@ def clean_logs() -> None:
     Returns:
         None
     """
-    utils_dir: str = os.path.dirname(__file__)
-    log_dir: str = os.path.abspath(os.path.join(utils_dir, "../log"))
-
     for file_path in glob.glob(os.path.join(log_dir, "*.log")):
         file_name: str = os.path.basename(file_path)
 
