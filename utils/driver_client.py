@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import paramiko
-import threading
 import traceback
+import multiprocessing
 from typing import Tuple
 from utils.logger import logger
 from types import TracebackType
@@ -12,7 +12,7 @@ from paramiko.channel import ChannelStdinFile, ChannelFile, ChannelStderrFile
 
 class DriverClient:
     _instance = None
-    _lock = threading.Lock()
+    _lock = multiprocessing.Lock()
 
     def __new__(cls, *args, **kwargs) -> None:
         """
