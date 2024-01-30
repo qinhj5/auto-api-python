@@ -4,10 +4,13 @@ import time
 import pytest
 import inspect
 import logging
+from utils.dirs import log_dir
 from utils.ssh_tunnel import SSHTunnel
 from utils.driver_client import DriverClient
 from utils.mysql_connection import MysqlConnection
 from utils.common import set_allure_and_console_output, get_code_modifier
+
+start_time = time.time()
 
 
 @pytest.fixture(scope="session")
@@ -41,6 +44,11 @@ def case_info(request):
     set_allure_and_console_output(name="last modified by", body=get_code_modifier(file_path, line_number))
 
 
+def pytest_sessionstart():
+    global start_time
+    start_time = time.time()
+
+
 def pytest_terminal_summary(terminalreporter, config):
     if config.pluginmanager.get_plugin("xdist"):
         if hasattr(config, "workerinput"):
@@ -52,8 +60,6 @@ def pytest_terminal_summary(terminalreporter, config):
     else:
         process_name = "main"
 
-    project_dir = os.path.dirname(os.path.abspath(__file__))
-    log_dir = os.path.abspath(os.path.join(project_dir, "log"))
     if process_name == "main":
         log_name = "summary.log"
     else:
@@ -73,7 +79,7 @@ def pytest_terminal_summary(terminalreporter, config):
         f.writelines("Number of error test cases: {}\n".format(num_error))
         f.writelines("Number of skipped test cases: {}\n".format(num_skipped))
 
-        duration = time.time() - terminalreporter._sessionstarttime
+        duration = time.time() - start_time
         f.writelines("Duration (seconds): {:.2f}".format(duration))
 
 
@@ -89,8 +95,6 @@ def configure_logging(request):
     else:
         process_name = "main"
 
-    project_dir = os.path.dirname(os.path.abspath(__file__))
-    log_dir = os.path.abspath(os.path.join(project_dir, "log"))
     if process_name == "main":
         log_name = "request.log"
     else:
