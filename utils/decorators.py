@@ -1,14 +1,11 @@
 # -*- coding: utf-8 -*-
 import os
 import filelock
+from utils.dirs import lock_dir
 from typing import Type, Callable
 
-utils_dir = os.path.dirname(__file__)
-project_dir = os.path.abspath(os.path.join(utils_dir, ".."))
-lock_dir = os.path.abspath(os.path.join(project_dir, "lock"))
-os.makedirs(lock_dir, exist_ok=True)
-log_lock_path = os.path.abspath(os.path.join(lock_dir, "log.lock"))
-log_lock = filelock.FileLock(log_lock_path)
+lock_path = os.path.abspath(os.path.join(lock_dir, "log.lock"))
+log_lock = filelock.FileLock(lock_path)
 
 
 def log_locker(func: Callable) -> Callable:
