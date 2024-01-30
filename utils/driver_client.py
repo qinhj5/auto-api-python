@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
+import os
+import filelock
 import paramiko
 import traceback
-import multiprocessing
 from typing import Tuple
 from utils.logger import logger
 from types import TracebackType
@@ -12,7 +13,12 @@ from paramiko.channel import ChannelStdinFile, ChannelFile, ChannelStderrFile
 
 class DriverClient:
     _instance = None
-    _lock = multiprocessing.Lock()
+    _utils_dir = os.path.dirname(__file__)
+    _project_dir = os.path.abspath(os.path.join(_utils_dir, ".."))
+    _lock_dir = os.path.abspath(os.path.join(_project_dir, "lock"))
+    os.makedirs(_lock_dir, exist_ok=True)
+    _lock_path = os.path.abspath(os.path.join(_lock_dir, "driver.lock"))
+    _lock = filelock.FileLock(_lock_path)
 
     def __new__(cls, *args, **kwargs) -> None:
         """
@@ -21,9 +27,8 @@ class DriverClient:
         Returns:
             None
         """
-        with cls._lock:
-            if not cls._instance:
-                cls._instance = super().__new__(cls)
+        if not cls._instance:
+            cls._instance = super().__new__(cls)
         return cls._instance
 
     def __init__(self, ip_conf_name: str = "driver_ip", ssh_conf_name: str = "ssh") -> None:
@@ -158,6 +163,5 @@ class DriverClient:
         Returns:
             None
         """
-        with DriverClient._lock:
-            if self._driver_client:
-                self._driver_client.close()
+        if self._driver_client:
+            self._driver_client.close()
