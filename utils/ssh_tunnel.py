@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import paramiko
 import traceback
-import threading
+import multiprocessing
 from typing import Tuple
 from utils.logger import logger
 from types import TracebackType
@@ -11,7 +11,7 @@ from paramiko.channel import ChannelStdinFile, ChannelFile, ChannelStderrFile
 
 class SSHTunnel:
     _instance = None
-    _lock = threading.Lock()
+    _lock = multiprocessing.Lock()
 
     def __new__(cls, *args, **kwargs) -> None:
         """
