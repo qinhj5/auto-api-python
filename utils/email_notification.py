@@ -5,6 +5,7 @@ import zipfile
 import smtplib
 from utils.common import get_conf
 from email.mime.text import MIMEText
+from utils.dirs import report_dir, log_dir
 from email.mime.multipart import MIMEMultipart
 from email.mime.application import MIMEApplication
 
@@ -68,9 +69,6 @@ class EmailNotification:
         Returns:
             None
         """
-        utils_dir = os.path.dirname(os.path.abspath(__file__))
-        report_dir = os.path.abspath(os.path.join(utils_dir, "../report"))
-        log_dir = os.path.abspath(os.path.join(utils_dir, "../log"))
 
         msg = MIMEMultipart()
         now = time.strftime("%Y-%m-%d %H:%M:%S")
