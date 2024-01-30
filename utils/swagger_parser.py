@@ -10,6 +10,7 @@ import requests
 import builtins
 from config.conf import Global
 from utils.logger import logger
+from utils.dirs import utils_dir
 from typing import Tuple, Generator
 
 
@@ -25,7 +26,6 @@ class SwaggerParser:
             None
         """
         self._swagger_url = swagger_url
-        self._utils_dir = os.path.dirname(__file__)
 
     @staticmethod
     def _get_python_type(java_type: str) -> str:
@@ -45,18 +45,20 @@ class SwaggerParser:
         }
         return python_type_mapping.get(java_type, "Any")
 
-    def _clear_tmp_dir(self) -> None:
+    @staticmethod
+    def _clear_tmp_dir() -> None:
         """
         Clears the temporary directory.
 
         Returns:
             None
         """
-        tmp_dir = os.path.abspath(os.path.join(self._utils_dir, "../tmp"))
+        tmp_dir = os.path.abspath(os.path.join(utils_dir, "../tmp"))
         if os.path.exists(tmp_dir):
             shutil.rmtree(tmp_dir)
 
-    def _create_package_dir(self, name: str) -> None:
+    @staticmethod
+    def _create_package_dir(name: str) -> None:
         """
         Creates package directories for API and testcases.
 
@@ -66,19 +68,19 @@ class SwaggerParser:
         Returns:
             None
         """
-        api_dir = os.path.abspath(os.path.join(self._utils_dir, f"../tmp/api/{name}"))
+        api_dir = os.path.abspath(os.path.join(utils_dir, f"../tmp/api/{name}"))
         os.makedirs(api_dir, exist_ok=True)
         init_path = os.path.abspath(os.path.join(api_dir, f"__init__.py"))
         with open(init_path, "w", encoding="utf-8") as f:
             f.write("# -*- coding: utf-8 -*-\n")
 
-        testcases_dir = os.path.abspath(os.path.join(self._utils_dir, f"../tmp/testcases/{name}"))
+        testcases_dir = os.path.abspath(os.path.join(utils_dir, f"../tmp/testcases/{name}"))
         os.makedirs(testcases_dir, exist_ok=True)
         init_path = os.path.abspath(os.path.join(testcases_dir, f"__init__.py"))
         with open(init_path, "w", encoding="utf-8") as f:
             f.write("# -*- coding: utf-8 -*-\n")
 
-        init_path = os.path.abspath(os.path.join(self._utils_dir, f"../tmp/__init__.py"))
+        init_path = os.path.abspath(os.path.join(utils_dir, f"../tmp/__init__.py"))
         with open(init_path, "w", encoding="utf-8") as f:
             f.write("# -*- coding: utf-8 -*-\n")
 
@@ -109,7 +111,7 @@ class SwaggerParser:
             str: The converted snake_case string.
         """
         name = SwaggerParser._remove_non_alphabet_from_start(name.strip())
-        words = re.findall(r"[A-Z]+[a-z0-9]*|[A-Z]?[a-z0-9]*", name)
+        words = re.findall(r"[A-Z]+[a-z\d]*|[A-Z]?[a-z\d]*", name)
         new_words = [word.lower() for word in words if word != ""]
 
         result = []
@@ -173,7 +175,7 @@ class SwaggerParser:
         for uri, api_details in json_generator:
             for api_method, api_detail in api_details.items():
                 module_name = SwaggerParser._pascal_to_snake(api_detail["tags"][0])
-                self._create_package_dir(module_name)
+                SwaggerParser._create_package_dir(module_name)
                 api = {"uri": uri, "method": api_method, "detail": api_detail}
                 if module_name in swagger_dict.keys():
                     swagger_dict[module_name].append(api)
@@ -402,7 +404,8 @@ class SwaggerParser:
 
         return header_str
 
-    def _write_api_file(self, module: str, module_code: str) -> None:
+    @staticmethod
+    def _write_api_file(module: str, module_code: str) -> None:
         """
         Write the generated API code to a file.
 
@@ -413,7 +416,7 @@ class SwaggerParser:
         Returns:
             None
         """
-        api_dir = os.path.abspath(os.path.join(self._utils_dir, f"../tmp/api/{module}"))
+        api_dir = os.path.abspath(os.path.join(utils_dir, f"../tmp/api/{module}"))
         api_path = os.path.abspath(os.path.join(api_dir, f"{module}_api.py"))
         formatted_code = black.format_str(module_code, mode=black.FileMode())
         with open(api_path, "w+", encoding="utf-8") as f:
@@ -422,7 +425,8 @@ class SwaggerParser:
         with open(init_path, "w", encoding="utf-8") as f:
             f.write("# -*- coding: utf-8 -*-\n")
 
-    def _generate_api_templates(self, swagger_dict: dict) -> None:
+    @staticmethod
+    def _generate_api_templates(swagger_dict: dict) -> None:
         """
         Generate API templates based on Swagger data and write them to files.
 
@@ -442,7 +446,7 @@ class SwaggerParser:
                 module_code += func_code
             module_code = SwaggerParser._get_api_header(SwaggerParser._snake_to_pascal(module) + "API",
                                                         import_list) + module_code
-            self._write_api_file(module, module_code)
+            SwaggerParser._write_api_file(module, module_code)
 
     @staticmethod
     def _get_conf_code(module: str) -> str:
@@ -468,7 +472,8 @@ class SwaggerParser:
         conf_code += f"    return {module}_api\n"
         return conf_code
 
-    def _write_conf_file(self, module: str, conf_code: str) -> None:
+    @staticmethod
+    def _write_conf_file(module: str, conf_code: str) -> None:
         """
         Write the generated conftest.py code to a file.
 
@@ -479,7 +484,7 @@ class SwaggerParser:
         Returns:
             None
         """
-        testcases_dir = os.path.abspath(os.path.join(self._utils_dir, f"../tmp/testcases/{module}"))
+        testcases_dir = os.path.abspath(os.path.join(utils_dir, f"../tmp/testcases/{module}"))
         conf_path = os.path.abspath(os.path.join(testcases_dir, "conftest.py"))
         formatted_code = black.format_str(conf_code, mode=black.FileMode())
         with open(conf_path, "w+", encoding="utf-8") as f:
@@ -551,7 +556,8 @@ class SwaggerParser:
 
         return testcases_code, file_name
 
-    def _write_testcases_file(self, module: str, file_name: str, testcases_code: str) -> None:
+    @staticmethod
+    def _write_testcases_file(module: str, file_name: str, testcases_code: str) -> None:
         """
         Write the generated test function code to a file.
 
@@ -563,13 +569,14 @@ class SwaggerParser:
         Returns:
             None
         """
-        testcases_dir = os.path.abspath(os.path.join(self._utils_dir, f"../tmp/testcases/{module}"))
+        testcases_dir = os.path.abspath(os.path.join(utils_dir, f"../tmp/testcases/{module}"))
         testcases_path = os.path.abspath(os.path.join(testcases_dir, f"{file_name}.py"))
         formatted_code = black.format_str(testcases_code, mode=black.FileMode())
         with open(testcases_path, "w+", encoding="utf-8") as f:
             f.write(formatted_code)
 
-    def _generate_testcases_templates(self, swagger_dict: dict) -> None:
+    @staticmethod
+    def _generate_testcases_templates(swagger_dict: dict) -> None:
         """
         Generate test function templates based on Swagger data and write them to files.
 
@@ -581,10 +588,10 @@ class SwaggerParser:
         """
         for module in swagger_dict.keys():
             conf_code = SwaggerParser._get_conf_code(module)
-            self._write_conf_file(module, conf_code)
+            SwaggerParser._write_conf_file(module, conf_code)
             for api in swagger_dict[module]:
                 testcases_code, file_name = SwaggerParser._get_testcases_code(module, api)
-                self._write_testcases_file(module, file_name, testcases_code)
+                SwaggerParser._write_testcases_file(module, file_name, testcases_code)
 
     def generate_templates(self) -> None:
         """
@@ -593,11 +600,11 @@ class SwaggerParser:
         Returns:
             None
         """
-        self._clear_tmp_dir()
+        SwaggerParser._clear_tmp_dir()
         swagger_dict = self._get_swagger_dict()
-        self._generate_api_templates(swagger_dict)
-        self._generate_testcases_templates(swagger_dict)
-        logger.info(f"""template dir: {os.path.abspath(os.path.join(self._utils_dir, "../tmp"))}""")
+        SwaggerParser._generate_api_templates(swagger_dict)
+        SwaggerParser._generate_testcases_templates(swagger_dict)
+        logger.info(f"""template dir: {os.path.abspath(os.path.join(utils_dir, "../tmp"))}""")
 
 
 if __name__ == "__main__":
