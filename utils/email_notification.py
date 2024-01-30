@@ -76,12 +76,14 @@ class EmailNotification:
         msg["Subject"] = subject
         msg["from"] = self._sender
         msg["to"] = self._recipients
+        
+        report_zip_path = os.path.abspath(os.path.join(report_dir, "report.zip"))
+        EmailNotification._zip_file(report_dir, report_zip_path)
+        msg = EmailNotification._add_attachment(msg, report_zip_path)
 
-        EmailNotification._zip_file(report_dir, os.path.abspath(os.path.join(report_dir, "report.zip")))
-        msg = EmailNotification._add_attachment(msg, report_dir)
-
-        EmailNotification._zip_file(log_dir, os.path.abspath(os.path.join(log_dir, "log.zip")))
-        msg = EmailNotification._add_attachment(msg, log_dir)
+        log_zip_path = os.path.abspath(os.path.join(log_dir, "log.zip"))
+        EmailNotification._zip_file(log_dir, log_zip_path)
+        msg = EmailNotification._add_attachment(msg, log_zip_path)
 
         for filename in os.listdir(log_dir):
             if filename == "summary.log":
