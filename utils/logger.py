@@ -2,22 +2,13 @@
 import os
 import logging
 import colorlog
-import multiprocessing
+from utils.decorators import log_locker
 from logging.handlers import RotatingFileHandler
-
-
-class ModuleFilter(logging.Filter):
-    def filter(self, record):
-        return not record.pathname.endswith("multiprocessing/util.py")
-
-
-module_filter = ModuleFilter()
 
 # setup log directory
 utils_dir = os.path.dirname(__file__)
 project_dir = os.path.abspath(os.path.join(utils_dir, ".."))
 log_dir = os.path.abspath(os.path.join(project_dir, "log"))
-os.makedirs(log_dir, exist_ok=True)
 
 # setup log path
 log_path = os.path.abspath(os.path.join(log_dir, "test.log"))
@@ -39,7 +30,6 @@ file_formatter = logging.Formatter(log_format)
 console_handler = logging.StreamHandler()
 console_handler.setLevel(logging.INFO)
 console_handler.setFormatter(console_formatter)
-console_handler.addFilter(module_filter)
 
 # build file handler
 file_handler = RotatingFileHandler(log_path,
@@ -49,10 +39,15 @@ file_handler = RotatingFileHandler(log_path,
                                    encoding="utf-8")
 file_handler.setLevel(logging.DEBUG)
 file_handler.setFormatter(file_formatter)
-file_handler.addFilter(module_filter)
 
 # setup logger
-logger = multiprocessing.get_logger()
+logger = logging.getLogger("test")
 logger.setLevel(logging.DEBUG)
 logger.addHandler(console_handler)
 logger.addHandler(file_handler)
+
+# add decorator
+logger.debug = log_locker(logger.debug)
+logger.info = log_locker(logger.info)
+logger.warning = log_locker(logger.warning)
+logger.error = log_locker(logger.error)
