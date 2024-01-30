@@ -4,9 +4,6 @@ import sys
 import shutil
 import pytest
 import argparse
-from utils.logger import logger
-from utils.common import set_env, clean_logs
-from utils.email_notification import send_email
 
 project_dir = os.path.dirname(__file__)
 sys.path.append(project_dir)
@@ -18,15 +15,14 @@ def exe_test(cases_dir="testcases",
              process_num=3,
              generate_report=False,
              marker=None):
-    report_dir = os.path.abspath(os.path.join(project_dir, "report"))
+
     if os.path.exists(report_dir):
         shutil.rmtree(report_dir)
 
     testcase_dir = os.path.abspath(os.path.join(project_dir, cases_dir))
     args = [testcase_dir]
 
-    raw_dir = os.path.abspath(os.path.join(report_dir, "raw"))
-    args.extend(["--alluredir", raw_dir])
+    args.extend(["--alluredir", report_raw_dir])
 
     args.append(f"-{output_mode}")
 
@@ -43,8 +39,7 @@ def exe_test(cases_dir="testcases",
     pytest.main(args)
 
     if generate_report:
-        html_dir = os.path.abspath(os.path.join(report_dir, "html"))
-        cmd = f"allure generate {raw_dir} -o {html_dir} --clean"
+        cmd = f"allure generate {report_raw_dir} -o {report_html_dir} --clean"
         os.system(cmd)
 
 
@@ -56,7 +51,7 @@ def get_parse_args():
     parser.add_argument(
         "--cases_dir",
         type=str,
-        default="testcases",
+        default="testcases/test_a",
         help="Directory of test cases",
     )
 
@@ -129,4 +124,8 @@ def main():
 
 
 if __name__ == "__main__":
+    from utils.logger import logger
+    from utils.common import set_env, clean_logs
+    from utils.email_notification import send_email
+    from utils.dirs import report_dir, report_raw_dir, report_html_dir
     main()
