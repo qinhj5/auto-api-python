@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
+import os
+import filelock
 import pymysql
 import traceback
-import multiprocessing
 from utils.logger import logger
 from types import TracebackType
 from utils.common import get_conf
@@ -14,7 +15,12 @@ pymysql.install_as_MySQLdb()
 
 class MysqlConnection:
     _instance = None
-    _lock = multiprocessing.Lock()
+    _utils_dir = os.path.dirname(__file__)
+    _project_dir = os.path.abspath(os.path.join(_utils_dir, ".."))
+    _lock_dir = os.path.abspath(os.path.join(_project_dir, "lock"))
+    os.makedirs(_lock_dir, exist_ok=True)
+    _lock_path = os.path.abspath(os.path.join(_lock_dir, "db.lock"))
+    _lock = filelock.FileLock(_lock_path)
 
     def __new__(cls, *args, **kwargs) -> None:
         """
@@ -23,9 +29,8 @@ class MysqlConnection:
         Returns:
             None
         """
-        with cls._lock:
-            if not cls._instance:
-                cls._instance = super().__new__(cls)
+        if not cls._instance:
+            cls._instance = super().__new__(cls)
         return cls._instance
 
     def __init__(self, mysql_conf_name: str = "mysql", ssh_conf_name: str = "ssh") -> None:
@@ -162,9 +167,8 @@ class MysqlConnection:
         Returns:
             Dict: Query result in dictionary form. Returns None if the query result is empty.
         """
-        with MysqlConnection._lock:
-            rows, cursor = self._execute_sql(sql)
-            return cursor.fetchone() if rows > 0 else None
+        rows, cursor = self._execute_sql(sql)
+        return cursor.fetchone() if rows > 0 else None
 
     def fetchall(self, sql: str) -> List[Dict]:
         """
@@ -176,9 +180,8 @@ class MysqlConnection:
         Returns:
             List[Dict]: Query result in list form. Returns an empty list if the query result is empty.
         """
-        with MysqlConnection._lock:
-            rows, cursor = self._execute_sql(sql)
-            return cursor.fetchall() if rows > 0 else []
+        rows, cursor = self._execute_sql(sql)
+        return cursor.fetchall() if rows > 0 else []
 
     def close(self) -> None:
         """
@@ -187,6 +190,5 @@ class MysqlConnection:
         Returns:
             None
         """
-        with MysqlConnection._lock:
-            if self._connection:
-                self._connection.close()
+        if self._connection:
+            self._connection.close()
