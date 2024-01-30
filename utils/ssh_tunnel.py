@@ -5,6 +5,7 @@ import paramiko
 import traceback
 from typing import Tuple
 from utils.logger import logger
+from utils.dirs import lock_dir
 from types import TracebackType
 from utils.common import get_conf
 from paramiko.channel import ChannelStdinFile, ChannelFile, ChannelStderrFile
@@ -12,12 +13,6 @@ from paramiko.channel import ChannelStdinFile, ChannelFile, ChannelStderrFile
 
 class SSHTunnel:
     _instance = None
-    _utils_dir = os.path.dirname(__file__)
-    _project_dir = os.path.abspath(os.path.join(_utils_dir, ".."))
-    _lock_dir = os.path.abspath(os.path.join(_project_dir, "lock"))
-    os.makedirs(_lock_dir, exist_ok=True)
-    _lock_path = os.path.abspath(os.path.join(_lock_dir, "tunnel.lock"))
-    _lock = filelock.FileLock(_lock_path)
 
     def __new__(cls, *args, **kwargs) -> None:
         """
@@ -40,6 +35,7 @@ class SSHTunnel:
         Returns:
             None
         """
+        self._lock = filelock.FileLock(os.path.abspath(os.path.join(lock_dir, f"{ssh_conf_name}.lock")))
         self._ssh_conf = get_conf(name=ssh_conf_name)
         self._ssh_tunnel = None
 
@@ -130,7 +126,7 @@ class SSHTunnel:
         Returns:
             ChannelStdinFile: The input channel of the SSH tunnel.
         """
-        with SSHTunnel._lock:
+        with self._lock:
             stdin, stdout, stderr = self._execute(command)
             logger.info(f"executed command: {command}")
             output = stdout.read().decode("utf-8").strip()
