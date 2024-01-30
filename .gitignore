@@ -6,6 +6,7 @@ venv/
 report/
 log/
 tmp/
+lock/
 *.pyc
 *.lock
 !.gitkeep
