@@ -232,7 +232,7 @@ def get_code_modifier(file_path: str, line_number: int) -> str:
     try:
         result = subprocess.run(command, shell=True, capture_output=True, encoding="utf-8")
         if result.returncode != 0:
-            logger.info(f"No git info in un-versioned file. Please ignore. [exit status {result.returncode}]")
+            logger.info(f"No git info in un-versioned file. Please ignore. (exit status {result.returncode})")
             return "No git info in un-versioned file."
         else:
             output = result.stdout
