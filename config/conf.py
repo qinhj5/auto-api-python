@@ -3,6 +3,7 @@ from utils.common import get_conf
 from utils.ssh_tunnel import SSHTunnel
 from utils.driver_client import DriverClient
 from utils.mysql_connection import MysqlConnection
+from utils.redis_connection import RedisConnection
 
 
 class Constants:
@@ -16,3 +17,4 @@ class Global:
     tunnel = SSHTunnel()
     driver = DriverClient()
     db = MysqlConnection()
+    sr = RedisConnection()
