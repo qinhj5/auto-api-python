@@ -8,16 +8,10 @@ from utils.dirs import log_dir
 from utils.ssh_tunnel import SSHTunnel
 from utils.driver_client import DriverClient
 from utils.mysql_connection import MysqlConnection
+from utils.redis_connection import RedisConnection
 from utils.common import set_allure_and_console_output, get_code_modifier
 
 start_time = time.time()
-
-
-@pytest.fixture(scope="session")
-def db():
-    db = MysqlConnection()
-    yield db
-    db.close()
 
 
 @pytest.fixture(scope="session")
@@ -32,6 +26,20 @@ def driver():
     driver = DriverClient()
     yield driver
     driver.close()
+
+
+@pytest.fixture(scope="session")
+def db():
+    db = MysqlConnection()
+    yield db
+    db.close()
+
+
+@pytest.fixture(scope="session")
+def sr():
+    sr = RedisConnection()
+    yield sr
+    sr.close()
 
 
 @pytest.fixture(scope="function", autouse=True)
