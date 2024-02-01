@@ -10,6 +10,12 @@ mysql:
   password: User.5555
   database: null
 
+redis:
+  host: localhost
+  port: 6379
+  password: User.5555
+  db: 0
+  
 ssh:
   ssh_host: null
   ssh_port: 22
