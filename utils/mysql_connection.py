@@ -7,9 +7,9 @@ from utils.logger import logger
 from utils.dirs import lock_dir
 from types import TracebackType
 from utils.common import get_conf
-from typing import Tuple, List, Dict
 from pymysql import cursors, Connection
 from sshtunnel import SSHTunnelForwarder
+from typing import Tuple, List, Dict, Union
 
 pymysql.install_as_MySQLdb()
 
@@ -45,6 +45,7 @@ class MysqlConnection:
         self._ssh_conf = get_conf(name=ssh_conf_name)
         self._connection = None
         self._use_tunnel = use_tunnel
+        self._tunnel_forwarder = None
 
     def __enter__(self) -> 'MysqlConnection':
         """
@@ -78,7 +79,8 @@ class MysqlConnection:
     @staticmethod
     def _create_mysql_connection(mysql_conf: dict,
                                  ssh_conf: dict,
-                                 use_tunnel: bool) -> Connection:
+                                 use_tunnel: bool) -> Union[Tuple[None, Connection],
+                                                            Tuple[SSHTunnelForwarder, Connection]]:
         """
         Create a MySQL connection.
 
@@ -88,26 +90,27 @@ class MysqlConnection:
             use_tunnel (bool): Whether to use an SSH tunnel.
 
         Returns:
-            Connection: MySQL connection object.
+            Union[Tuple[None, Connection], Tuple[SSHTunnelForwarder, Connection]]: A tuple containing the SSH tunnel
+            and MySQL connection objects if using tunnel, otherwise None and MySQL connection object.
         """
         if use_tunnel:
-            forwarder = SSHTunnelForwarder(
+            tunnel_forwarder = SSHTunnelForwarder(
                 ssh_address=(ssh_conf["ssh_host"], ssh_conf["ssh_port"]),
                 ssh_username=ssh_conf["ssh_user"],
                 ssh_pkey=ssh_conf.get("ssh_key"),
                 ssh_password=ssh_conf.get("ssh_password"),
                 remote_bind_address=(mysql_conf["host"], mysql_conf["port"])
             )
-            forwarder.start()
+            tunnel_forwarder.start()
 
             connection = pymysql.connect(
                 host="localhost",
-                port=forwarder.local_bind_port,
+                port=tunnel_forwarder.local_bind_port,
                 user=mysql_conf["user"],
                 password=mysql_conf["password"],
                 database=mysql_conf["database"]
             )
-            return connection
+            return tunnel_forwarder, connection
         else:
             connection = pymysql.connect(
                 host=mysql_conf["host"],
@@ -116,7 +119,7 @@ class MysqlConnection:
                 password=mysql_conf["password"],
                 database=mysql_conf["database"],
             )
-            return connection
+            return None, connection
 
     def _execute_sql(self, sql: str) -> Tuple[int, cursors.DictCursor]:
         """
@@ -130,9 +133,10 @@ class MysqlConnection:
         """
         try:
             if self._connection is None:
-                self._connection = MysqlConnection._create_mysql_connection(mysql_conf=self._mysql_conf,
-                                                                            ssh_conf=self._ssh_conf,
-                                                                            use_tunnel=self._use_tunnel)
+                self.close()
+                self._tunnel_forwarder, self._connection = MysqlConnection._create_mysql_connection(self._mysql_conf,
+                                                                                                    self._ssh_conf,
+                                                                                                    self._use_tunnel)
         except Exception as e:
             logger.error(f"{e}\n{traceback.format_exc()}")
             self.close()
@@ -191,3 +195,5 @@ class MysqlConnection:
         """
         if self._connection:
             self._connection.close()
+        if self._tunnel_forwarder:
+            self._tunnel_forwarder.close()
