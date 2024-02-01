@@ -5,6 +5,7 @@ import traceback
 from redis import StrictRedis
 from utils.logger import logger
 from utils.dirs import lock_dir
+from typing import Union, Tuple
 from types import TracebackType
 from utils.common import get_conf
 from sshtunnel import SSHTunnelForwarder
@@ -41,6 +42,7 @@ class RedisConnection:
         self._ssh_conf = get_conf(name=ssh_conf_name)
         self._connection = None
         self._use_tunnel = use_tunnel
+        self._tunnel_forwarder = None
 
     def __enter__(self) -> 'RedisConnection':
         """
@@ -74,7 +76,8 @@ class RedisConnection:
     @staticmethod
     def _create_redis_connection(redis_conf: dict,
                                  ssh_conf: dict,
-                                 use_tunnel: bool) -> StrictRedis:
+                                 use_tunnel: bool) -> Union[Tuple[None, StrictRedis],
+                                                            Tuple[SSHTunnelForwarder, StrictRedis]]:
         """
         Create a Redis connection.
 
@@ -84,25 +87,26 @@ class RedisConnection:
             use_tunnel (bool): Whether to use an SSH tunnel.
 
         Returns:
-            Connection: Redis connection object.
+            Union[Tuple[None, StrictRedis], Tuple[SSHTunnelForwarder, StrictRedis]]: A tuple containing the SSH tunnel
+            and Redis connection objects if using tunnel, otherwise None and Redis connection object.
         """
         if use_tunnel:
-            forwarder = SSHTunnelForwarder(
+            tunnel_forwarder = SSHTunnelForwarder(
                 ssh_address=(ssh_conf["ssh_host"], ssh_conf["ssh_port"]),
                 ssh_username=ssh_conf["ssh_user"],
                 ssh_pkey=ssh_conf.get("ssh_key"),
                 ssh_password=ssh_conf.get("ssh_password"),
                 remote_bind_address=(redis_conf["host"], redis_conf["port"])
             )
-            forwarder.start()
+            tunnel_forwarder.start()
 
             connection = StrictRedis(
                 host="localhost",
-                port=forwarder.local_bind_port,
+                port=tunnel_forwarder.local_bind_port,
                 password=redis_conf["password"],
                 db=redis_conf["db"]
             )
-            return connection
+            return tunnel_forwarder, connection
         else:
             connection = StrictRedis(
                 host=redis_conf["host"],
@@ -110,7 +114,7 @@ class RedisConnection:
                 password=redis_conf["password"],
                 db=redis_conf["db"],
             )
-            return connection
+            return None, connection
 
     def _check_connection(self) -> None:
         """
@@ -121,9 +125,10 @@ class RedisConnection:
         """
         try:
             if self._connection is None:
-                self._connection = RedisConnection._create_redis_connection(redis_conf=self._redis_conf,
-                                                                            ssh_conf=self._ssh_conf,
-                                                                            use_tunnel=self._use_tunnel)
+                self.close()
+                self._tunnel_forwarder, self._connection = RedisConnection._create_redis_connection(self._redis_conf,
+                                                                                                    self._ssh_conf,
+                                                                                                    self._use_tunnel)
         except Exception as e:
             logger.error(f"{e}\n{traceback.format_exc()}")
             self.close()
@@ -198,3 +203,5 @@ class RedisConnection:
         """
         if self._connection:
             self._connection.close()
+        if self._tunnel_forwarder:
+            self._tunnel_forwarder.close()
