@@ -56,7 +56,7 @@ def get_conf(name: str = None) -> Union[dict, str]:
     with open(conf_path, mode="r", encoding="utf-8") as f:
         conf = yaml.safe_load(f)
         if name:
-            return conf[name]
+            return conf.get(name)
         return conf
 
 
