@@ -41,6 +41,7 @@ class DriverClient:
         self._ip = get_conf(name=ip_conf_name)
         self._ssh_conf = get_conf(name=ssh_conf_name)
         self._driver_client = None
+        self._ssh_tunnel = None
 
     def __enter__(self) -> 'DriverClient':
         """
@@ -72,7 +73,7 @@ class DriverClient:
         self.close()
 
     @staticmethod
-    def _create_driver_client(ssh_conf: dict, ip: str) -> paramiko.SSHClient:
+    def _create_driver_client(ssh_conf: dict, ip: str) -> Tuple[SSHTunnelForwarder, paramiko.SSHClient]:
         """
         Create a driver client connection.
 
@@ -81,7 +82,7 @@ class DriverClient:
             ip (str): The IP of driver.
 
         Returns:
-            paramiko.SSHClient: Driver client object.
+            Tuple[SSHTunnelForwarder, paramiko.SSHClient]: A tuple containing the SSH tunnel and driver client objects.
         """
         driver_client = paramiko.SSHClient()
         driver_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -93,23 +94,23 @@ class DriverClient:
         else:
             private_key = paramiko.RSAKey.from_private_key_file(ssh_conf.get("ssh_key"))
 
-        forwarder = SSHTunnelForwarder(
+        ssh_tunnel = SSHTunnelForwarder(
             (ssh_conf["ssh_host"], ssh_conf["ssh_port"]),
             ssh_username=ssh_conf["ssh_user"],
             ssh_pkey=private_key,
             remote_bind_address=(ip, 22),
         )
-        forwarder.start()
+        ssh_tunnel.start()
 
         driver_client.connect(
             hostname="127.0.0.1",
-            port=forwarder.local_bind_port,
+            port=ssh_tunnel.local_bind_port,
             username=ssh_conf["ssh_user"],
             pkey=private_key,
             password=ssh_conf.get("ssh_password")
         )
 
-        return driver_client
+        return ssh_tunnel, driver_client
 
     def _execute(self, command: str) -> Tuple[ChannelStdinFile, ChannelFile, ChannelStderrFile]:
         """
@@ -122,8 +123,9 @@ class DriverClient:
             Tuple[ChannelStdinFile, ChannelFile, ChannelStderrFile]: A tuple contained the input, output, and error.
         """
         try:
-            if self._driver_client is None:
-                self._driver_client = DriverClient._create_driver_client(self._ssh_conf, self._ip)
+            if self._ssh_tunnel is None or self._driver_client is None:
+                self.close()
+                self._ssh_tunnel, self._driver_client = DriverClient._create_driver_client(self._ssh_conf, self._ip)
         except Exception as e:
             logger.error(f"{e}\n{traceback.format_exc()}")
             self.close()
@@ -161,3 +163,5 @@ class DriverClient:
         """
         if self._driver_client:
             self._driver_client.close()
+        if self._ssh_tunnel:
+            self._ssh_tunnel.close()
