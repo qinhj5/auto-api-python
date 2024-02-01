@@ -155,7 +155,7 @@ class RedisConnection:
             str: The value of the key.
         """
         self._check_connection()
-        return self._connection.get(name)
+        return self._connection.get(name).decode("utf-8")
 
     def hset(self, name: str, key: str, value: str) -> None:
         """
@@ -187,7 +187,7 @@ class RedisConnection:
 
         """
         self._check_connection()
-        return self._connection.hget(name, key)
+        return self._connection.hget(name, key).decode("utf-8")
 
     def close(self) -> None:
         """
