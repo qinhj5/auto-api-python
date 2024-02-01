@@ -184,7 +184,7 @@ class MysqlConnection:
 
     def close(self) -> None:
         """
-        Close the database connection.
+        Close the MySQL connection.
 
         Returns:
             None
