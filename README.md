@@ -57,6 +57,7 @@ APIAuto/
 │   ├── dirs.py
 │   ├── enums.py
 │   ├── logger.py
+│   ├── redis_connection.py
 │   ├── mysql_connection.py
 │   ├── driver_client.py
 │   ├── ssh_tunnel.py
