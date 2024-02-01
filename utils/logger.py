@@ -14,7 +14,7 @@ log_dir = os.path.abspath(os.path.join(project_dir, "log"))
 log_path = os.path.abspath(os.path.join(log_dir, "test.log"))
 
 # setup formatter
-log_format = "%(asctime)s - PID:%(process)s - TID:%(thread)s - %(filename)s:%(lineno)d - [%(levelname)s] - %(message)s"
+log_format = "%(asctime)s - PID:%(process)s - TID:%(thread)s - %(file)s:%(line)d - [%(levelname)s] - %(message)s"
 console_formatter = colorlog.ColoredFormatter(
     f"%(log_color)s{log_format}",
     log_colors={
