@@ -28,13 +28,14 @@ class MysqlConnection:
             cls._instance = super().__new__(cls)
         return cls._instance
 
-    def __init__(self, mysql_conf_name: str = "mysql", ssh_conf_name: str = "ssh") -> None:
+    def __init__(self, mysql_conf_name: str = "mysql", ssh_conf_name: str = "ssh", use_tunnel: bool = True) -> None:
         """
         Initialize an instance of the MysqlConnection class.
 
         Args:
             mysql_conf_name (str): The name of the MySQL configuration. Defaults to "mysql".
             ssh_conf_name (str): The name of the SSH configuration. Defaults to "ssh".
+            use_tunnel (bool): Whether to use an SSH tunnel. Defaults to True.
 
         Returns:
             None
@@ -43,6 +44,7 @@ class MysqlConnection:
         self._mysql_conf = get_conf(name=mysql_conf_name)
         self._ssh_conf = get_conf(name=ssh_conf_name)
         self._connection = None
+        self._use_tunnel = use_tunnel
 
     def __enter__(self) -> 'MysqlConnection':
         """
@@ -75,15 +77,15 @@ class MysqlConnection:
 
     @staticmethod
     def _create_mysql_connection(mysql_conf: dict,
-                                 ssh_conf: dict = None,
-                                 use_tunnel: bool = True) -> Connection:
+                                 ssh_conf: dict,
+                                 use_tunnel: bool) -> Connection:
         """
         Create a MySQL connection.
 
         Args:
             mysql_conf (dict): MySQL configuration information.
             ssh_conf (dict): SSH configuration information.
-            use_tunnel (bool): Whether to use an SSH tunnel. Defaults to True.
+            use_tunnel (bool): Whether to use an SSH tunnel.
 
         Returns:
             Connection: MySQL connection object.
@@ -129,7 +131,8 @@ class MysqlConnection:
         try:
             if self._connection is None:
                 self._connection = MysqlConnection._create_mysql_connection(mysql_conf=self._mysql_conf,
-                                                                            ssh_conf=self._ssh_conf)
+                                                                            ssh_conf=self._ssh_conf,
+                                                                            use_tunnel=self._use_tunnel)
         except Exception as e:
             logger.error(f"{e}\n{traceback.format_exc()}")
             self.close()
