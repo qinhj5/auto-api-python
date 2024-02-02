@@ -14,6 +14,18 @@ EMAIL_CONF = get_conf(name="email")
 
 class EmailNotification:
     def __init__(self, sender: str, password: str, server: str, recipients: str) -> None:
+        """
+        Initialize the class.
+
+        Args:
+            sender (str): The email address of the sender.
+            password (str): The password of the sender's email account.
+            server (str): The SMTP server address.
+            recipients (str): Comma-separated list of email addresses of the recipients.
+
+        Returns:
+            None
+        """
         self._sender = sender
         self._password = password
         self._server = server
