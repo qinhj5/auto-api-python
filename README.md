@@ -54,6 +54,7 @@ APIAuto/
 │   ├── common.py
 │   ├── decorators.py
 │   ├── email_notification.py
+│   ├── forwarder_setting.py
 │   ├── dirs.py
 │   ├── enums.py
 │   ├── logger.py
