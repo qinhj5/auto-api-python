@@ -145,4 +145,4 @@ class SSHTunnel:
             None
         """
         if self._ssh_tunnel:
-            self._ssh_tunnel.close()
+            self._ssh_tunnel.stop()
