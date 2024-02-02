@@ -165,4 +165,4 @@ class DriverClient:
         if self._driver_client:
             self._driver_client.close()
         if self._tunnel_forwarder:
-            self._tunnel_forwarder.close()
+            self._tunnel_forwarder.stop()
