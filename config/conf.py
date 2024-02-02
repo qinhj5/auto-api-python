@@ -4,6 +4,7 @@ from utils.ssh_tunnel import SSHTunnel
 from utils.driver_client import DriverClient
 from utils.mysql_connection import MysqlConnection
 from utils.redis_connection import RedisConnection
+from utils.clickhouse_connection import ClickhouseConnection
 
 
 class Constants:
@@ -18,3 +19,4 @@ class Global:
     driver = DriverClient()
     db = MysqlConnection()
     sr = RedisConnection()
+    ck = ClickhouseConnection()
