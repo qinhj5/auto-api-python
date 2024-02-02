@@ -15,7 +15,7 @@
 * 使用yaml文件管理环境配置
 * 支持allure生成测试报告
 * 支持数据驱动模式进行测试
-* 支持mysql、redis、tunnel和driver连接以用于验证
+* 支持mysql、tunnel和driver等连接以用于验证
 * 支持pytest-xdist多进程加速
 * 提供mail通知发送功能
 * 提供Dockerfile以支持在自定义镜像中执行测试
