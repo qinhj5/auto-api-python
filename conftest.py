@@ -9,6 +9,7 @@ from utils.ssh_tunnel import SSHTunnel
 from utils.driver_client import DriverClient
 from utils.mysql_connection import MysqlConnection
 from utils.redis_connection import RedisConnection
+from utils.clickhouse_connection import ClickhouseConnection
 from utils.common import set_allure_and_console_output, get_code_modifier
 
 start_time = time.time()
@@ -40,6 +41,13 @@ def sr():
     sr = RedisConnection()
     yield sr
     sr.close()
+
+
+@pytest.fixture(scope="session")
+def ck():
+    ck = ClickhouseConnection()
+    yield ck
+    ck.close()
 
 
 @pytest.fixture(scope="function", autouse=True)
