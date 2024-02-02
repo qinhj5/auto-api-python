@@ -15,7 +15,14 @@ redis:
   port: 6379
   password: null
   db: 0
-  
+
+clickhouse:
+  host: localhost
+  port: 9000
+  user: null
+  password: null
+  database: null
+
 ssh:
   ssh_host: null
   ssh_port: 22
