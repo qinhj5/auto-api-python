@@ -6,99 +6,155 @@ from utils.logger import logger
 from utils.common import get_conf
 
 
-def connect_ssh_tunnel(servers: list) -> None:
-    """
-    Connect to a jump host and establish SSH tunnels to the specified servers.
+class ForwarderSetting:
+    def __init__(self, conf_name: str = "forwarder_servers") -> None:
+        """
+        Initialize the class.
 
-    Args:
-        servers (list): List of servers in the format "<server>:<port>".
+        Args:
+            conf_name (str): The name of the configuration to retrieve.
 
-    Returns:
-        None
-    """
-    forwards = []
-    for server in servers:
-        forwards += ["-L", f"{server}:{server}"]
+        Returns:
+            None
+        """
+        self._forwarder_servers = get_conf(name=conf_name)
 
-    ssh_conf = get_conf("ssh")
-    command = ["ssh"] + forwards + ["-N", "-f", f"""{ssh_conf.get("ssh_user")}@{ssh_conf.get("ssh_host")}"""]
+    def _build_command(self) -> list:
+        """
+        Build the SSH command with port forwarding.
 
-    subprocess.call(command)
-    logger.info(f"executed command: {command}")
+        Returns:
+            list: The SSH command with port forwarding.
+        """
+        forwards = []
+        for server in self._forwarder_servers:
+            forwards += ["-L", f"{server}:{server}"]
 
+        ssh_conf = get_conf("ssh")
+        command = ["ssh"] + forwards + ["-N", "-f", f"""{ssh_conf.get("ssh_user")}@{ssh_conf.get("ssh_host")}"""]
 
-def remove_local_interfaces(servers: str) -> None:
-    """
-    Remove local network interfaces/aliases for the specified servers.
+        return command
 
-    Args:
-        servers (list): List of servers in the format "<server>:<port>".
+    @staticmethod
+    def _get_command_pids(command: list) -> list:
+        """
+        Get the process IDs (PIDs) of the running processes that match the specified command.
 
-    Returns:
-        None
-    """
-    password = getpass.getpass("please enter sudo password (possible plaintext display): ")
-    for server in servers:
-        if sys.platform == "darwin":
-            command = ["sudo", "ifconfig", "lo0", "-alias", server.split(":")[0]]
+        Args:
+            command (list): The command to match.
+
+        Returns:
+            list: The list of process IDs (PIDs) of the matching processes.
+        """
+        target_cmd = " ".join(command)
+        grep_cmd = f"ps aux | grep '{target_cmd}'"
+        process = subprocess.Popen(grep_cmd, shell=True, stdout=subprocess.PIPE)
+        logger.info(f"executed: {grep_cmd}")
+        output, _ = process.communicate()
+
+        pids = []
+        lines = output.strip().decode().split("\n")
+        for line in lines[:-2]:
+            if target_cmd in line:
+                pids.append(line.split()[1])
+
+        return pids
+
+    def _disconnect_ssh_tunnel(self) -> None:
+        """
+        Disconnect the specified servers via ssh tunnel.
+
+        Returns:
+            None
+        """
+        command = self._build_command()
+
+        pids = ForwarderSetting._get_command_pids(command)
+        if pids:
+            for pid in pids:
+                subprocess.call(f"kill {pid}", shell=True)
+            logger.info(f"killed: {command}")
         else:
-            command = ["sudo", "ip", "addr", "del", server.split(":")[0] + "/32", "dev", "lo"]
+            logger.info(f"no result for {command}")
 
-        proc = subprocess.Popen(["sudo", "-S"] + command,
-                                stdin=subprocess.PIPE,
-                                stderr=subprocess.PIPE,
-                                universal_newlines=True)
-        proc.communicate(password + "\n")
-        logger.info(f"executed command: {command}")
+    def _connect_ssh_tunnel(self) -> None:
+        """
+        Connect the specified servers via ssh tunnel.
 
+        Returns:
+            None
+        """
+        command = self._build_command()
 
-def add_local_interfaces(servers: str) -> None:
-    """
-    Add local network interfaces/aliases for the specified servers.
-
-    Args:
-        servers (list): List of servers in the format "<server>:<port>".
-
-    Returns:
-        None
-    """
-    password = getpass.getpass("please enter sudo password (possible plaintext display): ")
-    for server in servers:
-        if sys.platform == "darwin":
-            command = ["sudo", "ifconfig", "lo0", "alias", server.split(":")[0]]
+        pids = ForwarderSetting._get_command_pids(command)
+        if len(pids) == 0:
+            subprocess.call(command)
+            logger.info(f"executed: {command}")
         else:
-            command = ["sudo", "ip", "addr", "add", server.split(":")[0] + "/32", "dev", "lo"]
+            logger.info(f"existed for {command}")
 
-        proc = subprocess.Popen(["sudo", "-S"] + command,
-                                stdin=subprocess.PIPE,
-                                stderr=subprocess.PIPE,
-                                universal_newlines=True)
-        proc.communicate(password + "\n")
-        logger.info(f"executed command: {command}")
+    def _remove_local_interfaces(self) -> None:
+        """
+        Remove local network interfaces/aliases for the specified servers.
 
+        Returns:
+            None
+        """
+        password = getpass.getpass("please enter sudo password (possible plaintext display): ")
+        for server in self._forwarder_servers:
+            if sys.platform == "darwin":
+                command = ["sudo", "ifconfig", "lo0", "-alias", server.split(":")[0]]
+            else:
+                command = ["sudo", "ip", "addr", "del", server.split(":")[0] + "/32", "dev", "lo"]
 
-def activate_forwarder() -> None:
-    """
-    Connect the specified servers via ssh tunnel.
+            proc = subprocess.Popen(["sudo", "-S"] + command,
+                                    stdin=subprocess.PIPE,
+                                    stderr=subprocess.PIPE,
+                                    universal_newlines=True)
+            proc.communicate(password + "\n")
+            logger.info(f"executed: {command}")
 
-    Returns:
-        None
-    """
-    servers = get_conf("forwarder").get("servers")
-    add_local_interfaces(servers)
-    connect_ssh_tunnel(servers)
+    def _add_local_interfaces(self) -> None:
+        """
+        Add local network interfaces/aliases for the specified servers.
 
+        Returns:
+            None
+        """
+        password = getpass.getpass("please enter sudo password (possible plaintext display): ")
+        for server in self._forwarder_servers:
+            if sys.platform == "darwin":
+                command = ["sudo", "ifconfig", "lo0", "alias", server.split(":")[0]]
+            else:
+                command = ["sudo", "ip", "addr", "add", server.split(":")[0] + "/32", "dev", "lo"]
 
-def deactivate_forwarder() -> None:
-    """
-    Disconnect the specified servers via ssh tunnel.
+            proc = subprocess.Popen(["sudo", "-S"] + command,
+                                    stdin=subprocess.PIPE,
+                                    stderr=subprocess.PIPE,
+                                    universal_newlines=True)
+            proc.communicate(password + "\n")
+            logger.info(f"executed: {command}")
 
-    Returns:
-        None
-    """
-    servers = get_conf("forwarder").get("servers")
-    remove_local_interfaces(servers)
+    def deactivate_forwarder(self) -> None:
+        """
+        Deactivate forwarder.
+
+        Returns:
+            None
+        """
+        self._remove_local_interfaces()
+        self._disconnect_ssh_tunnel()
+
+    def activate_forwarder(self) -> None:
+        """
+        Activate forwarder.
+
+        Returns:
+            None
+        """
+        self._add_local_interfaces()
+        self._connect_ssh_tunnel()
 
 
 if __name__ == "__main__":
-    activate_forwarder()
+    ForwarderSetting().activate_forwarder()
