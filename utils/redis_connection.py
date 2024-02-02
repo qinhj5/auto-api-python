@@ -204,4 +204,4 @@ class RedisConnection:
         if self._connection:
             self._connection.close()
         if self._tunnel_forwarder:
-            self._tunnel_forwarder.close()
+            self._tunnel_forwarder.stop()
