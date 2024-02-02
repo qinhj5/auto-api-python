@@ -38,7 +38,6 @@ email:
 
 driver_ip: 1.2.3.4
 
-forwarder:
-  servers:
-    - 1.1.1.1:1111
-    - 2.2.2.2:2222
+forwarder_servers:
+  - 1.1.1.1:1111
+  - 2.2.2.2:2222
