@@ -54,8 +54,8 @@ class ForwarderSetting:
 
         pids = []
         lines = output.strip().decode().split("\n")
-        for line in lines[:-2]:
-            if target_cmd in line:
+        for line in lines:
+            if target_cmd in line and "grep" not in line:
                 pids.append(line.split()[1])
 
         return pids
