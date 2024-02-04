@@ -51,21 +51,23 @@ APIAuto/
 │       └── test_google_search_by_keyword.py
 ├── utils/
 │   ├── __init__.py
+│   ├── api_coverage.py
+│   ├── clickhouse_connection.py
 │   ├── common.py
 │   ├── decorators.py
-│   ├── email_notification.py
-│   ├── forwarder_setting.py
 │   ├── dirs.py
-│   ├── enums.py
-│   ├── logger.py
-│   ├── clickhouse_connection.py
-│   ├── redis_connection.py
-│   ├── mysql_connection.py
 │   ├── driver_shell.py
+│   ├── email_notification.py
+│   ├── enums.py
+│   ├── forwarder_setting.py
+│   ├── kafka_client.py
+│   ├── logger.py
+│   ├── mysql_connection.py
+│   ├── redis_connection.py
+│   ├── swagger_parser.py
 │   ├── tunnel_shell.py
-│   ├── api_coverage.py
-│   ├── xmind_parser.py
-│   └── swagger_parser.py
+│   └── xmind_parser.py
+├── .gitignore
 ├── conftest.py
 ├── Dockerfile
 ├── Jenkinsfile
