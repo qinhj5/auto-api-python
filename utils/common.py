@@ -5,6 +5,7 @@ import json
 import time
 import yaml
 import glob
+import random
 import allure
 import datetime
 import subprocess
@@ -169,15 +170,13 @@ def set_console_detail(name: str, body: Any) -> None:
     Returns:
         None
     """
-    string = "-" * 64
-    middle_start = (len(string) - len(name)) // 2
-    middle_end = middle_start + len(name)
-    print_str = string[:middle_start] + name + string[middle_end:]
+    start_str = name.center(64, "-")
+    end_str = "-" * 64
     if is_json_object(body):
         body = get_formatted_json_string(body)
     else:
         body = str(body)
-    print(f"\n{print_str}\n{body}\n{string}")
+    print(f"\n{start_str}\n{body}\n{end_str}")
 
 
 def set_allure_detail(name: str, body: Any) -> None:
@@ -236,8 +235,8 @@ def get_code_modifier(file_path: str, line_number: int) -> str:
             return "No git info in un-versioned file."
         else:
             output = result.stdout
-            author_mail = output.split("\n")[2].split()[1][1:-1]
-            return author_mail
+            code_modifier = output.split("\n")[2].split()[1][1:-1]
+            return code_modifier
     except subprocess.CalledProcessError as e:
         logger.error(f"Error occurred during command execution: {e}")
         return "An error occurred during command execution."
@@ -258,7 +257,7 @@ def get_csv_data(csv_name: str) -> List[List[str]]:
     logger.info(f"read csv file: {csv_path}")
     with open(csv_path, "r", encoding="utf-8") as f:
         reader = csv.reader(f)
-        for index, row in enumerate(reader, 1):
+        for _, row in enumerate(reader):
             res.append(row)
     return res
 
@@ -311,3 +310,22 @@ def clean_logs() -> None:
 
         if "request" in file_name or "summary" in file_name:
             os.remove(file_path)
+
+
+def generate_random_string(num: int, charset: str) -> str:
+    """
+    Generate a random string of length num using the characters specified in the charset parameter.
+
+    Args:
+        num (int): The length of the random string to be generated.
+        charset (str): A string representing the characters that can be used to generate the random string.
+        This parameter can take the following values:
+        - string.ascii_letters: includes all uppercase and lowercase letters
+        - string.ascii_lowercase: includes only lowercase letters
+        - string.ascii_uppercase: includes only uppercase letters
+        - string.digits: includes only digits
+
+    Returns:
+        str: The generated random string.
+    """
+    return "".join(random.choice(charset) for _ in range(num))
