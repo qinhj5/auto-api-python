@@ -11,7 +11,7 @@ from utils.common import get_conf
 from paramiko.channel import ChannelStdinFile, ChannelFile, ChannelStderrFile
 
 
-class SSHTunnel:
+class TunnelShell:
     _instance = None
 
     def __new__(cls, *args, **kwargs) -> None:
@@ -27,7 +27,7 @@ class SSHTunnel:
 
     def __init__(self, ssh_conf_name: str = "ssh") -> None:
         """
-        Initialize an instance of the SSHTunnel class.
+        Initialize an instance of the TunnelShell class.
 
         Args:
             ssh_conf_name (str): The name of the SSH configuration. Defaults to "ssh".
@@ -37,14 +37,14 @@ class SSHTunnel:
         """
         self._lock = filelock.FileLock(os.path.abspath(os.path.join(lock_dir, f"{ssh_conf_name}.lock")))
         self._ssh_conf = get_conf(name=ssh_conf_name)
-        self._ssh_tunnel = None
+        self._tunnel_client = None
 
-    def __enter__(self) -> 'SSHTunnel':
+    def __enter__(self) -> 'TunnelShell':
         """
         Context manager method for entering the context.
 
         Returns:
-            SSHTunnel: The current instance of the SSHTunnel class.
+            TunnelShell: The current instance of the TunnelShell class.
         """
         return self
 
@@ -69,18 +69,18 @@ class SSHTunnel:
         self.close()
 
     @staticmethod
-    def _create_ssh_tunnel(ssh_conf: dict) -> paramiko.SSHClient:
+    def _create_tunnel_client(ssh_conf: dict) -> paramiko.SSHClient:
         """
-        Create an SSH tunnel connection.
+        Create a tunnel client connection.
 
         Args:
             ssh_conf (dict): SSH configuration information.
 
         Returns:
-            paramiko.SSHClient: SSH tunnel object.
+            paramiko.SSHClient: tunnel client object.
         """
-        ssh_tunnel = paramiko.SSHClient()
-        ssh_tunnel.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        tunnel_client = paramiko.SSHClient()
+        tunnel_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         ssh_key = ssh_conf.get("ssh_key")
 
         if ssh_key is None:
@@ -88,17 +88,17 @@ class SSHTunnel:
         else:
             private_key = paramiko.RSAKey.from_private_key_file(ssh_conf.get("ssh_key"))
 
-        ssh_tunnel.connect(hostname=ssh_conf["ssh_host"],
-                           port=ssh_conf["ssh_port"],
-                           username=ssh_conf["ssh_user"],
-                           pkey=private_key,
-                           password=ssh_conf.get("ssh_password"))
+        tunnel_client.connect(hostname=ssh_conf["ssh_host"],
+                              port=ssh_conf["ssh_port"],
+                              username=ssh_conf["ssh_user"],
+                              pkey=private_key,
+                              password=ssh_conf.get("ssh_password"))
 
-        return ssh_tunnel
+        return tunnel_client
 
     def _execute(self, command: str) -> Tuple[ChannelStdinFile, ChannelFile, ChannelStderrFile]:
         """
-        Execute a command on the SSH tunnel.
+        Execute a command on the tunnel client.
 
         Args:
             command (str): The command to execute.
@@ -107,13 +107,13 @@ class SSHTunnel:
             Tuple[ChannelStdinFile, ChannelFile, ChannelStderrFile]: A tuple contained the input, output, and error.
         """
         try:
-            if self._ssh_tunnel is None:
-                self._ssh_tunnel = SSHTunnel._create_ssh_tunnel(self._ssh_conf)
+            if self._tunnel_client is None:
+                self._tunnel_client = TunnelShell._create_tunnel_client(self._ssh_conf)
         except Exception as e:
             logger.error(f"{e}\n{traceback.format_exc()}")
             self.close()
         else:
-            stdin, stdout, stderr = self._ssh_tunnel.exec_command(command)
+            stdin, stdout, stderr = self._tunnel_client.exec_command(command)
             return stdin, stdout, stderr
 
     def execute_command(self, command: str) -> ChannelStdinFile:
@@ -124,7 +124,7 @@ class SSHTunnel:
             command (str): The command to execute.
 
         Returns:
-            ChannelStdinFile: The input channel of the SSH tunnel.
+            ChannelStdinFile: The input channel of the tunnel client.
         """
         with self._lock:
             stdin, stdout, stderr = self._execute(command)
@@ -139,10 +139,10 @@ class SSHTunnel:
 
     def close(self) -> None:
         """
-        Close the ssh tunnel.
+        Close the tunnel client.
 
         Returns:
             None
         """
-        if self._ssh_tunnel:
-            self._ssh_tunnel.stop()
+        if self._tunnel_client:
+            self._tunnel_client.stop()
