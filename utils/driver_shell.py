@@ -12,7 +12,7 @@ from sshtunnel import SSHTunnelForwarder
 from paramiko.channel import ChannelStdinFile, ChannelFile, ChannelStderrFile
 
 
-class DriverClient:
+class DriverShell:
     _instance = None
 
     def __new__(cls, *args, **kwargs) -> None:
@@ -28,7 +28,7 @@ class DriverClient:
 
     def __init__(self, ip_conf_name: str = "driver_ip", ssh_conf_name: str = "ssh") -> None:
         """
-        Initialize an instance of the DriverClient class.
+        Initialize an instance of the DriverShell class.
 
         Args:
             ip_conf_name (str): The name of the IP configuration. Defaults to "driver_ip".
@@ -43,12 +43,12 @@ class DriverClient:
         self._driver_client = None
         self._tunnel_forwarder = None
 
-    def __enter__(self) -> 'DriverClient':
+    def __enter__(self) -> 'DriverShell':
         """
         Context manager method for entering the context.
 
         Returns:
-            DriverClient: The current instance of the DriverClient class.
+            DriverShell: The current instance of the DriverShell class.
         """
         return self
 
@@ -125,8 +125,8 @@ class DriverClient:
         try:
             if self._tunnel_forwarder is None or self._driver_client is None:
                 self.close()
-                self._tunnel_forwarder, self._driver_client = DriverClient._create_driver_client(self._ssh_conf,
-                                                                                                 self._ip)
+                self._tunnel_forwarder, self._driver_client = DriverShell._create_driver_client(self._ssh_conf,
+                                                                                                self._ip)
         except Exception as e:
             logger.error(f"{e}\n{traceback.format_exc()}")
             self.close()
