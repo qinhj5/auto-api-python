@@ -41,3 +41,11 @@ driver_ip: 1.2.3.4
 forwarder_servers:
   - 1.1.1.1:1111
   - 2.2.2.2:2222
+
+kafka_consumer:
+  sasl.username: null
+  sasl.password: null
+  sasl.mechanism: PLAIN
+  security.protocol: SASL_PLAINTEXT
+  group.id: null
+  topic.name: null
