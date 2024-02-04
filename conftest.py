@@ -5,8 +5,8 @@ import pytest
 import inspect
 import logging
 from utils.dirs import log_dir
-from utils.ssh_tunnel import SSHTunnel
-from utils.driver_client import DriverClient
+from utils.tunnel_shell import TunnelShell
+from utils.driver_shell import DriverShell
 from utils.mysql_connection import MysqlConnection
 from utils.redis_connection import RedisConnection
 from utils.clickhouse_connection import ClickhouseConnection
@@ -17,14 +17,14 @@ start_time = time.time()
 
 @pytest.fixture(scope="session")
 def tunnel():
-    tunnel = SSHTunnel()
+    tunnel = TunnelShell()
     yield tunnel
     tunnel.close()
 
 
 @pytest.fixture(scope="session")
 def driver():
-    driver = DriverClient()
+    driver = DriverShell()
     yield driver
     driver.close()
 
