@@ -61,8 +61,8 @@ APIAuto/
 │   ├── clickhouse_connection.py
 │   ├── redis_connection.py
 │   ├── mysql_connection.py
-│   ├── driver_client.py
-│   ├── ssh_tunnel.py
+│   ├── driver_shell.py
+│   ├── tunnel_shell.py
 │   ├── api_coverage.py
 │   ├── xmind_parser.py
 │   └── swagger_parser.py
