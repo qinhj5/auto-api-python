@@ -49,3 +49,13 @@ kafka_consumer:
   security.protocol: SASL_PLAINTEXT
   group.id: null
   topic.name: null
+
+locust:
+  uri: /about
+  method: get
+  min_wait: 1
+  max_wait: 2
+  users: 10
+  spawn_rate: 1
+  num_requests: null
+  run_time: 1m
