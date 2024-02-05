@@ -52,8 +52,8 @@ def ck():
 
 @pytest.fixture(scope="function", autouse=True)
 def case_info(request):
-    function_path = inspect.getfile(request.function.__code__)
-    set_allure_and_console_output(name="function path", body=function_path)
+    file_path = inspect.getfile(request.function.__code__)
+    set_allure_and_console_output(name="file path", body=file_path)
 
     file_path = inspect.getfile(request.module)
     line_number = request.function.__code__.co_firstlineno
