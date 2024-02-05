@@ -22,6 +22,7 @@
 * 提供Jenkinsfile以支持自动构建并运行测试项目
 * 提供基于swagger一键生成api和testcases模版的脚本
 * 提供基于swagger和log一键统计api覆盖情况的脚本
+* ...
 
 <br>
 
@@ -63,6 +64,7 @@ APIAuto/
 │   ├── kafka_client.py
 │   ├── logger.py
 │   ├── mysql_connection.py
+│   ├── performance_test.py
 │   ├── redis_connection.py
 │   ├── swagger_parser.py
 │   ├── tunnel_shell.py
