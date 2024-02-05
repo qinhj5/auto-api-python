@@ -11,6 +11,10 @@ config_dir = os.path.abspath(os.path.join(project_dir, "config"))
 report_dir = os.path.abspath(os.path.join(project_dir, "report"))
 report_raw_dir = os.path.abspath(os.path.join(report_dir, "raw"))
 report_html_dir = os.path.abspath(os.path.join(report_dir, "html"))
+report_locust_dir = os.path.abspath(os.path.join(report_dir, "locust"))
+
+venv_dir = os.path.abspath(os.path.join(project_dir, "venv"))
+venv_bin_dir = os.path.abspath(os.path.join(venv_dir, "bin"))
 
 lock_dir = os.path.abspath(os.path.join(project_dir, "lock"))
 os.makedirs(lock_dir, exist_ok=True)
