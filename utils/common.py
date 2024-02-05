@@ -231,15 +231,15 @@ def get_code_modifier(file_path: str, line_number: int) -> str:
     try:
         result = subprocess.run(command, shell=True, capture_output=True, encoding="utf-8")
         if result.returncode != 0:
-            logger.info(f"No git info in un-versioned file. Please ignore. (exit status {result.returncode})")
-            return "No git info in un-versioned file."
+            logger.info(f"No git info in un-versioned file. Please ignore. Exit status: {result.returncode}")
+            return "(No git info in un-versioned file.)"
         else:
             output = result.stdout
             code_modifier = output.split("\n")[2].split()[1][1:-1]
             return code_modifier
     except subprocess.CalledProcessError as e:
         logger.error(f"Error occurred during command execution: {e}")
-        return "An error occurred during command execution."
+        return "(An error occurred during command execution.)"
 
 
 def get_csv_data(csv_name: str) -> List[List[str]]:
