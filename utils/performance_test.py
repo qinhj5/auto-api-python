@@ -1,11 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Modify source code: venv/lib/python3.7/site-packages/locust/stats.py
-try:
-    from typing import OrderedDict as OrderedDictType
-except ImportError:
-    from collections import OrderedDict as OrderedDictType
-"""
 import os
 import subprocess
 from config.conf import Global
