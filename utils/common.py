@@ -54,7 +54,7 @@ def get_conf(name: str = None) -> Union[dict, str]:
     """
     conf_path = os.path.abspath(os.path.join(config_dir, f"conf_{get_env()}.yml"))
 
-    with open(conf_path, mode="r", encoding="utf-8") as f:
+    with open(conf_path, "r", encoding="utf-8") as f:
         conf = yaml.safe_load(f)
         if name:
             return conf.get(name)
