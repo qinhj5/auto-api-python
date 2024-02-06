@@ -92,14 +92,20 @@ def pytest_terminal_summary(terminalreporter, config):
     num_collected = num_passed + num_failed + num_error + num_skipped
 
     with open(log_path, "w", encoding="utf-8") as f:
-        f.writelines("Total number of test cases: {}\n".format(num_collected))
-        f.writelines("Number of passed test cases: {}\n".format(num_passed))
-        f.writelines("Number of failed test cases: {}\n".format(num_failed))
-        f.writelines("Number of error test cases: {}\n".format(num_error))
-        f.writelines("Number of skipped test cases: {}\n".format(num_skipped))
+        f.writelines("Total cases: {}\n".format(num_collected))
+        f.writelines("Passed cases: {}\n".format(num_passed))
+        f.writelines("Failed cases: {}\n".format(num_failed))
+        f.writelines("Error cases: {}\n".format(num_error))
+        f.writelines("Skipped cases: {}\n".format(num_skipped))
 
         duration = time.time() - start_time
-        f.writelines("Duration (seconds): {:.2f}".format(duration))
+        hours = int(duration // 3600)
+        minutes = int((duration % 3600) // 60)
+        seconds = int(duration % 60)
+
+        formatted_duration = "{:02d}:{:02d}:{:02d}".format(hours, minutes, seconds)
+
+        f.writelines("Elapsed time: {}".format(formatted_duration))
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -120,15 +126,10 @@ def configure_logging(request):
         log_name = f"request_{process_name}.log"
     log_path = os.path.abspath(os.path.join(log_dir, log_name))
 
-    request_file_handler = logging.FileHandler(log_path, mode="w", encoding="utf-8")
+    request_file_handler = logging.FileHandler(log_path, "w", encoding="utf-8")
     request_file_handler.setLevel(logging.DEBUG)
 
     request_logger = logging.getLogger("urllib3")
     request_logger.setLevel(logging.DEBUG)
     request_logger.propagate = False
     request_logger.addHandler(request_file_handler)
-
-    yield
-
-    request_logger.removeHandler(request_file_handler)
-    request_file_handler.close()
