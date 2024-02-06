@@ -215,31 +215,31 @@ def set_allure_and_console_output(name: str, body: Any) -> None:
     set_allure_detail(name, body)
 
 
-def get_code_modifier(file_path: str, line_number: int) -> str:
+def get_code_modifiers(file_path: str, line_range: dict) -> List[str]:
     """
-    Get the email address of the code modifier.
+    Get the email addresses of the code modifiers.
 
     Args:
         file_path (str): File path.
-        line_number (int): Line number.
+        line_range (dict): Line range.
 
     Returns:
-        str: Email address of the code modifier.
+        List[str]: Email addresses of the code modifiers.
     """
-    command = f"git blame --line-porcelain -L {line_number},{line_number} {file_path}"
+    modifiers = set()
 
-    try:
+    for line_number in range(line_range["start_line"], line_range["end_line"] + 1):
+        command = f"git blame --line-porcelain -L {line_number},{line_number} {file_path}"
         result = subprocess.run(command, shell=True, capture_output=True, encoding="utf-8")
+
         if result.returncode != 0:
-            logger.info(f"No git info in un-versioned file. Please ignore. Exit status: {result.returncode}")
-            return "(No git info in un-versioned file.)"
+            modifiers.add(f"No git info in un-versioned file.")
         else:
             output = result.stdout
             code_modifier = output.split("\n")[2].split()[1][1:-1]
-            return code_modifier
-    except subprocess.CalledProcessError as e:
-        logger.error(f"Error occurred during command execution: {e}")
-        return "(An error occurred during command execution.)"
+            modifiers.add(code_modifier)
+
+    return list(modifiers)
 
 
 def get_csv_data(csv_name: str) -> List[List[str]]:
