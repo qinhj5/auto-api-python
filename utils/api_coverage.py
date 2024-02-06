@@ -6,7 +6,7 @@ import requests
 from openpyxl import Workbook
 from config.conf import Global
 from utils.logger import logger
-from openpyxl.worksheet.worksheet import Worksheet
+from utils.common import adjust_column_width
 from typing import List, Dict, Union, Optional, Tuple
 from utils.dirs import log_request_dir, report_sheet_dir
 
@@ -165,29 +165,6 @@ class ApiCoverage:
 
         return request_list, swagger_dict
 
-    @staticmethod
-    def _set_column_width(worksheet: Worksheet) -> None:
-        """
-        Adjusts the column width in the worksheet.
-
-        Args:
-            worksheet (Worksheet): The worksheet to adjust the column width.
-
-        Returns:
-            None
-        """
-        for column_cells in worksheet.columns:
-            max_length = 0
-            column = column_cells[0].column_letter
-            for cell in column_cells:
-                try:
-                    if len(str(cell.value)) > max_length:
-                        max_length = len(cell.value)
-                except Exception as e:
-                    logger.error(e)
-            adjusted_width = (max_length + 2)
-            worksheet.column_dimensions[column].width = adjusted_width
-
     def get_coverage_summary(self) -> None:
         """
         Generate and save the API coverage summary report.
@@ -247,7 +224,7 @@ class ApiCoverage:
                                               request_url["method"]])
 
         for sheet_name in workbook.sheetnames:
-            ApiCoverage._set_column_width(workbook[sheet_name])
+            adjust_column_width(workbook[sheet_name])
 
         xlsx_path = os.path.abspath(os.path.join(report_sheet_dir, "api_coverage.xlsx"))
         os.makedirs(report_sheet_dir, exist_ok=True)
