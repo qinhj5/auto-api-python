@@ -419,7 +419,7 @@ class SwaggerParser:
         api_dir = os.path.abspath(os.path.join(utils_dir, f"../tmp/api/{module}"))
         api_path = os.path.abspath(os.path.join(api_dir, f"{module}_api.py"))
         formatted_code = black.format_str(module_code, mode=black.FileMode())
-        with open(api_path, "w+", encoding="utf-8") as f:
+        with open(api_path, "w", encoding="utf-8") as f:
             f.write(formatted_code)
         init_path = os.path.abspath(os.path.join(api_dir, f"__init__.py"))
         with open(init_path, "w", encoding="utf-8") as f:
@@ -487,7 +487,7 @@ class SwaggerParser:
         testcases_dir = os.path.abspath(os.path.join(utils_dir, f"../tmp/testcases/{module}"))
         conf_path = os.path.abspath(os.path.join(testcases_dir, "conftest.py"))
         formatted_code = black.format_str(conf_code, mode=black.FileMode())
-        with open(conf_path, "w+", encoding="utf-8") as f:
+        with open(conf_path, "w", encoding="utf-8") as f:
             f.write(formatted_code)
         init_path = os.path.abspath(os.path.join(testcases_dir, f"__init__.py"))
         with open(init_path, "w", encoding="utf-8") as f:
@@ -572,7 +572,7 @@ class SwaggerParser:
         testcases_dir = os.path.abspath(os.path.join(utils_dir, f"../tmp/testcases/{module}"))
         testcases_path = os.path.abspath(os.path.join(testcases_dir, f"{file_name}.py"))
         formatted_code = black.format_str(testcases_code, mode=black.FileMode())
-        with open(testcases_path, "w+", encoding="utf-8") as f:
+        with open(testcases_path, "w", encoding="utf-8") as f:
             f.write(formatted_code)
 
     @staticmethod
