@@ -4,14 +4,14 @@ import csv
 import json
 import time
 import yaml
-import glob
+import shutil
 import random
 import allure
 import datetime
 import subprocess
 from utils.logger import logger
 from typing import Any, List, Union, Dict
-from utils.dirs import config_dir, data_dir, log_dir
+from utils.dirs import config_dir, data_dir, report_dir, log_request_dir, log_summary_dir
 
 
 def set_env(env: str) -> None:
@@ -296,20 +296,19 @@ def set_assertion_error(detail: str) -> str:
     return detail
 
 
-def clean_logs() -> None:
+def clean_logs_and_reports() -> None:
     """
-    Clean up log files in the log directory.
-
-    Removes log files with names containing "request" or "summary" from the log directory.
+    Clean up log files and report files.
 
     Returns:
         None
     """
-    for file_path in glob.glob(os.path.join(log_dir, "*.log")):
-        file_name: str = os.path.basename(file_path)
-
-        if "request" in file_name or "summary" in file_name:
-            os.remove(file_path)
+    if os.path.exists(report_dir):
+        shutil.rmtree(report_dir)
+    if os.path.exists(log_request_dir):
+        shutil.rmtree(log_request_dir)
+    if os.path.exists(log_summary_dir):
+        shutil.rmtree(log_summary_dir)
 
 
 def generate_random_string(num: int, charset: str) -> str:
