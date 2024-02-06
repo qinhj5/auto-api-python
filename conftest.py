@@ -14,9 +14,9 @@ from utils.mysql_connection import MysqlConnection
 from utils.redis_connection import RedisConnection
 from utils.clickhouse_connection import ClickhouseConnection
 from utils.dirs import log_request_dir, log_summary_dir, lock_dir, report_sheet_dir
-from utils.common import set_allure_and_console_output, get_code_modifiers, adjust_column_width
+from utils.common import set_allure_and_console_output, get_code_modifiers, adjust_column_width, get_current_datetime
 
-start_time = time.time()
+session_start_time = time.time()
 failure_lock = filelock.FileLock(os.path.abspath(os.path.join(lock_dir, f"failure.lock")))
 
 
@@ -57,6 +57,8 @@ def ck():
 
 @pytest.fixture(scope="function", autouse=True)
 def case_info(request):
+    set_allure_and_console_output(name="start time", body=get_current_datetime())
+
     func = request.function
     func_name = func.__name__
     file_path = inspect.getsourcefile(func)
@@ -64,8 +66,13 @@ def case_info(request):
     start_line = lines[-1]
     line_range = {"start_line": start_line, "end_line": start_line + len(lines[0]) - 1}
 
-    set_allure_and_console_output(name="function path", body=f"{file_path}::{func_name}")
+    set_allure_and_console_output(name="file path", body=f"{file_path}")
+    set_allure_and_console_output(name="function name", body=f"{func_name}")
     set_allure_and_console_output(name="last modified by", body=get_code_modifiers(file_path, line_range))
+
+    yield
+
+    set_allure_and_console_output(name="end time", body=get_current_datetime())
 
 
 def pytest_runtest_makereport(item, call):
@@ -100,8 +107,8 @@ def pytest_runtest_makereport(item, call):
 
 
 def pytest_sessionstart():
-    global start_time
-    start_time = time.time()
+    global session_start_time
+    session_start_time = time.time()
 
 
 def pytest_terminal_summary(terminalreporter, config):
@@ -134,7 +141,7 @@ def pytest_terminal_summary(terminalreporter, config):
         f.writelines("Error cases: {}\n".format(num_error))
         f.writelines("Skipped cases: {}\n".format(num_skipped))
 
-        duration = time.time() - start_time
+        duration = time.time() - session_start_time
         hours = int(duration // 3600)
         minutes = int((duration % 3600) // 60)
         seconds = int(duration % 60)
