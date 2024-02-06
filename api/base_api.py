@@ -3,7 +3,7 @@ import curlify
 import requests
 from http import HTTPStatus
 from typing import Any, Dict
-from utils.common import set_allure_and_console_output, get_current_datetime, is_json_string, loads_json_string
+from utils.common import set_allure_and_console_output, is_json_string, loads_json_string
 
 
 class BaseAPI:
@@ -64,8 +64,6 @@ class BaseAPI:
         )
         prepared_request = requests.Session().prepare_request(request)
 
-        set_allure_and_console_output(name="start time", body=get_current_datetime())
-
         with requests.Session().send(prepared_request, timeout=600) as r:
             set_allure_and_console_output(name="curl", body=curlify.to_curl(r.request, compressed=True))
 
@@ -81,7 +79,5 @@ class BaseAPI:
             else:
                 response_body = {"status_code": r.status_code, "text": "response is too long to display"}
             set_allure_and_console_output(name="response body", body=response_body)
-
-            set_allure_and_console_output(name="end time", body=get_current_datetime())
 
             return response_body
