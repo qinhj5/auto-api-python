@@ -18,6 +18,7 @@ config_dir = os.path.abspath(os.path.join(project_dir, "config"))
 report_dir = os.path.abspath(os.path.join(project_dir, "report"))
 report_raw_dir = os.path.abspath(os.path.join(report_dir, "raw"))
 report_html_dir = os.path.abspath(os.path.join(report_dir, "html"))
+report_sheet_dir = os.path.abspath(os.path.join(report_dir, "sheet"))
 report_locust_dir = os.path.abspath(os.path.join(report_dir, "locust"))
 
 venv_dir = os.path.abspath(os.path.join(project_dir, "venv"))
