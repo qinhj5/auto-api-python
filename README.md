@@ -83,12 +83,12 @@ APIAuto/
 <br>
 
 ## 四、使用教程
-（Ubuntu 20.04 LTS x64, Python3.7）
+（Ubuntu 20.04 LTS x64, Python3.8）
 
 ### 1.安装工具
 ```
   sudo apt update
-  sudo apt install python3.7 virtualenv git default-jdk allure
+  sudo apt install python3.8 virtualenv git default-jdk
 ```
 ### 2.克隆仓库
 ```
@@ -97,17 +97,13 @@ APIAuto/
 ```
 ### 3.安装依赖
 ```
-  virtualenv --python=python3.7 venv
+  virtualenv --python=python3.8 venv
   source venv/bin/activate
-  pip3.7 install -r requirements.txt
+  pip3.8 install -r requirements.txt
 ```
 ### 4.执行测试
 ```
-  python3.7 ./main.py
-```
-### 5.生成报告
-```
-  ./report.sh
+  python3.8 ./main.py
 ```
 
 <br>
