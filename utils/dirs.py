@@ -5,6 +5,13 @@ utils_dir = os.path.dirname(__file__)
 project_dir = os.path.abspath(os.path.join(utils_dir, ".."))
 
 log_dir = os.path.abspath(os.path.join(project_dir, "log"))
+
+log_request_dir = os.path.abspath(os.path.join(log_dir, "request"))
+os.makedirs(log_request_dir, exist_ok=True)
+
+log_summary_dir = os.path.abspath(os.path.join(log_dir, "summary"))
+os.makedirs(log_summary_dir, exist_ok=True)
+
 data_dir = os.path.abspath(os.path.join(project_dir, "data"))
 config_dir = os.path.abspath(os.path.join(project_dir, "config"))
 
