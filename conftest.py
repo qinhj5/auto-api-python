@@ -10,7 +10,7 @@ from utils.driver_shell import DriverShell
 from utils.mysql_connection import MysqlConnection
 from utils.redis_connection import RedisConnection
 from utils.clickhouse_connection import ClickhouseConnection
-from utils.common import set_allure_and_console_output, get_code_modifier
+from utils.common import set_allure_and_console_output, get_code_modifiers
 
 start_time = time.time()
 
@@ -55,10 +55,12 @@ def case_info(request):
     func = request.function
     func_name = func.__name__
     file_path = inspect.getsourcefile(func)
-    line_number = inspect.getsourcelines(func)[-1]
+    lines = inspect.getsourcelines(func)
+    start_line = lines[-1]
+    line_range = {"start_line": start_line, "end_line": start_line + len(lines[0]) - 1}
 
     set_allure_and_console_output(name="function path", body=f"{file_path}::{func_name}")
-    set_allure_and_console_output(name="last modified by", body=get_code_modifier(file_path, line_number))
+    set_allure_and_console_output(name="last modified by", body=get_code_modifiers(file_path, line_range))
 
 
 def pytest_sessionstart():
