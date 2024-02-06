@@ -4,11 +4,11 @@ import time
 import pytest
 import inspect
 import logging
-from utils.dirs import log_dir
 from utils.tunnel_shell import TunnelShell
 from utils.driver_shell import DriverShell
 from utils.mysql_connection import MysqlConnection
 from utils.redis_connection import RedisConnection
+from utils.dirs import log_request_dir, log_summary_dir
 from utils.clickhouse_connection import ClickhouseConnection
 from utils.common import set_allure_and_console_output, get_code_modifiers
 
@@ -83,7 +83,7 @@ def pytest_terminal_summary(terminalreporter, config):
         log_name = "summary.log"
     else:
         log_name = f"summary_{process_name}.log"
-    log_path = os.path.abspath(os.path.join(log_dir, log_name))
+    log_path = os.path.abspath(os.path.join(log_summary_dir, log_name))
 
     num_passed = len(terminalreporter.stats.get("passed", []))
     num_failed = len(terminalreporter.stats.get("failed", []))
@@ -124,7 +124,7 @@ def configure_logging(request):
         log_name = "request.log"
     else:
         log_name = f"request_{process_name}.log"
-    log_path = os.path.abspath(os.path.join(log_dir, log_name))
+    log_path = os.path.abspath(os.path.join(log_request_dir, log_name))
 
     request_file_handler = logging.FileHandler(log_path, "w", encoding="utf-8")
     request_file_handler.setLevel(logging.DEBUG)
