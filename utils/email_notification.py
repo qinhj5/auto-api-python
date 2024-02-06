@@ -5,9 +5,9 @@ import zipfile
 import smtplib
 from utils.common import get_conf
 from email.mime.text import MIMEText
-from utils.dirs import report_dir, log_dir
 from email.mime.multipart import MIMEMultipart
 from email.mime.application import MIMEApplication
+from utils.dirs import report_dir, log_dir, log_summary_dir
 
 EMAIL_CONF = get_conf(name="email")
 
@@ -97,9 +97,10 @@ class EmailNotification:
         EmailNotification._zip_file(log_dir, log_zip_path)
         msg = EmailNotification._add_attachment(msg, log_zip_path)
 
-        for filename in os.listdir(log_dir):
+        for filename in os.listdir(log_summary_dir):
             if filename == "summary.log":
-                with open(log_dir + "/" + filename, "r", encoding="utf-8") as f:
+                log_summary_path = os.path.abspath(os.path.join(log_summary_dir, "summary.log"))
+                with open(log_summary_path, "r", encoding="utf-8") as f:
                     lines = f.readlines()
                     for line in lines:
                         msg.attach(MIMEText(line, "plain", _charset="utf-8"))
