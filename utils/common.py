@@ -11,6 +11,7 @@ import datetime
 import subprocess
 from utils.logger import logger
 from typing import Any, List, Union, Dict
+from openpyxl.worksheet.worksheet import Worksheet
 from utils.dirs import config_dir, data_dir, report_dir, log_request_dir, log_summary_dir
 
 
@@ -215,18 +216,25 @@ def set_allure_and_console_output(name: str, body: Any) -> None:
     set_allure_detail(name, body)
 
 
-def get_code_modifiers(file_path: str, line_range: dict) -> List[str]:
+def get_code_modifiers(file_path: str, line_range: dict = None, line_number: int = None) -> List[str]:
     """
-    Get the email addresses of the code modifiers.
+    Get the email addresses of the code modifiers according line range or number.
 
     Args:
         file_path (str): File path.
-        line_range (dict): Line range.
+        line_range (dict): Line range, keys - start_line, end_line.
+        line_number (int): Line number.
 
     Returns:
         List[str]: Email addresses of the code modifiers.
     """
+    if not line_range and not line_number:
+        raise Exception("miss argument: line_range or line_number")
+
     modifiers = set()
+
+    if line_number:
+        line_range = {"start_line": line_number, "end_line": line_number}
 
     for line_number in range(line_range["start_line"], line_range["end_line"] + 1):
         command = f"git blame --line-porcelain -L {line_number},{line_number} {file_path}"
@@ -328,3 +336,26 @@ def generate_random_string(num: int, charset: str) -> str:
         str: The generated random string.
     """
     return "".join(random.choice(charset) for _ in range(num))
+
+
+def adjust_column_width(worksheet: Worksheet) -> None:
+    """
+    Adjusts the column width in the worksheet.
+
+    Args:
+        worksheet (Worksheet): The worksheet to adjust the column width.
+
+    Returns:
+        None
+    """
+    for column_cells in worksheet.columns:
+        max_length = 0
+        column = column_cells[0].column_letter
+        for cell in column_cells:
+            try:
+                if len(str(cell.value)) > max_length:
+                    max_length = len(cell.value)
+            except Exception as e:
+                logger.error(e)
+        adjusted_width = (max_length + 2)
+        worksheet.column_dimensions[column].width = adjusted_width
