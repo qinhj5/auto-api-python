@@ -70,13 +70,13 @@ APIAuto/
 │   ├── tunnel_shell.py
 │   └── xmind_parser.py
 ├── .gitignore
+├── allure.sh
 ├── conftest.py
 ├── Dockerfile
 ├── Jenkinsfile
 ├── main.py
 ├── pytest.ini
 ├── README.md
-├── report.sh
 └── requirements.txt
 ```
 
