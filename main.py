@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
 import sys
-import shutil
 import pytest
 import argparse
 
@@ -15,9 +14,6 @@ def exe_test(cases_dir="testcases",
              process_num=3,
              generate_report=False,
              marker=None):
-
-    if os.path.exists(report_dir):
-        shutil.rmtree(report_dir)
 
     testcase_dir = os.path.abspath(os.path.join(project_dir, cases_dir))
     args = [testcase_dir]
@@ -100,7 +96,7 @@ def get_parse_args():
 
 
 def pre_action():
-    clean_logs()
+    clean_logs_and_reports()
 
 
 def post_action():
@@ -125,7 +121,7 @@ def main():
 
 if __name__ == "__main__":
     from utils.logger import logger
-    from utils.common import set_env, clean_logs
     from utils.email_notification import send_email
-    from utils.dirs import report_dir, report_raw_dir, report_html_dir
+    from utils.dirs import report_raw_dir, report_html_dir
+    from utils.common import set_env, clean_logs_and_reports
     main()
