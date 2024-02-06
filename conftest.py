@@ -1,18 +1,23 @@
 # -*- coding: utf-8 -*-
 import os
+import json
 import time
 import pytest
 import inspect
 import logging
+import filelock
+import traceback
 from utils.tunnel_shell import TunnelShell
 from utils.driver_shell import DriverShell
+from openpyxl import Workbook, load_workbook
 from utils.mysql_connection import MysqlConnection
 from utils.redis_connection import RedisConnection
-from utils.dirs import log_request_dir, log_summary_dir
 from utils.clickhouse_connection import ClickhouseConnection
-from utils.common import set_allure_and_console_output, get_code_modifiers
+from utils.dirs import log_request_dir, log_summary_dir, lock_dir, report_sheet_dir
+from utils.common import set_allure_and_console_output, get_code_modifiers, adjust_column_width
 
 start_time = time.time()
+failure_lock = filelock.FileLock(os.path.abspath(os.path.join(lock_dir, f"failure.lock")))
 
 
 @pytest.fixture(scope="session")
@@ -61,6 +66,37 @@ def case_info(request):
 
     set_allure_and_console_output(name="function path", body=f"{file_path}::{func_name}")
     set_allure_and_console_output(name="last modified by", body=get_code_modifiers(file_path, line_range))
+
+
+def pytest_runtest_makereport(item, call):
+    request = item.parent
+    reruns = request.config.getoption("--reruns", 0)
+    if call.when == "call" and call.excinfo is not None and item.execution_count == (reruns + 1):
+        file = item.fspath.strpath
+        func = item.name
+        line = traceback.extract_tb(call.excinfo.tb)[-1][1]
+        modifiers = json.dumps(get_code_modifiers(file_path=file, line_number=line))
+        error = traceback.format_tb(call.excinfo.tb)[-1].strip()
+
+        with failure_lock:
+            xlsx_path = os.path.abspath(os.path.join(report_sheet_dir, "failed_cases.xlsx"))
+            if not os.path.exists(xlsx_path):
+                os.makedirs(report_sheet_dir, exist_ok=True)
+
+                workbook = Workbook()
+                default_sheet = workbook.active
+                workbook.remove(default_sheet)
+
+                failure_summary_sheet = workbook.create_sheet("failure_summary")
+                failure_summary_sheet.append(["file", "func", "line", "modifiers", "error"])
+            else:
+                workbook = load_workbook(xlsx_path)
+
+                failure_summary_sheet = workbook["failure_summary"]
+
+            failure_summary_sheet.append([file, func, line, modifiers, error])
+            adjust_column_width(failure_summary_sheet)
+            workbook.save(xlsx_path)
 
 
 def pytest_sessionstart():
