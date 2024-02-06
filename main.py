@@ -13,7 +13,9 @@ def exe_test(cases_dir="testcases",
              output_mode="-s",
              process_num=3,
              generate_report=False,
-             marker=None):
+             marker=None,
+             reruns=0
+             ):
 
     testcase_dir = os.path.abspath(os.path.join(project_dir, cases_dir))
     args = [testcase_dir]
@@ -25,7 +27,7 @@ def exe_test(cases_dir="testcases",
     args.extend(["--durations", f"{slowest_cases}"])
 
     if process_num:
-        args.extend(["-n", f"{process_num}", "--dist", "loadfile"])
+        args.extend(["-n", f"{process_num}", "--dist", "loadfile", "--reruns", f"{reruns}"])
 
     if marker is not None:
         args.extend(["-m", marker])
@@ -92,6 +94,13 @@ def get_parse_args():
         help="Run testcases with the specified marker",
     )
 
+    parser.add_argument(
+        "--reruns",
+        type=int,
+        default=0,
+        help="Rerun failed testcases",
+    )
+
     return parser.parse_args()
 
 
@@ -116,7 +125,9 @@ def main():
              output_mode=args.output_mode,
              process_num=args.process_num,
              generate_report=args.generate_report,
-             marker=args.marker)
+             marker=args.marker,
+             reruns=args.reruns,
+             )
 
 
 if __name__ == "__main__":
