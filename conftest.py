@@ -60,11 +60,11 @@ def case_info(request):
     set_allure_and_console_output(name="start time", body=get_current_datetime())
 
     func = request.function
+    file_path = func.__code__.co_filename
     func_name = func.__name__
-    file_path = inspect.getsourcefile(func)
-    lines = inspect.getsourcelines(func)
-    start_line = lines[-1]
-    line_range = {"start_line": start_line, "end_line": start_line + len(lines[0]) - 1}
+    source_lines = inspect.getsourcelines(func)
+    start_line = source_lines[-1]
+    line_range = {"start_line": start_line, "end_line": start_line + len(source_lines[0]) - 1}
 
     set_allure_and_console_output(name="file path", body=f"{file_path}")
     set_allure_and_console_output(name="function name", body=f"{func_name}")
