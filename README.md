@@ -69,6 +69,7 @@ APIAuto/
 │   ├── swagger_parser.py
 │   ├── tunnel_shell.py
 │   └── xmind_parser.py
+├── .dockerignore
 ├── .gitignore
 ├── allure.sh
 ├── conftest.py
