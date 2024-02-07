@@ -47,7 +47,7 @@ class ForwarderSetting:
             list: The list of process IDs (PIDs) of the matching processes.
         """
         target_cmd = " ".join(command)
-        grep_cmd = f"ps aux | grep '{target_cmd}'"
+        grep_cmd = f"""ps aux | grep "{target_cmd}" """
         process = subprocess.Popen(grep_cmd, shell=True, stdout=subprocess.PIPE)
         logger.info(f"executed: {grep_cmd}")
         output, _ = process.communicate()
