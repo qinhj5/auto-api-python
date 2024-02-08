@@ -15,6 +15,9 @@ curlify==2.2.1
 exceptiongroup==1.1.3
 execnet==2.0.2
 filelock==3.12.2
+google-api-python-client==2.116.0
+google-auth-httplib2==0.2.0
+google-auth-oauthlib==1.2.0
 gspread==6.0.1
 idna==3.4
 importlib-metadata==6.7.0
