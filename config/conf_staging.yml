@@ -61,7 +61,7 @@ locust:
   run_time: "1m"
 
 google_api:
-  key_info:
+  service_info:
     type: "service_account"
     project_id: ""
     private_key_id: ""
