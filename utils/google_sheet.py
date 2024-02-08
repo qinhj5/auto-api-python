@@ -34,7 +34,7 @@ class GoogleSheet:
         Returns:
             None
         """
-        self._lock = filelock.FileLock(os.path.abspath(os.path.join(lock_dir, f"{google_conf_name}.lock")))
+        self._lock = filelock.FileLock(os.path.abspath(os.path.join(lock_dir, "google_sheet.lock")))
         self._google_conf = get_conf(name=google_conf_name)
         self._gspread_client = gspread.service_account_from_dict(
             info=self._google_conf.get("service_info"),
