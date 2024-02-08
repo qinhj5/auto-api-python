@@ -104,7 +104,7 @@ APIAuto/
 ```
 ### 4.执行测试
 ```
-  python3.8 ./main.py
+  python3.8 main.py
 ```
 
 <br>
