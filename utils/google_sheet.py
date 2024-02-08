@@ -29,7 +29,7 @@ class GoogleSheet:
         Initialize an instance of the GoogleSheet class.
 
         Args:
-            google_conf_name (str): The name of the GoogleSheet configuration. Defaults to "google".
+            google_conf_name (str): The name of the GoogleSheet configuration. Defaults to "google_api".
 
         Returns:
             None
