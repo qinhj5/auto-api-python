@@ -2,7 +2,6 @@
 import os
 import base64
 import traceback
-import filelock as filelock
 from utils.logger import logger
 from types import TracebackType
 from utils.common import get_conf
@@ -39,7 +38,6 @@ class GoogleEmail:
         Returns:
             None
         """
-        self._lock = filelock.FileLock(os.path.abspath(os.path.join(lock_dir, "google_email.lock")))
         self._google_conf = get_conf(name=google_conf_name)
         self._credentials = None
         self._gmail_service = None
@@ -124,10 +122,7 @@ class GoogleEmail:
         message.attach(MIMEText(body, "plain"))
 
         raw_message = base64.urlsafe_b64encode(message.as_bytes()).decode("utf-8")
-
-        with self._lock:
-            response = self._gmail_service.users().messages().send(userId="me", body={"raw": raw_message}).execute()
-
+        response = self._gmail_service.users().messages().send(userId="me", body={"raw": raw_message}).execute()
         logger.info(f"Email sent successfully! Response: {response}")
 
 
