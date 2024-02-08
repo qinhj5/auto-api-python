@@ -161,4 +161,4 @@ class GoogleSheet:
 
 
 if __name__ == "__main__":
-    GoogleSheet().get_sheet_titles()
+    logger.info(GoogleSheet().get_sheet_titles())
