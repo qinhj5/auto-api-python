@@ -80,7 +80,8 @@ class GoogleSheet:
         Returns:
             None
         """
-        self._active_sheet.clear()
+        with self._lock:
+            self._active_sheet.clear()
 
     def create_sheet(self, title: str, rows: int = 100, cols: int = 20) -> None:
         """
@@ -97,7 +98,8 @@ class GoogleSheet:
         if title in self.get_sheet_titles():
             logger.error(f"sheet with title {title} exists.")
         else:
-            self._sheet_page.add_worksheet(title=title, rows=rows, cols=cols)
+            with self._lock:
+                self._sheet_page.add_worksheet(title=title, rows=rows, cols=cols)
 
     def switch_to_sheet(self, title: str) -> bool:
         """
@@ -126,7 +128,8 @@ class GoogleSheet:
         Returns:
             None
         """
-        self._active_sheet.update(data)
+        with self._lock:
+            self._active_sheet.update(data)
 
     def delete_sheet(self, title: str) -> bool:
         """
@@ -139,9 +142,10 @@ class GoogleSheet:
             bool: True if the deletion is successful, False otherwise.
         """
         try:
-            sheet = self._sheet_page.worksheet(title)
-            self._sheet_page.del_worksheet(sheet)
-            return True
+            with self._lock:
+                sheet = self._sheet_page.worksheet(title)
+                self._sheet_page.del_worksheet(sheet)
+                return True
         except gspread.exceptions.WorksheetNotFound:
             logger.error(f"sheet with title {title} not found")
             return False
