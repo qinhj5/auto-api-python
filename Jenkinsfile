@@ -1,67 +1,37 @@
 pipeline {
     agent any
-    environment {
-        /* Git username */
-        gitUsername = ""
-        /* Automation repository name */
-        repositoryName = ""
-        /* Custom image name */
-        imageName = ""
-        /* Custom image tag/version */
-        imageTag = ""
-        /* Custom container name */
-        containerName = ""
-    }
     stages {
         stage("Preparation") {
             steps {
                 echo "Working directory"
                 sh "pwd"
-                echo "Cloning the project"
-                sh "git clone git@github.com:${gitUsername}/${repositoryName}.git"
-                echo "Viewing images"
-                sh "docker images"
-                echo "Viewing containers"
-                sh "docker ps -a"
-                echo "Building the image"
-                sh """cd ${repositoryName}/
-                    docker build -t ${imageName}:${imageTag} .
-                """
+
+                echo "Directory content"
+                sh "ls -a -l"
             }
         }
-        stage("Run Tests") {
+        stage("Dependency") {
             steps {
-                echo "Running the container"
-                sh "docker run -i --name=${containerName} ${imageName}:${imageTag}"
+                echo "Setup venv"
+                sh "python3.8 -m venv venv"
+
+                echo "Install dependency"
+                sh "venv/bin/pip3.8 install -r requirements.txt"
             }
         }
-        stage("Post-processing") {
+        stage("Execute") {
             steps {
-                echo "Saving the report"
-                sh "docker cp ${containerName}:/code/report ./${repositoryName}/report"
-                echo "Saving the log"
-                sh "docker cp ${containerName}:/code/log ./${repositoryName}/log"
-                echo "Removing the container"
-                sh "docker rm ${containerName}"
-                echo "Removing the image"
-                sh "docker rmi ${imageName}:${imageTag}"
+                echo "Run main"
+                sh "venv/bin/python3.8 main.py"
             }
         }
     }
     post {
         success {
-            echo "Viewing images"
-            sh "docker images"
-            echo "Viewing containers"
-            sh "docker ps -a"
-            echo "Execution successful"
+            echo "Success"
         }
         failure {
-            echo "Viewing images"
-            sh "docker images"
-            echo "Viewing containers"
-            sh "docker ps -a"
-            echo "Execution failed"
+            echo "Failure"
         }
     }
 }
