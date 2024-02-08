@@ -39,7 +39,7 @@ def get_env() -> str:
     return env
 
 
-def get_conf(name: str = None) -> Union[dict, str]:
+def get_conf(name: str = None) -> dict:
     """
     Get configuration information.
 
@@ -47,11 +47,7 @@ def get_conf(name: str = None) -> Union[dict, str]:
         name (str): Configuration item name. Defaults to None.
 
     Returns:
-        Union[dict, str]: Configuration information dictionary if `name` is provided,
-        otherwise the entire configuration dictionary as a string.
-
-    Raises:
-        FileNotFoundError: Raised when the configuration file does not exist.
+        dict: Configuration item dictionary if `name` is provided, otherwise the entire configuration dictionary.
     """
     conf_path = os.path.abspath(os.path.join(config_dir, f"conf_{get_env()}.yml"))
 
