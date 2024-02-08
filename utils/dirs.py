@@ -12,6 +12,7 @@ os.makedirs(log_request_dir, exist_ok=True)
 log_summary_dir = os.path.abspath(os.path.join(log_dir, "summary"))
 os.makedirs(log_summary_dir, exist_ok=True)
 
+tmp_dir = os.path.abspath(os.path.join(project_dir, "tmp"))
 data_dir = os.path.abspath(os.path.join(project_dir, "data"))
 config_dir = os.path.abspath(os.path.join(project_dir, "config"))
 
