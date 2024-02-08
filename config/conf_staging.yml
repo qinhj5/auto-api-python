@@ -1,61 +1,77 @@
 portal:
-  base_url: https://www.google.com
+  base_url: "https://www.google.com"
   headers:
-    cookie: null
+    cookie: ""
 
 mysql:
-  host: localhost
+  host: "localhost"
   port: 3306
-  user: null
-  password: null
-  database: null
+  user: ""
+  password: ""
+  database: ""
 
 redis:
-  host: localhost
+  host: "localhost"
   port: 6379
-  password: null
+  password: ""
   db: 0
 
 clickhouse:
-  host: localhost
+  host: "localhost"
   port: 9000
-  user: null
-  password: null
-  database: null
+  user: ""
+  password: ""
+  database: ""
 
 ssh:
-  ssh_host: null
+  ssh_host: ""
   ssh_port: 22
-  ssh_user: null
-  ssh_key: /Users/null/.ssh/id_rsa
-  ssh_password: null
+  ssh_user: ""
+  ssh_key: ""
+  ssh_password: ""
 
 email:
-  sender: null 
-  password: null 
-  server: null 
-  recipients: null
+  sender: ""
+  password: ""
+  server: ""
+  recipients: ""
 
-driver_ip: 1.2.3.4
+driver_ip: "1.2.3.4"
 
 forwarder_servers:
-  - 1.1.1.1:1111
-  - 2.2.2.2:2222
+  - "1.1.1.1:1111"
+  - "2.2.2.2:2222"
 
 kafka_consumer:
-  sasl.username: null
-  sasl.password: null
-  sasl.mechanism: PLAIN
-  security.protocol: SASL_PLAINTEXT
-  group.id: null
-  topic.name: null
+  sasl.username: ""
+  sasl.password: ""
+  sasl.mechanism: "PLAIN"
+  security.protocol: "SASL_PLAINTEXT"
+  group.id: ""
+  topic.name: ""
 
 locust:
-  uri: /about
-  method: get
+  uri: "/about"
+  method: "get"
   min_wait: 1
   max_wait: 2
   users: 10
   spawn_rate: 1
-  num_requests: null
-  run_time: 1m
+  num_requests: ""
+  run_time: "1m"
+
+google_api:
+  key_info:
+    type: "service_account"
+    project_id: 0
+    private_key_id: ""
+    private_key: ""
+    client_email: ""
+    client_id: 0
+    auth_uri: ""
+    token_uri: ""
+    auth_provider_x509_cert_url: ""
+    client_x509_cert_url: ""
+    universe_domain: ""
+  file_name: ""
+  spreadsheet_name: ""
