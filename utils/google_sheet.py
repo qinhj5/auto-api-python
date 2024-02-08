@@ -24,7 +24,7 @@ class GoogleSheet:
             cls._instance = super().__new__(cls)
         return cls._instance
 
-    def __init__(self, google_conf_name: str = "google") -> None:
+    def __init__(self, google_conf_name: str = "google_api") -> None:
         """
         Initialize an instance of the GoogleSheet class.
 
