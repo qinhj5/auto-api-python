@@ -89,7 +89,7 @@ APIAuto/
 ### 1.安装工具
 ```
   sudo apt update
-  sudo apt install python3.8 virtualenv git default-jdk
+  sudo apt install -y python3.8 virtualenv git default-jdk
 ```
 ### 2.克隆仓库
 ```
