@@ -2,11 +2,11 @@
 import os
 import base64
 import traceback
+from utils.dirs import tmp_dir
 from utils.logger import logger
 from types import TracebackType
 from utils.common import get_conf
 from email.mime.text import MIMEText
-from utils.dirs import lock_dir, tmp_dir
 from googleapiclient.discovery import build
 from email.mime.multipart import MIMEMultipart
 from google.oauth2.credentials import Credentials
