@@ -83,5 +83,6 @@ google_api:
     auth_provider_x509_cert_url: ""
     client_x509_cert_url: ""
     universe_domain: ""
-  file_name: ""
-  spreadsheet_name: ""
+  google_sheet:
+    file_name: ""
+    spreadsheet_name: ""
