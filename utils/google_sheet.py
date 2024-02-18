@@ -161,4 +161,5 @@ class GoogleSheet:
 
 
 if __name__ == "__main__":
+    # for the specific spreadsheet in config, should grant Editor access to service account manually
     logger.info(GoogleSheet().get_sheet_titles())
