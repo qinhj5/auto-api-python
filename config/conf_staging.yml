@@ -86,3 +86,5 @@ google_api:
   google_sheet:
     file_name: ""
     spreadsheet_name: ""
+  google_drive:
+    folder_name: ""
