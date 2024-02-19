@@ -79,7 +79,6 @@ class GoogleEmail:
         Returns:
             None
         """
-        self._credentials = None
         os.makedirs(tmp_dir, exist_ok=True)
         google_token_path = os.path.abspath(os.path.join(tmp_dir, "google_email_token.json"))
         if os.path.exists(google_token_path):
