@@ -45,7 +45,7 @@ class GoogleEmail:
         self._gmail_service = None
         self._init()
 
-    def __enter__(self) -> "GoogleEmail":
+    def __enter__(self) -> 'GoogleEmail':
         """
         Context manager method for entering the context.
 
