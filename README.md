@@ -67,6 +67,7 @@ APIAuto/
 │   ├── kafka_client.py
 │   ├── logger.py
 │   ├── mysql_connection.py
+│   ├── open_ai.py
 │   ├── performance_test.py
 │   ├── redis_connection.py
 │   ├── swagger_parser.py
