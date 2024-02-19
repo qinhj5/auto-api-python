@@ -2,11 +2,13 @@
 import os
 import base64
 import traceback
+from email import encoders
 from utils.dirs import tmp_dir
 from utils.logger import logger
 from types import TracebackType
 from utils.common import get_conf
 from email.mime.text import MIMEText
+from email.mime.base import MIMEBase
 from googleapiclient.discovery import build
 from email.mime.multipart import MIMEMultipart
 from google.oauth2.credentials import Credentials
@@ -100,26 +102,46 @@ class GoogleEmail:
 
         self._gmail_service = build("gmail", "v1", credentials=self._credentials)
 
-    def send(self, to_recipients: str, cc_recipients: str, bcc_recipients: str, subject: str, body: str) -> None:
+    def send(self,
+             to_recipients: str,
+             subject: str,
+             body: str,
+             cc_recipients: str = None,
+             bcc_recipients: str = None,
+             attachment_path: str = None
+             ) -> None:
         """
         Send an email using Gmail API.
 
         Args:
             to_recipients (str): Comma-separated email addresses of the primary recipients.
-            cc_recipients (str): Comma-separated email addresses of the CC recipients.
-            bcc_recipients (str): Comma-separated email addresses of the BCC recipients.
             subject (str): The email subject.
             body (str): The email body.
+            cc_recipients (str): Comma-separated email addresses of the CC recipients. Default is None.
+            bcc_recipients (str): Comma-separated email addresses of the BCC recipients. Default is None.
+            attachment_path (str): Path to the file to be attached. Default is None (no attachment).
 
         Returns:
             None
         """
         message = MIMEMultipart()
         message["to"] = to_recipients
-        message["cc"] = cc_recipients
-        message["bcc"] = bcc_recipients
         message["subject"] = subject
         message.attach(MIMEText(body, "plain"))
+
+        if cc_recipients:
+            message["cc"] = cc_recipients
+        if bcc_recipients:
+            message["bcc"] = bcc_recipients
+
+        if attachment_path:
+            attachment_name = os.path.basename(attachment_path)
+            attachment = MIMEBase("application", "octet-stream")
+            with open(attachment_path, "rb") as f:
+                attachment.set_payload(f.read())
+            encoders.encode_base64(attachment)
+            attachment.add_header("Content-Disposition", f"attachment; filename={attachment_name}")
+            message.attach(attachment)
 
         raw_message = base64.urlsafe_b64encode(message.as_bytes()).decode("utf-8")
         response = self._gmail_service.users().messages().send(userId="me", body={"raw": raw_message}).execute()
@@ -127,4 +149,4 @@ class GoogleEmail:
 
 
 if __name__ == "__main__":
-    GoogleEmail().send(to_recipients="", cc_recipients="", bcc_recipients="", subject="", body="")
+    GoogleEmail().send(to_recipients="", subject="", body="")
