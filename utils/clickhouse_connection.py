@@ -5,8 +5,8 @@ import traceback
 from utils.logger import logger
 from utils.dirs import lock_dir
 from types import TracebackType
-from utils.common import get_conf
 from clickhouse_driver import Client
+from utils.common import get_env_conf
 from sshtunnel import SSHTunnelForwarder
 from typing import Union, Tuple, Any, List, Dict
 
@@ -41,8 +41,8 @@ class ClickhouseConnection:
             None
         """
         self._lock = filelock.FileLock(os.path.abspath(os.path.join(lock_dir, f"{clickhouse_conf_name}.lock")))
-        self._clickhouse_conf = get_conf(name=clickhouse_conf_name)
-        self._ssh_conf = get_conf(name=ssh_conf_name)
+        self._clickhouse_conf = get_env_conf(name=clickhouse_conf_name)
+        self._ssh_conf = get_env_conf(name=ssh_conf_name)
         self._connection = None
         self._use_tunnel = use_tunnel
         self._tunnel_forwarder = None

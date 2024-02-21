@@ -6,9 +6,9 @@ from email import encoders
 from utils.dirs import tmp_dir
 from utils.logger import logger
 from types import TracebackType
-from utils.common import get_conf
 from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
+from utils.common import get_ext_conf
 from googleapiclient.discovery import build
 from email.mime.multipart import MIMEMultipart
 from google.oauth2.credentials import Credentials
@@ -40,7 +40,7 @@ class GoogleEmail:
         Returns:
             None
         """
-        self._google_conf = get_conf(name=google_conf_name)
+        self._google_conf = get_ext_conf(name=google_conf_name)
         self._credentials = None
         self._gmail_service = None
         self._init()

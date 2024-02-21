@@ -3,13 +3,13 @@ import os
 import time
 import zipfile
 import smtplib
-from utils.common import get_conf
 from email.mime.text import MIMEText
+from utils.common import get_ext_conf
 from email.mime.multipart import MIMEMultipart
 from email.mime.application import MIMEApplication
 from utils.dirs import report_dir, log_dir, log_summary_dir
 
-EMAIL_CONF = get_conf(name="email")
+EMAIL_CONF = get_ext_conf(name="email")
 
 
 class EmailNotification:

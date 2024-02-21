@@ -7,7 +7,7 @@ import filelock as filelock
 from utils.dirs import lock_dir
 from utils.logger import logger
 from types import TracebackType
-from utils.common import get_conf
+from utils.common import get_ext_conf
 
 
 class GoogleSheet:
@@ -35,7 +35,7 @@ class GoogleSheet:
             None
         """
         self._lock = filelock.FileLock(os.path.abspath(os.path.join(lock_dir, "google_sheet.lock")))
-        self._google_conf = get_conf(name=google_conf_name)
+        self._google_conf = get_ext_conf(name=google_conf_name)
         self._gspread_client = gspread.service_account_from_dict(
             info=self._google_conf.get("service_info"),
             scopes=[

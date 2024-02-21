@@ -35,13 +35,13 @@ def get_env() -> str:
     Returns:
         str: The value of the environment variable.
     """
-    env = os.environ.get("ENV", "staging")
+    env = os.environ.get("ENV", "test")
     return env
 
 
-def get_conf(name: str = None) -> dict:
+def get_env_conf(name: str = None) -> dict:
     """
-    Get configuration information.
+    Get configuration information of environment.
 
     Args:
         name (str): Configuration item name. Defaults to None.
@@ -50,6 +50,25 @@ def get_conf(name: str = None) -> dict:
         dict: Configuration item dictionary if `name` is provided, otherwise the entire configuration dictionary.
     """
     conf_path = os.path.abspath(os.path.join(config_dir, f"conf_{get_env()}.yml"))
+
+    with open(conf_path, "r", encoding="utf-8") as f:
+        conf = yaml.safe_load(f)
+        if name:
+            return conf.get(name)
+        return conf
+
+
+def get_ext_conf(name: str = None) -> dict:
+    """
+    Get configuration information of extension.
+
+    Args:
+        name (str): Configuration item name. Defaults to None.
+
+    Returns:
+        dict: Configuration item dictionary if `name` is provided, otherwise the entire configuration dictionary.
+    """
+    conf_path = os.path.abspath(os.path.join(config_dir, f"conf_ext.yml"))
 
     with open(conf_path, "r", encoding="utf-8") as f:
         conf = yaml.safe_load(f)

@@ -4,7 +4,7 @@ import string
 from typing import List
 from utils.logger import logger
 from confluent_kafka import Consumer
-from utils.common import get_conf, generate_random_string
+from utils.common import get_env_conf, generate_random_string
 
 
 class KafkaClient:
@@ -20,8 +20,8 @@ class KafkaClient:
         Returns:
             None
         """
-        self._consumer_conf = get_conf(consumer_conf_name)
-        self._servers = get_conf(servers_conf_name)
+        self._consumer_conf = get_env_conf(consumer_conf_name)
+        self._servers = get_env_conf(servers_conf_name)
         self._topic = None
 
     def _update_kafka_config(self) -> None:

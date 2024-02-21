@@ -7,7 +7,7 @@ from typing import Tuple
 from utils.logger import logger
 from utils.dirs import lock_dir
 from types import TracebackType
-from utils.common import get_conf
+from utils.common import get_env_conf
 from sshtunnel import SSHTunnelForwarder
 from paramiko.channel import ChannelStdinFile, ChannelFile, ChannelStderrFile
 
@@ -38,8 +38,8 @@ class DriverShell:
             None
         """
         self._lock = filelock.FileLock(os.path.abspath(os.path.join(lock_dir, f"{ip_conf_name}.lock")))
-        self._ip = get_conf(name=ip_conf_name)
-        self._ssh_conf = get_conf(name=ssh_conf_name)
+        self._ip = get_env_conf(name=ip_conf_name)
+        self._ssh_conf = get_env_conf(name=ssh_conf_name)
         self._driver_client = None
         self._tunnel_forwarder = None
 

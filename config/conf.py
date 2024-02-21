@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from utils.common import get_conf
+from utils.common import get_env_conf
 from utils.tunnel_shell import TunnelShell
 from utils.driver_shell import DriverShell
 from utils.mysql_connection import MysqlConnection
@@ -8,7 +8,7 @@ from utils.clickhouse_connection import ClickhouseConnection
 
 
 class Constants:
-    _PORTAL_CONF = get_conf(name="portal")
+    _PORTAL_CONF = get_env_conf(name="portal")
     BASE_URL = _PORTAL_CONF["base_url"]
     HEADERS = _PORTAL_CONF["headers"]
 

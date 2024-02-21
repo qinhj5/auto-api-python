@@ -4,7 +4,7 @@ import filelock
 import traceback
 from utils.logger import logger
 from types import TracebackType
-from utils.common import get_conf
+from utils.common import get_ext_conf
 from utils.dirs import tmp_dir, lock_dir
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
@@ -15,7 +15,7 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 
 class GoogleDrive:
     _instance = None
-    
+
     def __new__(cls, *args, **kwargs) -> None:
         """
         Implement singleton mode.
@@ -38,7 +38,7 @@ class GoogleDrive:
             None
         """
         self._lock = filelock.FileLock(os.path.abspath(os.path.join(lock_dir, "google_drive.lock")))
-        self._google_conf = get_conf(name=google_conf_name)
+        self._google_conf = get_ext_conf(name=google_conf_name)
         self._credentials = None
         self._drive_service = None
         self._init()
@@ -125,7 +125,7 @@ class GoogleDrive:
         else:
             logger.error(f"failed to create folder, file will be uploaded to root, response: {response}")
         return folder_id
-    
+
     def _get_folder_id(self, folder_name: str) -> str:
         """
             Get the ID of a folder by its name.

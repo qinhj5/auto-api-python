@@ -83,8 +83,8 @@ def get_parse_args():
     parser.add_argument(
         "--env",
         type=str,
-        default="staging",
-        help="Environment (e.g. live or staging or test)",
+        default="test",
+        help="Environment (e.g. test or staging or production)",
     )
 
     parser.add_argument(

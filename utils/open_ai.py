@@ -7,7 +7,7 @@ import traceback
 from openai import OpenAI
 from utils.logger import logger
 from types import TracebackType
-from utils.common import get_conf
+from utils.common import get_ext_conf
 from utils.dirs import tmp_dir, lock_dir
 
 
@@ -36,7 +36,7 @@ class OpenAi:
             None
         """
         self._lock = filelock.FileLock(os.path.abspath(os.path.join(lock_dir, "open_ai.lock")))
-        self._openai_conf = get_conf(name=openai_conf_name)
+        self._openai_conf = get_ext_conf(name=openai_conf_name)
         self._model = self._openai_conf.get("model")
         self._history = self._openai_conf.get("history")
         self._client = OpenAI(api_key=self._openai_conf.get("api_key"))

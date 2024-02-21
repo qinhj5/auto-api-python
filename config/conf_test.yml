@@ -30,12 +30,6 @@ ssh:
   ssh_key: ""
   ssh_password: ""
 
-email:
-  sender: ""
-  password: ""
-  server: ""
-  recipients: ""
-
 driver_ip: "1.2.3.4"
 
 forwarder_servers:
@@ -59,37 +53,3 @@ locust:
   spawn_rate: 1
   num_requests: ""
   run_time: "1m"
-
-google_api:
-  client_config:
-    installed:
-      client_id: ""
-      project_id: ""
-      auth_uri: ""
-      token_uri: ""
-      auth_provider_x509_cert_url: ""
-      client_secret: ""
-      redirect_uris:
-        - "http://localhost"
-  service_info:
-    type: "service_account"
-    project_id: ""
-    private_key_id: ""
-    private_key: ""
-    client_email: ""
-    client_id: ""
-    auth_uri: ""
-    token_uri: ""
-    auth_provider_x509_cert_url: ""
-    client_x509_cert_url: ""
-    universe_domain: ""
-  google_sheet:
-    file_name: ""
-    spreadsheet_name: ""
-  google_drive:
-    folder_name: ""
-
-open_ai:
-  api_key: ""
-  model: ""
-  history: 0

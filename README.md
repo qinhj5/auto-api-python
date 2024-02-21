@@ -39,7 +39,8 @@ APIAuto/
 ├── config/
 │   ├── __init__.py
 │   ├── conf.py
-│   └── conf_staging.yml
+│   ├── conf_ext.yml
+│   └── conf_test.yml
 ├── data/
 │   └── keyword.csv
 ├── log/

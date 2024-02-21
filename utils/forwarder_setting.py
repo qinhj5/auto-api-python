@@ -3,7 +3,7 @@ import sys
 import getpass
 import subprocess
 from utils.logger import logger
-from utils.common import get_conf
+from utils.common import get_env_conf
 
 
 class ForwarderSetting:
@@ -17,7 +17,7 @@ class ForwarderSetting:
         Returns:
             None
         """
-        self._forwarder_servers = get_conf(name=conf_name)
+        self._forwarder_servers = get_env_conf(name=conf_name)
 
     def _build_command(self) -> list:
         """
@@ -30,7 +30,7 @@ class ForwarderSetting:
         for server in self._forwarder_servers:
             forwards += ["-L", f"{server}:{server}"]
 
-        ssh_conf = get_conf("ssh")
+        ssh_conf = get_env_conf("ssh")
         command = ["ssh"] + forwards + ["-N", "-f", f"""{ssh_conf.get("ssh_user")}@{ssh_conf.get("ssh_host")}"""]
 
         return command

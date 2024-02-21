@@ -7,7 +7,7 @@ from typing import Tuple
 from utils.logger import logger
 from utils.dirs import lock_dir
 from types import TracebackType
-from utils.common import get_conf
+from utils.common import get_env_conf
 from paramiko.channel import ChannelStdinFile, ChannelFile, ChannelStderrFile
 
 
@@ -36,7 +36,7 @@ class TunnelShell:
             None
         """
         self._lock = filelock.FileLock(os.path.abspath(os.path.join(lock_dir, f"{ssh_conf_name}.lock")))
-        self._ssh_conf = get_conf(name=ssh_conf_name)
+        self._ssh_conf = get_env_conf(name=ssh_conf_name)
         self._tunnel_client = None
 
     def __enter__(self) -> 'TunnelShell':

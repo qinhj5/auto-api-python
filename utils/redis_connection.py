@@ -7,7 +7,7 @@ from utils.logger import logger
 from utils.dirs import lock_dir
 from typing import Union, Tuple
 from types import TracebackType
-from utils.common import get_conf
+from utils.common import get_env_conf
 from sshtunnel import SSHTunnelForwarder
 
 
@@ -38,8 +38,8 @@ class RedisConnection:
             None
         """
         self._lock = filelock.FileLock(os.path.abspath(os.path.join(lock_dir, f"{redis_conf_name}.lock")))
-        self._redis_conf = get_conf(name=redis_conf_name)
-        self._ssh_conf = get_conf(name=ssh_conf_name)
+        self._redis_conf = get_env_conf(name=redis_conf_name)
+        self._ssh_conf = get_env_conf(name=ssh_conf_name)
         self._connection = None
         self._use_tunnel = use_tunnel
         self._tunnel_forwarder = None

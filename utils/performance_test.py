@@ -3,11 +3,11 @@ import os
 import subprocess
 from config.conf import Global
 from utils.logger import logger
-from utils.common import get_conf
+from utils.common import get_env_conf
 from locust import HttpUser, TaskSet, task, between
 from utils.dirs import venv_bin_dir, report_locust_dir
 
-LOCUST_CONF = get_conf(name="locust")
+LOCUST_CONF = get_env_conf(name="locust")
 
 
 class WebsiteTask(TaskSet):

@@ -6,7 +6,7 @@ import traceback
 from utils.logger import logger
 from utils.dirs import lock_dir
 from types import TracebackType
-from utils.common import get_conf
+from utils.common import get_env_conf
 from pymysql import cursors, Connection
 from sshtunnel import SSHTunnelForwarder
 from typing import Tuple, List, Dict, Union
@@ -41,8 +41,8 @@ class MysqlConnection:
             None
         """
         self._lock = filelock.FileLock(os.path.abspath(os.path.join(lock_dir, f"{mysql_conf_name}.lock")))
-        self._mysql_conf = get_conf(name=mysql_conf_name)
-        self._ssh_conf = get_conf(name=ssh_conf_name)
+        self._mysql_conf = get_env_conf(name=mysql_conf_name)
+        self._ssh_conf = get_env_conf(name=ssh_conf_name)
         self._connection = None
         self._use_tunnel = use_tunnel
         self._tunnel_forwarder = None
