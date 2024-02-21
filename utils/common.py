@@ -85,7 +85,7 @@ def get_current_datetime() -> str:
         str: The string representation of the current time, formatted as "%Y-%m-%d %H:%M:%S".
     """
     current_datetime = datetime.datetime.now()
-    formatted_datetime = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
+    formatted_datetime = current_datetime.strftime("%Y%m%d_%H%M%S")
     return formatted_datetime
 
 
@@ -247,20 +247,34 @@ def get_code_modifiers(file_path: str, line_range: dict = None, line_number: int
         raise Exception("miss argument: line_range or line_number")
 
     modifiers = set()
-
-    if line_number:
-        line_range = {"start_line": line_number, "end_line": line_number}
-
-    for line_number in range(line_range["start_line"], line_range["end_line"] + 1):
-        command = f"git blame --line-porcelain -L {line_number},{line_number} {file_path}"
-        result = subprocess.run(command, shell=True, capture_output=True, encoding="utf-8")
-
-        if result.returncode != 0:
-            modifiers.add(f"No git info in un-versioned file.")
+    
+    is_installed = False
+    try:
+        result = subprocess.run(["git", "--version"], capture_output=True, text=True)
+        output = result.stdout.strip()
+        logger.warning(f"{output}")
+        if output.startswith("git version"):
+            is_installed = True
         else:
-            output = result.stdout
-            code_modifier = output.split("\n")[2].split()[1][1:-1]
-            modifiers.add(code_modifier)
+            modifiers.add(f"no git tool in this machine")
+    except FileNotFoundError:
+        modifiers.add(f"no git tool in this machine")
+
+    if is_installed:
+
+        if line_number:
+            line_range = {"start_line": line_number, "end_line": line_number}
+
+        for line_number in range(line_range["start_line"], line_range["end_line"] + 1):
+            command = f"git blame --line-porcelain -L {line_number},{line_number} {file_path}"
+            result = subprocess.run(command, shell=True, capture_output=True)
+
+            if result.returncode != 0:
+                modifiers.add(f"no git info in un-versioned file")
+            else:
+                output = result.stdout
+                code_modifier = output.split("\n")[2].split()[1][1:-1]
+                modifiers.add(code_modifier)
 
     return list(modifiers)
 
