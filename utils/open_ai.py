@@ -100,7 +100,7 @@ class OpenAi:
             with open(dialogue_contexts_path, "w", encoding="utf-8") as f:
                 json.dump(self._contexts, f, indent=4)
 
-    def _generate_response(self, prompt: str) -> None:
+    def _generate_response(self, prompt: str) -> str:
         """
         Generate a response using OpenAI's model.
 
@@ -108,7 +108,7 @@ class OpenAi:
             prompt (str): The prompt for generating the response.
 
         Returns:
-            None
+            str: The text of response.
         """
         context = "\n".join(self._contexts[-self._history:])
 
@@ -130,6 +130,8 @@ class OpenAi:
         logger.info(f"You:\n{prompt}")
         logger.info(f"Bot:\n{response_text}")
 
+        return response_text
+
     def run(self):
         logger.info(f"started dialogue")
         logger.info(f"Model: {self._model}, History: {self._history}")
@@ -137,7 +139,9 @@ class OpenAi:
             while True:
                 time.sleep(1)
                 prompt = input("input your prompt:\n")
-                self._generate_response(prompt)
+                response_text = self._generate_response(prompt)
+                if response_text == "failed to generate a response":
+                    raise KeyboardInterrupt
         except KeyboardInterrupt:
             logger.info("finished dialogue")
 
