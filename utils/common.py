@@ -252,13 +252,12 @@ def get_code_modifiers(file_path: str, line_range: dict = None, line_number: int
     try:
         result = subprocess.run(["git", "--version"], capture_output=True, text=True)
         output = result.stdout.strip()
-        logger.warning(f"{output}")
         if output.startswith("git version"):
             is_installed = True
         else:
-            modifiers.add(f"no git tool in this machine")
+            modifiers.add(f"git.not.found")
     except FileNotFoundError:
-        modifiers.add(f"no git tool in this machine")
+        modifiers.add(f"git.not.found")
 
     if is_installed:
 
@@ -270,7 +269,7 @@ def get_code_modifiers(file_path: str, line_range: dict = None, line_number: int
             result = subprocess.run(command, shell=True, capture_output=True)
 
             if result.returncode != 0:
-                modifiers.add(f"no git info in un-versioned file")
+                modifiers.add(f"execute.command.error")
             else:
                 output = result.stdout
                 code_modifier = output.split("\n")[2].split()[1][1:-1]
