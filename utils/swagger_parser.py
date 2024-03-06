@@ -10,8 +10,8 @@ import requests
 import builtins
 from config.conf import Global
 from utils.logger import logger
+from typing import Tuple, Union
 from utils.dirs import utils_dir
-from typing import Tuple, Generator
 
 
 class SwaggerParser:
@@ -26,6 +26,8 @@ class SwaggerParser:
             None
         """
         self._swagger_url = swagger_url
+        self._paths_dict = None
+        self._definitions_dict = None
 
     @staticmethod
     def _get_python_type(java_type: str) -> str:
@@ -139,12 +141,12 @@ class SwaggerParser:
         pascal_name = "".join(word.capitalize() for word in words)
         return pascal_name
 
-    def _get_swagger_json(self) -> Generator[tuple, None, None]:
+    def _get_swagger_data(self) -> dict:
         """
         Get Swagger JSON data by making a request to the specified Swagger URL.
 
-        Yields:
-            tuple: A tuple containing the API URI and its details.
+        Returns:
+            dict: Path data of swagger.
 
         Raises:
             ValueError: If the Swagger URL response is not a valid JSON.
@@ -157,33 +159,33 @@ class SwaggerParser:
             except ValueError:
                 logger.error(f"Please check Swagger URL response: {response.text}")
             else:
-                for api, api_details in response.json().get("paths", dict()).items():
-                    yield api, api_details
+                self._definitions_dict = response.json().get("definitions", dict())
+                return response.json().get("paths", dict())
         else:
             logger.error("Failed to request Swagger URL")
             sys.exit(1)
 
-    def _get_swagger_dict(self) -> dict:
+    def _process_swagger_data(self) -> None:
         """
-        Get a dictionary representation of Swagger data.
+        Processed path data of swagger.
 
         Returns:
-            dict: A dictionary representing Swagger data.
+            None
         """
-        json_generator = self._get_swagger_json()
-        swagger_dict = {}
-        for uri, api_details in json_generator:
+        raw_paths_dict = self._get_swagger_data()
+        paths_dict = {}
+        for uri, api_details in raw_paths_dict.items():
             for api_method, api_detail in api_details.items():
                 module_name = SwaggerParser._pascal_to_snake(api_detail["tags"][0])
                 SwaggerParser._create_package_dir(module_name)
                 api = {"uri": uri, "method": api_method, "detail": api_detail}
-                if module_name in swagger_dict.keys():
-                    swagger_dict[module_name].append(api)
+                if module_name in paths_dict.keys():
+                    paths_dict[module_name].append(api)
                 else:
-                    swagger_dict[module_name] = []
-                    swagger_dict[module_name].append(api)
+                    paths_dict[module_name] = []
+                    paths_dict[module_name].append(api)
 
-        return swagger_dict
+        self._paths_dict = paths_dict
 
     @staticmethod
     def _convert_path_params(path: str) -> str:
@@ -220,6 +222,10 @@ class SwaggerParser:
                 continue
             if param.get("required") is None:
                 param.update({"required": False})
+            if param.get("schema") is None:
+                param.update({"use_schema": True})
+            else:
+                param.update({"use_schema": False})
             snake_name = SwaggerParser._pascal_to_snake(param["name"])
             if snake_name not in snake_names:
                 deduplicated_params.append(param)
@@ -228,21 +234,29 @@ class SwaggerParser:
         return deduplicated_params
 
     @staticmethod
-    def _get_wrapped_string(long_string: str, length: int = 110, indent: int = 8, replace_colon: bool = False) -> str:
+    def _get_wrapped_string(long_string: str, indent: int, param_process: bool = False) -> str:
         """
         Generate wrapped string by splitting a long string into smaller segments.
 
         Args:
             long_string (str): The long string to be split.
-            length (int): The maximum length of each segment. Defaults to 110.
-            indent (int): The number of spaces to indent each segment. Defaults to 8.
-            replace_colon (bool): Whether to replace colons in the string. Defaults to False.
+            indent (int, optional): The number of spaces to indent each segment.
+            param_process (bool, optional): Whether to process parameter description. Defaults to False.
 
         Returns:
             str: The wrapped string with each segment smaller than the specified length.
         """
-        if replace_colon:
-            long_string = long_string.replace(":", " - ")
+        length = 116 - indent
+        if param_process:
+            string_list = long_string.split(": ", 1)
+            key_string = string_list[0]
+            value_string = string_list[-1]
+            value_string = value_string.replace(":", " - ")
+            value_string = re.sub(r"([,;])(?!\s)", r"\1 ", value_string)
+            long_string = f"{key_string}: {value_string}"
+        else:
+            long_string = re.sub(r"([,;])(?!\s)", r"\1 ", long_string)
+
         words = long_string.split()
         wrapped_strings = []
 
@@ -257,7 +271,7 @@ class SwaggerParser:
         if current_segment:
             wrapped_strings.append(current_segment.strip())
 
-        return f"""\n{" " * indent}""".join(wrapped_strings)
+        return " " * indent + f"""\n{" " * indent}""".join(wrapped_strings)
 
     @staticmethod
     def _avoid_keywords(name: str) -> str:
@@ -269,14 +283,42 @@ class SwaggerParser:
 
         Returns:
             str: The modified name.
-
         """
         if keyword.iskeyword(name) or name in dir(builtins):
             name = f"param_{name}"
         return name
 
-    @staticmethod
-    def _get_api_func(api: dict) -> Tuple[str, bool]:
+    def _generate_sample_data(self, schema: dict) -> Union[None, dict, list, int, str]:
+        """
+        Generate sample data based on the given schema.
+
+        Args:
+            schema (dict): The schema to generate sample data from.
+
+        Returns:
+            Union[None, dict, list, int, str]: The generated sample data.
+        """
+        if schema is None:
+            return None
+        if schema.get("type") == "object":
+            sample_data = {}
+            for prop, prop_schema in schema.get("properties", {}).items():
+                sample_data[prop] = self._generate_sample_data(prop_schema)
+            return sample_data
+        elif schema.get("type") == "array":
+            return [self._generate_sample_data(schema["items"])]
+        elif schema.get("type") == "integer":
+            return 0
+        elif schema.get("type") == "string":
+            return ""
+        elif schema.get("type") == "boolean":
+            return False
+        elif schema.get("$ref"):
+            return self._generate_sample_data(self._definitions_dict.get(schema.get("$ref").split("/")[-1]))
+        else:
+            return None
+
+    def _get_api_func(self, api: dict) -> Tuple[str, bool]:
         """
         Generate API function code based on Swagger API details.
 
@@ -296,8 +338,7 @@ class SwaggerParser:
         logger.info(json.dumps(api["detail"]))
 
         summary = api["detail"].get("summary", "Null")
-
-        summary = SwaggerParser._get_wrapped_string(summary)
+        summary = SwaggerParser._get_wrapped_string(summary, indent=8)
 
         uri = SwaggerParser._convert_path_params(api["uri"])
 
@@ -305,12 +346,14 @@ class SwaggerParser:
         if params:
             params = SwaggerParser._get_deduplicated_params(params)
             params = sorted(params, key=lambda x: x["required"], reverse=True)
+            params = sorted(params, key=lambda x: x["use_schema"], reverse=True)
 
         params_list = []
         params_dict = {}
         header_dict = {}
         data_dict = {}
         json_dict = {}
+        schema_dict = {}
         use_list = False
         for param in params:
             param_name = SwaggerParser._pascal_to_snake(param["name"])
@@ -324,7 +367,7 @@ class SwaggerParser:
 
             param_desc = param.get("description", "null")
             param_item = ({param_name: {"type": param_type, "desc": param_desc}}
-                          if param["required"]
+                          if param["required"] and param.get("schema") is None
                           else {param_name: {"type": f"{param_type} = None", "desc": param_desc}})
             params_list.append(param_item)
 
@@ -337,6 +380,9 @@ class SwaggerParser:
             elif param.get("in", "body") == "body":
                 json_dict.update({param["name"]: param_name})
 
+            if param.get("schema"):
+                schema_dict.update({param["name"]: param.get("schema")})
+
         params_header = ""
         if params_list:
             params_header = (", " +
@@ -345,12 +391,12 @@ class SwaggerParser:
                                   for item in params_list]))
         func_header = f"""\n    def {func_name}(self{params_header}) -> Dict[str, Any]:\n"""
 
-        func_body = "        \"\"\"\n        %s\n\n" % summary
+        func_body = "        \"\"\"\n%s\n\n" % summary
         func_body += "        Args:\n            self\n"
         for item in params_list:
-            func_body += (f"""            {next(iter(item.keys()))} ({item[next(iter(item.keys()))]["type"]}): """ +
-                          f"""{SwaggerParser._get_wrapped_string(item[next(iter(item.keys()))]["desc"],
-                                                                 length=70, indent=12, replace_colon=True)}\n""")
+            desc_string = f"""{next(iter(item.keys()))} ({item[next(iter(item.keys()))]["type"]}): """ + \
+                          item[next(iter(item.keys()))]["desc"]
+            func_body += f"""{SwaggerParser._get_wrapped_string(desc_string, indent=12, param_process=True)}\n"""
         func_body += "\n        Returns:\n            Dict[str, Any]: " \
                      "The response content of the request as a dictionary.\
                       \n        \"\"\"\n"
@@ -369,8 +415,16 @@ class SwaggerParser:
             func_body += """        data_dict = {%s}\n""" % partial_str
             request_list.append("data=data_dict")
         if json_dict:
-            partial_str = ", ".join([f""""{k}": {v}""" for k, v in json_dict.items()])
-            func_body += """        json_dict = {%s}\n""" % partial_str
+            if len(schema_dict.keys()) == 1 and schema_dict.keys() == json_dict.keys():
+                for k, v in json_dict.items():
+                    schema_sample = self._generate_sample_data(schema_dict.get(k))
+                    if schema_sample == "":
+                        schema_sample = "\"\""
+                    func_body += f"""        {v}_sample = {schema_sample}\n"""
+                    func_body += f"""        json_dict = {v} if {v} else {v}_sample\n"""
+            else:
+                partial_str = ", ".join([f""""{k}": {v}""" for k, v in json_dict.items()])
+                func_body += """        json_dict = {%s}\n""" % partial_str
             request_list.append("json=json_dict")
 
         request_str = ""
@@ -425,22 +479,18 @@ class SwaggerParser:
         with open(init_path, "w", encoding="utf-8") as f:
             f.write("# -*- coding: utf-8 -*-\n")
 
-    @staticmethod
-    def _generate_api_templates(swagger_dict: dict) -> None:
+    def _generate_api_templates(self) -> None:
         """
         Generate API templates based on Swagger data and write them to files.
-
-        Args:
-            swagger_dict (dict): Swagger data.
 
         Returns:
             None
         """
-        for module in swagger_dict.keys():
+        for module in self._paths_dict.keys():
             module_code = ""
             import_list = False
-            for api in swagger_dict[module]:
-                func_code, use_list = SwaggerParser._get_api_func(api)
+            for api in self._paths_dict[module]:
+                func_code, use_list = self._get_api_func(api)
                 if use_list:
                     import_list = True
                 module_code += func_code
@@ -575,21 +625,17 @@ class SwaggerParser:
         with open(testcases_path, "w", encoding="utf-8") as f:
             f.write(formatted_code)
 
-    @staticmethod
-    def _generate_testcases_templates(swagger_dict: dict) -> None:
+    def _generate_testcases_templates(self) -> None:
         """
         Generate test function templates based on Swagger data and write them to files.
-
-        Args:
-            swagger_dict (dict): Swagger data.
 
         Returns:
             None
         """
-        for module in swagger_dict.keys():
+        for module in self._paths_dict.keys():
             conf_code = SwaggerParser._get_conf_code(module)
             SwaggerParser._write_conf_file(module, conf_code)
-            for api in swagger_dict[module]:
+            for api in self._paths_dict[module]:
                 testcases_code, file_name = SwaggerParser._get_testcases_code(module, api)
                 SwaggerParser._write_testcases_file(module, file_name, testcases_code)
 
@@ -601,9 +647,9 @@ class SwaggerParser:
             None
         """
         SwaggerParser._clear_tmp_dir()
-        swagger_dict = self._get_swagger_dict()
-        SwaggerParser._generate_api_templates(swagger_dict)
-        SwaggerParser._generate_testcases_templates(swagger_dict)
+        self._process_swagger_data()
+        self._generate_api_templates()
+        self._generate_testcases_templates()
         logger.info(f"""template dir: {os.path.abspath(os.path.join(utils_dir, "../tmp"))}""")
 
 
