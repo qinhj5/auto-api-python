@@ -88,8 +88,8 @@ class ApiCoverage:
                 swagger_dict = dict()
                 swagger_dict["static_url_list"] = []
                 swagger_dict["dynamic_url_list"] = []
-                for path, api_details in r.json().get("paths", dict()).items():
-                    for method, detail in api_details.items():
+                for path, path_details in r.json().get("paths", dict()).items():
+                    for method, detail in path_details.items():
                         tags = detail.get("tags")
                         url = Global.constants.BASE_URL + path
                         if "{" not in path:
