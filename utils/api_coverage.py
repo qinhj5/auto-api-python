@@ -61,7 +61,7 @@ class ApiCoverage:
                 path = path if path.find("?") == -1 else path[: path.find("?")]
                 path = path if path[-1] != "/" else path[:-1]
                 request_url = {
-                    "url": items[0][: items[0].rfind(":")] + path,
+                    "url": items[0][:items[0].rfind(":")] + path,
                     "method": items[1][1:],
                     "matched": False,
                 }
@@ -91,10 +91,11 @@ class ApiCoverage:
                 for path, api_details in r.json().get("paths", dict()).items():
                     for method, detail in api_details.items():
                         tags = detail.get("tags")
+                        url = Global.constants.BASE_URL + path
                         if "{" not in path:
                             swagger_dict["static_url_list"].append(
                                 {
-                                    "url": Global.constants.BASE_URL + path,
+                                    "url": url,
                                     "method": method.upper(),
                                     "count": 0,
                                     "tag": tags[0] if isinstance(tags, list) and len(tags) else "NULL"
@@ -103,7 +104,7 @@ class ApiCoverage:
                         else:
                             swagger_dict["dynamic_url_list"].append(
                                 {
-                                    "url": Global.constants.BASE_URL + path,
+                                    "url": url,
                                     "method": method.upper(),
                                     "count": 0,
                                     "tag": tags[0] if isinstance(tags, list) and len(tags) else "NULL"
