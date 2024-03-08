@@ -174,11 +174,11 @@ class SwaggerParser:
         """
         raw_paths_dict = self._get_swagger_data()
         paths_dict = {}
-        for uri, api_details in raw_paths_dict.items():
-            for api_method, api_detail in api_details.items():
+        for path, path_details in raw_paths_dict.items():
+            for api_method, api_detail in path_details.items():
                 module_name = SwaggerParser._pascal_to_snake(api_detail["tags"][0])
                 SwaggerParser._create_package_dir(module_name)
-                api = {"uri": uri, "method": api_method, "detail": api_detail}
+                api = {"uri": path, "method": api_method, "detail": api_detail}
                 if module_name in paths_dict.keys():
                     paths_dict[module_name].append(api)
                 else:
