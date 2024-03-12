@@ -53,3 +53,8 @@ locust:
   spawn_rate: 1
   num_requests: ""
   run_time: "1m"
+
+chrome_storage:
+  host: ""
+  cookie_file: ""
+  local_state: ""
