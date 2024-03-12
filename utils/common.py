@@ -8,6 +8,7 @@ import shutil
 import random
 import allure
 import datetime
+import traceback
 import subprocess
 from utils.logger import logger
 from typing import Any, List, Union, Dict
@@ -384,6 +385,6 @@ def adjust_column_width(worksheet: Worksheet) -> None:
                 if len(str(cell.value)) > max_length:
                     max_length = len(cell.value)
             except Exception as e:
-                logger.error(e)
+                logger.error(f"{e}\n{traceback.format_exc()}")
         adjusted_width = (max_length + 2)
         worksheet.column_dimensions[column].width = adjusted_width
