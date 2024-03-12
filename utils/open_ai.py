@@ -73,7 +73,7 @@ class OpenAi:
 
     def _init_contexts(self) -> None:
         """
-        Initialize dialogue contexts from file or create a new file if it doesn't exist.
+        Initialize dialogue contexts from file or create a new file if it does not exist.
 
         Returns:
             None
@@ -102,7 +102,7 @@ class OpenAi:
 
     def _generate_response(self, prompt: str) -> str:
         """
-        Generate a response using OpenAI's model.
+        Generate a response using OpenAI model.
 
         Args:
             prompt (str): The prompt for generating the response.
@@ -122,7 +122,7 @@ class OpenAi:
             )
             response_text = completion.choices[0].message
         except Exception as e:
-            logger.error(f"error: {e}")
+            logger.error(f"{e}\n{traceback.format_exc()}")
             response_text = "failed to generate a response"
 
         self._contexts.append(f"Prompt: {prompt}, Answer: {response_text}.")
