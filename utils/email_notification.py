@@ -19,7 +19,7 @@ class EmailNotification:
 
         Args:
             sender (str): The email address of the sender.
-            password (str): The password of the sender's email account.
+            password (str): The password of the email account of sender.
             server (str): The SMTP server address.
             recipients (str): Comma-separated list of email addresses of the recipients.
 
