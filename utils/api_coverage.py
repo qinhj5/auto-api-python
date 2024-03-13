@@ -79,21 +79,21 @@ class ApiCoverage:
             dynamic_url_list, each of which is a list of request URLs, methods, and counts.
         """
         try:
-            r = requests.get(self._swagger_url, headers=Global.constants.HEADERS)
+            response = requests.get(self._swagger_url, headers=Global.constants.HEADERS)
         except Exception as e:
             logger.error(f"{e}\n{traceback.format_exc()}")
             sys.exit(1)
 
-        if r.status_code == 200:
+        if response.status_code == 200:
             try:
-                r.json()
+                response.json()
             except ValueError:
-                logger.error(f"Parse Swagger docs error: {r.text}")
+                logger.error(f"Parse Swagger docs error: {response.text}")
             else:
                 swagger_dict = dict()
                 swagger_dict["static_url_list"] = []
                 swagger_dict["dynamic_url_list"] = []
-                for path, path_details in r.json().get("paths", dict()).items():
+                for path, path_details in response.json().get("paths", dict()).items():
                     for method, detail in path_details.items():
                         tags = detail.get("tags")
                         url = Global.constants.BASE_URL + path
