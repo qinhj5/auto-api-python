@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
+import sys
 import base64
 import traceback
 from email import encoders
@@ -82,11 +83,14 @@ class GoogleEmail:
         os.makedirs(tmp_dir, exist_ok=True)
         google_token_path = os.path.abspath(os.path.join(tmp_dir, "google_email_token.json"))
         if os.path.exists(google_token_path):
-            self._credentials = Credentials.from_authorized_user_file(
-                filename=google_token_path,
-                scopes=["https://www.googleapis.com/auth/gmail.send"]
-            )
-
+            try:
+                self._credentials = Credentials.from_authorized_user_file(
+                    filename=google_token_path,
+                    scopes=["https://www.googleapis.com/auth/gmail.send"]
+                )
+            except Exception as e:
+                logger.error(f"{e}\n{traceback.format_exc()}")
+                sys.exit(1)
         if not self._credentials or not self._credentials.valid:
             if self._credentials and self._credentials.expired and self._credentials.refresh_token:
                 self._credentials.refresh(Request())
@@ -95,7 +99,11 @@ class GoogleEmail:
                     client_config=self._google_conf.get("client_config"),
                     scopes=["https://www.googleapis.com/auth/gmail.send"]
                 )
-                self._credentials = flow.run_local_server(port=0)
+                try:
+                    self._credentials = flow.run_local_server(port=0)
+                except Exception as e:
+                    logger.error(f"{e}\n{traceback.format_exc()}")
+                    sys.exit(1)
             with open(google_token_path, "w") as f:
                 f.write(self._credentials.to_json())
 
