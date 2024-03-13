@@ -3,6 +3,8 @@ import os
 import time
 import zipfile
 import smtplib
+import traceback
+from utils.logger import logger
 from email.mime.text import MIMEText
 from utils.common import get_ext_conf
 from email.mime.multipart import MIMEMultipart
@@ -66,11 +68,13 @@ class EmailNotification:
         Returns:
             MIMEMultipart: Updated email message with attachments added.
         """
-        for filename in os.listdir(target_dir):
-            if ".zip" in filename:
-                f = MIMEApplication(open(os.path.join(target_dir, filename), "rb").read())
-                f.add_header("Content-Disposition", "attachment", filename=filename)
-                msg.attach(f)
+        if not os.path.exists(target_dir):
+            return msg
+
+        filename = os.path.basename(target_dir)
+        f = MIMEApplication(open(target_dir, "rb").read())
+        f.add_header("Content-Disposition", "attachment", filename=filename)
+        msg.attach(f)
 
         return msg
 
@@ -106,10 +110,14 @@ class EmailNotification:
                         msg.attach(MIMEText(line, "plain", _charset="utf-8"))
 
         smtp = smtplib.SMTP()
-        smtp.connect(self._server)
-        smtp.login(self._sender, self._password)
-        smtp.sendmail(self._sender, self._recipients.split(","), msg.as_string())
-        smtp.quit()
+        try:
+            smtp.connect(self._server)
+            smtp.login(self._sender, self._password)
+            smtp.sendmail(self._sender, self._recipients.split(","), msg.as_string())
+        except Exception as e:
+            logger.error(f"{e}\n{traceback.format_exc()}")
+        else:
+            smtp.quit()
 
 
 def send_email():
