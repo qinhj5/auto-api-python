@@ -8,6 +8,7 @@ import shutil
 import keyword
 import requests
 import builtins
+import traceback
 from config.conf import Global
 from utils.logger import logger
 from typing import Tuple, Union
@@ -151,7 +152,11 @@ class SwaggerParser:
         Raises:
             ValueError: If the Swagger URL response is not a valid JSON.
         """
-        response = requests.get(self._swagger_url, headers=Global.constants.HEADERS)
+        try:
+            response = requests.get(self._swagger_url, headers=Global.constants.HEADERS)
+        except Exception as e:
+            logger.error(f"{e}\n{traceback.format_exc()}")
+            sys.exit(1)
 
         if response.status_code == 200:
             try:
