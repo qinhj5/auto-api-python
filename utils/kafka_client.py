@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
+import sys
 import time
 import string
+import traceback
 from typing import List
 from utils.logger import logger
 from confluent_kafka import Consumer
@@ -89,7 +91,11 @@ class KafkaClient:
             None
         """
         self._update_kafka_config()
-        consumer = Consumer(self._consumer_conf)
+        try:
+            consumer = Consumer(self._consumer_conf)
+        except Exception as e:
+            logger.error(f"{e}\n{traceback.format_exc()}")
+            sys.exit(1)
         consumer.subscribe([self._topic])
 
         logger.info("receiving realtime kafka messages...")
