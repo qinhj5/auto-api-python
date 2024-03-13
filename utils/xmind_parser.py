@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import sys
+import traceback
 from utils.logger import logger
 from xmindparser import xmind_to_dict
 
@@ -41,7 +43,11 @@ class XmindParser:
         Returns:
             None
         """
-        xmind_dict = xmind_to_dict(self._xmind_file_path)
+        try:
+            xmind_dict = xmind_to_dict(self._xmind_file_path)
+        except Exception as e:
+            logger.error(f"{e}\n{traceback.format_exc()}")
+            sys.exit(1)
 
         total_leaf_nodes_count = 0
 
