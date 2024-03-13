@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
+import sys
 import filelock
 import traceback
 from utils.logger import logger
@@ -80,11 +81,15 @@ class GoogleDrive:
         os.makedirs(tmp_dir, exist_ok=True)
         google_token_path = os.path.abspath(os.path.join(tmp_dir, "google_drive_token.json"))
         if os.path.exists(google_token_path):
-            self._credentials = Credentials.from_authorized_user_file(
-                filename=google_token_path,
-                scopes=["https://www.googleapis.com/auth/drive",
-                        "https://www.googleapis.com/auth/drive.metadata"]
-            )
+            try:
+                self._credentials = Credentials.from_authorized_user_file(
+                    filename=google_token_path,
+                    scopes=["https://www.googleapis.com/auth/drive",
+                            "https://www.googleapis.com/auth/drive.metadata"]
+                )
+            except Exception as e:
+                logger.error(f"{e}\n{traceback.format_exc()}")
+                sys.exit(1)
 
         if not self._credentials or not self._credentials.valid:
             if self._credentials and self._credentials.expired and self._credentials.refresh_token:
@@ -95,7 +100,11 @@ class GoogleDrive:
                     scopes=["https://www.googleapis.com/auth/drive",
                             "https://www.googleapis.com/auth/drive.metadata"]
                 )
-                self._credentials = flow.run_local_server(port=0)
+                try:
+                    self._credentials = flow.run_local_server(port=0)
+                except Exception as e:
+                    logger.error(f"{e}\n{traceback.format_exc()}")
+                    sys.exit(1)
             with open(google_token_path, "w") as f:
                 f.write(self._credentials.to_json())
 
