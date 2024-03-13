@@ -3,6 +3,7 @@ import os
 import re
 import sys
 import requests
+import traceback
 from openpyxl import Workbook
 from config.conf import Global
 from utils.logger import logger
@@ -77,7 +78,11 @@ class ApiCoverage:
             Optional[Dict[str, List[Dict[str, Union[str, int]]]]]: A dictionary containing static_url_list and
             dynamic_url_list, each of which is a list of request URLs, methods, and counts.
         """
-        r = requests.get(self._swagger_url, headers=Global.constants.HEADERS)
+        try:
+            r = requests.get(self._swagger_url, headers=Global.constants.HEADERS)
+        except Exception as e:
+            logger.error(f"{e}\n{traceback.format_exc()}")
+            sys.exit(1)
 
         if r.status_code == 200:
             try:
