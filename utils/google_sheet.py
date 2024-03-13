@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
+import sys
 import gspread
 import traceback
 from typing import List
@@ -36,15 +37,10 @@ class GoogleSheet:
         """
         self._lock = filelock.FileLock(os.path.abspath(os.path.join(lock_dir, "google_sheet.lock")))
         self._google_conf = get_ext_conf(name=google_conf_name)
-        self._gspread_client = gspread.service_account_from_dict(
-            info=self._google_conf.get("service_info"),
-            scopes=[
-                "https://www.googleapis.com/auth/drive",
-                "https://www.googleapis.com/auth/spreadsheets"
-            ]
-        )
-        self._sheet_page = self._gspread_client.open(self._google_conf.get("google_sheet").get("file_name"))
-        self._active_sheet = self._sheet_page.worksheet(self._google_conf.get("google_sheet").get("spreadsheet_name"))
+        self._gspread_client = None
+        self._sheet_page = None
+        self._active_sheet = None
+        self._init()
 
     def __enter__(self) -> 'GoogleSheet':
         """
@@ -72,6 +68,27 @@ class GoogleSheet:
 
         if exc_tb:
             logger.error("".join(traceback.format_tb(exc_tb)))
+
+    def _init(self) -> None:
+        """
+        Initialize the gsheet client.
+
+        Returns:
+            None
+        """
+        try:
+            self._gspread_client = gspread.service_account_from_dict(
+                info=self._google_conf.get("service_info"),
+                scopes=[
+                    "https://www.googleapis.com/auth/drive",
+                    "https://www.googleapis.com/auth/spreadsheets"
+                ]
+            )
+        except Exception as e:
+            logger.error(f"{e}\n{traceback.format_exc()}")
+            sys.exit(1)
+        self._sheet_page = self._gspread_client.open(self._google_conf.get("google_sheet").get("file_name"))
+        self._active_sheet = self._sheet_page.worksheet(self._google_conf.get("google_sheet").get("spreadsheet_name"))
 
     def clear_active_sheet(self) -> None:
         """
