@@ -8,7 +8,7 @@ import datetime
 import traceback
 from utils.logger import logger
 from utils.common import get_env_conf
-from typing import Tuple, List, Any, Optional
+from typing import Tuple, List, Dict, Any, Optional
 
 
 class ChromeStorage:
@@ -56,7 +56,6 @@ class ChromeStorage:
         """
         if self._platform == "darwin":
             import keyring
-
             password = keyring.get_password("Chrome Safe Storage", "Chrome")
 
             if isinstance(password, str):
@@ -179,7 +178,12 @@ class ChromeStorage:
         cursor = conn.cursor()
 
         try:
-            cursor.execute("SELECT host_key, name, encrypted_value, expires_utc, has_expires FROM cookies;")
+            cursor.execute("SELECT host_key, \
+                            name, \
+                            encrypted_value, \
+                            expires_utc, \
+                            has_expires, \
+                            last_update_utc FROM cookies;")
             raw_cookies = cursor.fetchall()
         except Exception as e:
             logger.error(f"{e}\n{traceback.format_exc()}")
@@ -190,23 +194,23 @@ class ChromeStorage:
                     {"name": cookie["name"],
                      "value": self._decrypt_cookie_value(cookie["encrypted_value"]),
                      "host": cookie["host_key"],
-                     "expired": ChromeStorage._is_expired(cookie["expires_utc"]) if cookie["has_expires"] else False,
-                     "last_update": last_update_time.strftime("%Y-%m-%d %H:%M:%S")}
+                     "is_expired": ChromeStorage._is_expired(cookie["expires_utc"]) if cookie["has_expires"] else False,
+                     "update_time": last_update_time.strftime("%Y-%m-%d %H:%M:%S")}
                 )
         finally:
             conn.close()
 
-    def get_all_cookies(self) -> List[str]:
+    def get_all_cookies(self) -> List[Dict[str, Any]]:
         """
         Get a list of all cookies.
 
         Returns:
-            List[str]: A list containing all cookies. Each cookie is represented as a str.
+            List[Dict[str, Any]]: A list containing all cookies. Each cookie is represented as a dict.
         """
         self._fetch_browser_cookies()
 
         if self._cookies:
-            return [f"""{cookie["name"]}={cookie["value"]}""" for cookie in self._cookies]
+            return self._cookies
         else:
             logger.warning("no local cookies")
             return []
@@ -232,7 +236,7 @@ class ChromeStorage:
             logger.warning(f"no such cookie ({name}) for host ({self._host})")
             return ""
 
-        if all(not cookie["expired"] for cookie in cookie_values):
+        if all(not cookie["is_expired"] for cookie in cookie_values):
             cookie_strings = [f"""{cookie["name"]}={cookie["value"]}""" for cookie in cookie_values]
             return ";".join(cookie_strings)
         else:
