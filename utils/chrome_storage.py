@@ -4,12 +4,11 @@ import sys
 import json
 import base64
 import sqlite3
-import keyring
 import datetime
 import traceback
 from utils.logger import logger
 from utils.common import get_env_conf
-from typing import Tuple, Any, Optional
+from typing import Tuple, List, Any, Optional
 
 
 class ChromeStorage:
@@ -56,6 +55,8 @@ class ChromeStorage:
             Optional[bytes]: The encryption key as bytes, or None if the platform is not supported.
         """
         if self._platform == "darwin":
+            import keyring
+
             password = keyring.get_password("Chrome Safe Storage", "Chrome")
 
             if isinstance(password, str):
@@ -157,7 +158,7 @@ class ChromeStorage:
         Returns:
             bool: True if the expiration time has passed, False otherwise.
         """
-        expiration_timestamp = microseconds / 10 ** 6
+        expiration_timestamp = microseconds / 10 ** 6 - 11644473600
         expiration_datetime = datetime.datetime.fromtimestamp(expiration_timestamp)
 
         return expiration_datetime < datetime.datetime.now()
@@ -184,16 +185,33 @@ class ChromeStorage:
             logger.error(f"{e}\n{traceback.format_exc()}")
         else:
             for cookie in raw_cookies:
+                last_update_time = datetime.datetime.fromtimestamp(cookie["last_update_utc"] / 10 ** 6 - 11644473600)
                 self._cookies.append(
                     {"name": cookie["name"],
                      "value": self._decrypt_cookie_value(cookie["encrypted_value"]),
                      "host": cookie["host_key"],
-                     "expired": ChromeStorage._is_expired(cookie["expires_utc"]) if cookie["has_expires"] else False}
+                     "expired": ChromeStorage._is_expired(cookie["expires_utc"]) if cookie["has_expires"] else False,
+                     "last_update": last_update_time.strftime("%Y-%m-%d %H:%M:%S")}
                 )
         finally:
             conn.close()
 
-    def get_cookie_value(self, name: str, host: str = None) -> None:
+    def get_all_cookies(self) -> List[str]:
+        """
+        Get a list of all cookies.
+
+        Returns:
+            List[str]: A list containing all cookies. Each cookie is represented as a str.
+        """
+        self._fetch_browser_cookies()
+
+        if self._cookies:
+            return [f"""{cookie["name"]}={cookie["value"]}""" for cookie in self._cookies]
+        else:
+            logger.warning("no local cookies")
+            return []
+
+    def get_cookie_value(self, name: str, host: str = None) -> str:
         """
         Get the value of a cookie.
 
@@ -202,7 +220,7 @@ class ChromeStorage:
             host (str): The host of the cookie. If not provided, the default host will be used.
 
         Returns:
-            None
+            str: The cookie value of host.
         """
         self._fetch_browser_cookies()
 
@@ -212,14 +230,17 @@ class ChromeStorage:
         cookie_values = [cookie for cookie in self._cookies if cookie["host"] == host and cookie["name"] == name]
         if len(cookie_values) == 0:
             logger.warning(f"no such cookie ({name}) for host ({self._host})")
-            return
+            return ""
 
         if all(not cookie["expired"] for cookie in cookie_values):
             cookie_strings = [f"""{cookie["name"]}={cookie["value"]}""" for cookie in cookie_values]
-            logger.info(";".join(cookie_strings))
+            return ";".join(cookie_strings)
         else:
             logger.error("cookie value expired")
+            return ""
 
 
 if __name__ == "__main__":
-    ChromeStorage().get_cookie_value("")
+    cookies = ChromeStorage().get_all_cookies()
+    for c in cookies:
+        logger.info(c)
