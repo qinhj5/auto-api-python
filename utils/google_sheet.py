@@ -84,11 +84,11 @@ class GoogleSheet:
                     "https://www.googleapis.com/auth/spreadsheets"
                 ]
             )
+            self._sheet_page = self._gspread_client.open(self._google_conf.get("google_sheet").get("file_name"))
+            self._active_sheet = self._sheet_page.worksheet(self._google_conf.get("google_sheet").get("sheet_name"))
         except Exception as e:
             logger.error(f"{e}\n{traceback.format_exc()}")
             sys.exit(1)
-        self._sheet_page = self._gspread_client.open(self._google_conf.get("google_sheet").get("file_name"))
-        self._active_sheet = self._sheet_page.worksheet(self._google_conf.get("google_sheet").get("spreadsheet_name"))
 
     def clear_active_sheet(self) -> None:
         """
