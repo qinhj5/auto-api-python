@@ -27,11 +27,13 @@ google_api:
     auth_provider_x509_cert_url: ""
     client_x509_cert_url: ""
     universe_domain: ""
-  google_sheet:
-    file_name: ""
-    spreadsheet_name: ""
   google_drive:
     folder_name: ""
+  google_email:
+    default_recipient: ""
+  google_sheet:
+    file_name: ""
+    sheet_name: ""
 
 open_ai:
   api_key: ""
