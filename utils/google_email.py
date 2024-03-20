@@ -42,7 +42,6 @@ class GoogleEmail:
             None
         """
         self._google_conf = get_ext_conf(name=google_conf_name)
-        self._credentials = None
         self._gmail_service = None
         self._init()
 
@@ -75,44 +74,45 @@ class GoogleEmail:
 
     def _init(self) -> None:
         """
-        Initialize the credentials and gmail_service.
+        Initialize the gmail_service.
 
         Returns:
             None
         """
         os.makedirs(tmp_dir, exist_ok=True)
         google_token_path = os.path.abspath(os.path.join(tmp_dir, "google_email_token.json"))
+        credentials = None
         if os.path.exists(google_token_path):
             try:
-                self._credentials = Credentials.from_authorized_user_file(
+                credentials = Credentials.from_authorized_user_file(
                     filename=google_token_path,
                     scopes=["https://www.googleapis.com/auth/gmail.send"]
                 )
             except Exception as e:
                 logger.error(f"{e}\n{traceback.format_exc()}")
                 sys.exit(1)
-        if not self._credentials or not self._credentials.valid:
-            if self._credentials and self._credentials.expired and self._credentials.refresh_token:
-                self._credentials.refresh(Request())
+        if not credentials or not credentials.valid:
+            if credentials and credentials.expired and credentials.refresh_token:
+                credentials.refresh(Request())
             else:
                 flow = InstalledAppFlow.from_client_config(
                     client_config=self._google_conf.get("client_config"),
                     scopes=["https://www.googleapis.com/auth/gmail.send"]
                 )
                 try:
-                    self._credentials = flow.run_local_server(port=0)
+                    credentials = flow.run_local_server(port=0)
                 except Exception as e:
                     logger.error(f"{e}\n{traceback.format_exc()}")
                     sys.exit(1)
             with open(google_token_path, "w") as f:
-                f.write(self._credentials.to_json())
+                f.write(credentials.to_json())
 
-        self._gmail_service = build("gmail", "v1", credentials=self._credentials)
+        self._gmail_service = build("gmail", "v1", credentials=credentials)
 
     def send(self,
-             to_recipients: str,
              subject: str,
              body: str,
+             to_recipients: str,
              cc_recipients: str = None,
              bcc_recipients: str = None,
              attachment_path: str = None
@@ -121,9 +121,9 @@ class GoogleEmail:
         Send an email using Gmail API.
 
         Args:
-            to_recipients (str): Comma-separated email addresses of the primary recipients.
             subject (str): The email subject.
             body (str): The email body.
+            to_recipients (str): Comma-separated email addresses of the primary recipients.
             cc_recipients (str): Comma-separated email addresses of the CC recipients. Default is None.
             bcc_recipients (str): Comma-separated email addresses of the BCC recipients. Default is None.
             attachment_path (str): Path to the file to be attached. Default is None (no attachment).
@@ -132,12 +132,20 @@ class GoogleEmail:
             None
         """
         message = MIMEMultipart()
-        message["to"] = to_recipients
         message["subject"] = subject
         message.attach(MIMEText(body, "plain"))
 
+        recipients = to_recipients.split(",")
+        recipients = [recipient for recipient in recipients if recipient]
+
+        default_recipient = self._google_conf.get("google_email").get("default_recipient")
+        if default_recipient:
+            recipients.append(default_recipient)
+        message["to"] = ",".join(recipients)
+
         if cc_recipients:
             message["cc"] = cc_recipients
+
         if bcc_recipients:
             message["bcc"] = bcc_recipients
 
@@ -156,4 +164,5 @@ class GoogleEmail:
 
 
 if __name__ == "__main__":
+    # OAuth consent screen is required before using Gmail API
     GoogleEmail().send(to_recipients="", subject="", body="")
