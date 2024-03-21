@@ -205,7 +205,7 @@ class SwaggerParser:
         """
         matches = re.findall(r"{(.*?)}", path)
         for match in matches:
-            path = path.replace(match, SwaggerParser._avoid_keywords(SwaggerParser._pascal_to_snake(match)))
+            path = path.replace("{%s}" % match, "{%s}" % avoid_keywords(pascal_to_snake(match)))
         return path
 
     @staticmethod
