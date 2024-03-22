@@ -156,7 +156,7 @@ class GoogleDrive:
 
         folder_id = self._get_id(name=folder_name)
         if not folder_id:
-            self._create_folder(folder_name=folder_name)
+            folder_id = self._create_folder(folder_name=folder_name)
 
         file_metadata.update({"parents": [folder_id]})
 
