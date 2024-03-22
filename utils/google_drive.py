@@ -152,7 +152,7 @@ class GoogleDrive:
 
         folder_name = self._google_conf.get("google_drive").get("folder_name")
         if not folder_name:
-            folder_name = "test"
+            folder_name = "tmp"
 
         folder_id = self._get_id(name=folder_name)
         if not folder_id:
