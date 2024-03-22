@@ -116,8 +116,9 @@ class EmailNotification:
             smtp.sendmail(self._sender, self._recipients.split(","), msg.as_string())
         except Exception as e:
             logger.error(f"{e}\n{traceback.format_exc()}")
-        else:
-            smtp.quit()
+        finally:
+            if smtp:
+                smtp.quit()
 
 
 def send_email():
