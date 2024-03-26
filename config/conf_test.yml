@@ -54,7 +54,6 @@ locust:
   num_requests: ""
   run_time: "1m"
 
-chrome_storage:
+chrome_browser:
   host: ""
-  cookie_file: ""
-  local_state: ""
+  data_dir: ""
