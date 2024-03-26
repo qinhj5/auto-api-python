@@ -3,31 +3,81 @@ import os
 import sys
 import json
 import base64
+import shutil
 import sqlite3
 import datetime
 import traceback
+import leveldb as leveldb
+from utils.dirs import tmp_dir
 from utils.logger import logger
 from utils.common import get_env_conf
 from typing import Tuple, List, Dict, Any, Optional
 
 
-class ChromeStorage:
-    def __init__(self, conf_name: str = "chrome_storage") -> None:
+class ChromeBrowser:
+    def __init__(self, conf_name: str = "chrome_browser") -> None:
         """
-       Initialize an instance of the ChromeStorage class.
+       Initialize an instance of the ChromeBrowser class.
 
        Args:
-           conf_name (str): The name of the ChromeStorage configuration. Defaults to "chrome_storage".
+           conf_name (str): The name of the ChromeBrowser configuration. Defaults to "chrome_browser".
 
        Returns:
            None
        """
         self._conf = get_env_conf(name=conf_name)
         self._host = self._conf.get("host")
-        self._cookie_file = self._conf.get("cookie_file")
-        self._local_state = self._conf.get("local_state")
+        self._data_dir = self._conf.get("data_dir")
+        self._cookies_path = os.path.abspath(os.path.join(self._data_dir, "Default/Cookies"))
+        self._local_state_path = os.path.abspath(os.path.join(self._data_dir, "Local State"))
+        self._leveldb_path = os.path.abspath(os.path.join(self._data_dir, "Default/Local Storage/leveldb"))
         self._platform = sys.platform
         self._cookies = list()
+        self._local_storage_items = list()
+        self._init()
+
+    def _init(self) -> None:
+        """
+        Initialization function to copy essential directory and files to the temporary directory.
+
+        Returns:
+           None
+        """
+        if not os.path.exists(tmp_dir):
+            os.makedirs(tmp_dir, exist_ok=True)
+
+        cookies_path = os.path.abspath(os.path.join(self._data_dir, "Default/Cookies"))
+        if not os.path.exists(cookies_path):
+            logger.error(f"cookies path ({cookies_path}) does not exist")
+            sys.exit(1)
+        else:
+            self._cookies_path = os.path.abspath(os.path.join(tmp_dir, "Cookies"))
+            if os.path.exists(self._cookies_path):
+                os.remove(self._cookies_path)
+            shutil.copy2(cookies_path, self._cookies_path)
+
+        local_state_path = os.path.abspath(os.path.join(self._data_dir, "Local State"))
+        if not os.path.exists(local_state_path):
+            logger.error(f"local state path ({local_state_path}) does not exist")
+            sys.exit(1)
+        else:
+            self._local_state_path = os.path.abspath(os.path.join(tmp_dir, "Local State"))
+            if os.path.exists(self._local_state_path):
+                os.remove(self._local_state_path)
+            shutil.copy2(local_state_path, self._local_state_path)
+
+        leveldb_path = os.path.abspath(os.path.join(self._data_dir, "Default/Local Storage/leveldb"))
+        if not os.path.exists(leveldb_path):
+            logger.error(f"leveldb path ({leveldb_path}) does not exist")
+            sys.exit(1)
+        else:
+            self._leveldb_path = os.path.abspath(os.path.join(tmp_dir, "leveldb"))
+            if os.path.exists(self._leveldb_path):
+                shutil.rmtree(self._leveldb_path)
+            shutil.copytree(leveldb_path, self._leveldb_path)
+
+        self._fetch_browser_cookies()
+        self._fetch_browser_local_storage_items()
 
     @staticmethod
     def _dict_factory(cursor: sqlite3.Cursor, row: Tuple[Any]) -> dict:
@@ -76,7 +126,7 @@ class ChromeStorage:
             return kdf.derive(password)
         elif self._platform == "win32":
             try:
-                with open(self._local_state, "r", encoding="utf-8") as f:
+                with open(self._local_state_path, "r", encoding="utf-8") as f:
                     base64_encrypted_key = json.load(f)["os_crypt"]["encrypted_key"]
             except Exception as e:
                 logger.error(f"{e}\n{traceback.format_exc()}")
@@ -134,7 +184,7 @@ class ChromeStorage:
             de_cryptor = cipher.decryptor()
             decrypted = de_cryptor.update(encrypted_value) + de_cryptor.finalize()
 
-            return ChromeStorage._clean_bytes(decrypted)
+            return ChromeBrowser._clean_bytes(decrypted)
         else:
             init_vector = encrypted_value[3:15]
             cipher_bytes = encrypted_value[15:]
@@ -169,12 +219,8 @@ class ChromeStorage:
         Returns:
             None
         """
-        if not os.path.exists(self._cookie_file):
-            logger.error(f"path ({self._cookie_file}) does not exist")
-            sys.exit(1)
-
-        conn = sqlite3.connect(self._cookie_file)
-        conn.row_factory = ChromeStorage._dict_factory
+        conn = sqlite3.connect(self._cookies_path)
+        conn.row_factory = ChromeBrowser._dict_factory
         cursor = conn.cursor()
 
         try:
@@ -194,11 +240,26 @@ class ChromeStorage:
                     {"name": cookie["name"],
                      "value": self._decrypt_cookie_value(cookie["encrypted_value"]),
                      "host": cookie["host_key"],
-                     "is_expired": ChromeStorage._is_expired(cookie["expires_utc"]) if cookie["has_expires"] else False,
+                     "is_expired": ChromeBrowser._is_expired(cookie["expires_utc"]) if cookie["has_expires"] else False,
                      "update_time": last_update_time.strftime("%Y-%m-%d %H:%M:%S")}
                 )
         finally:
             conn.close()
+
+    def _fetch_browser_local_storage_items(self) -> None:
+        """
+        Fetch browser local storage items and store them in self._local_storage_items
+
+        Returns:
+            None
+        """
+        try:
+            db = leveldb.LevelDB(self._leveldb_path)
+        except Exception as e:
+            logger.error(f"{e}\n{traceback.format_exc()}")
+        else:
+            for k in db.RangeIter(include_value=False):
+                self._local_storage_items.append({"key": k, "value": db.Get(k)})
 
     def get_all_cookies(self) -> List[Dict[str, Any]]:
         """
@@ -207,12 +268,23 @@ class ChromeStorage:
         Returns:
             List[Dict[str, Any]]: A list containing all cookies. Each cookie is represented as a dict.
         """
-        self._fetch_browser_cookies()
-
         if self._cookies:
             return self._cookies
         else:
             logger.warning("no local cookies")
+            return []
+
+    def get_all_local_storage_items(self) -> List[Dict[str, Any]]:
+        """
+        Get a list of all local storage items.
+
+        Returns:
+            List[Dict[str, Any]]: A list containing all local storage items. Each item is represented as a dict.
+        """
+        if self._local_storage_items:
+            return self._local_storage_items
+        else:
+            logger.warning("no local local storage items")
             return []
 
     def get_cookie_value(self, name: str, host: str = None) -> str:
@@ -224,27 +296,53 @@ class ChromeStorage:
             host (str): The host of the cookie. If not provided, the default host will be used.
 
         Returns:
-            str: The cookie value of host.
+            str: The cookie value of the specific host.
         """
-        self._fetch_browser_cookies()
-
         if not host:
             host = self._host
 
         cookie_values = [cookie for cookie in self._cookies if cookie["host"] == host and cookie["name"] == name]
+
         if len(cookie_values) == 0:
-            logger.warning(f"no such cookie ({name}) for host ({self._host})")
-            return ""
+            logger.error(f"no such cookie ({name}) for host ({host})")
+            sys.exit(1)
 
         if all(not cookie["is_expired"] for cookie in cookie_values):
             cookie_strings = [f"""{cookie["name"]}={cookie["value"]}""" for cookie in cookie_values]
             return ";".join(cookie_strings)
         else:
             logger.error("cookie value expired")
-            return ""
+            sys.exit(1)
+
+    def get_local_storage_item_value(self, name: str, host: str = None) -> bytearray:
+        """
+        Get the value of a local storage item.
+
+        Args:
+            name (str): The name of the local storage item.
+            host (str): The host of the local storage item. If not provided, the default host will be used.
+
+        Returns:
+            bytearray: The local storage item value of the specific host.
+        """
+        if not host:
+            host = self._host
+
+        item_values = [item for item in self._local_storage_items
+                       if host in item["key"].decode("utf-8") and name in item["key"].decode("utf-8")]
+
+        if len(item_values) == 0:
+            logger.error(f"no such local storage item ({name}) for host ({host})")
+            sys.exit(1)
+
+        if len(item_values) != 1:
+            logger.error(f"too many local storage items ({name}) for host ({host})")
+            sys.exit(1)
+
+        return item_values[0].get("value", bytearray())
 
 
 if __name__ == "__main__":
-    cookies = ChromeStorage().get_all_cookies()
+    cookies = ChromeBrowser().get_all_cookies()
     for c in cookies:
         logger.info(c)
