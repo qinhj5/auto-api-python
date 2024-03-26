@@ -54,7 +54,7 @@ APIAuto/
 ├── utils/
 │   ├── __init__.py
 │   ├── api_coverage.py
-│   ├── chrome_storage.py
+│   ├── chrome_browser.py
 │   ├── clickhouse_connection.py
 │   ├── common.py
 │   ├── decorators.py
