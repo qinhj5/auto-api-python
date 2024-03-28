@@ -397,8 +397,9 @@ class SwaggerParser:
                                   for item in params_list]))
         func_header = f"""\n    def {func_name}(self{params_header}) -> Dict[str, Any]:\n"""
 
-        func_body = "        \"\"\"\n%s\n\n" % summary
-        func_body += "        Args:\n            self\n"
+        func_body = "        \"\"\"\n%s\n" % summary
+        if params_list:
+            func_body += "\n        Args:\n"
         for item in params_list:
             desc_string = f"""{next(iter(item.keys()))} ({item[next(iter(item.keys()))]["type"]}): """ + \
                           item[next(iter(item.keys()))]["desc"]
