@@ -117,7 +117,7 @@ def main():
     pre_action()
     
     args = get_parse_args()
-    set_env(args.env)
+    os.environ["ENV"] = args.env
     logger.info(f"current env is {args.env}.")
 
     exe_test(cases_dir=args.cases_dir,
@@ -133,6 +133,6 @@ def main():
 if __name__ == "__main__":
     from utils.logger import logger
     from utils.email_notification import send_email
+    from utils.common import clean_logs_and_reports
     from utils.dirs import report_raw_dir, report_html_dir
-    from utils.common import set_env, clean_logs_and_reports
     main()
