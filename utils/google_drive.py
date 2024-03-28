@@ -106,7 +106,7 @@ class GoogleDrive:
         if folder_id is not None:
             logger.info(f"created folder {folder_name}")
         else:
-            logger.error(f"failed to create folder, file will be uploaded to root, response: {response}")
+            logger.warning(f"create folder ({folder_name}) failed, file will be uploaded to root, response: {response}")
         return folder_id
 
     def _get_id(self, name: str) -> str:
@@ -129,7 +129,7 @@ class GoogleDrive:
                 sys.exit(1)
             result_id = files[0].get("id")
         else:
-            logger.error(f"no search result for name {name}")
+            logger.warning(f"no search result for name {name}")
             result_id = ""
 
         return result_id
