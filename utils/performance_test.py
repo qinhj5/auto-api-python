@@ -22,7 +22,7 @@ class WebsiteTask(TaskSet):
         url = Global.constants.BASE_URL + uri
         if response.status_code != 200:
             WebsiteTask._count_failure += 1
-            logger.error(f"failure ({method} {url}) [{str(WebsiteTask._count_failure).center(7)}]")
+            logger.warning(f"failure ({method} {url}) [{str(WebsiteTask._count_failure).center(7)}]")
         else:
             WebsiteTask._count_success += 1
             logger.info(f"success ({method} {url}) [{str(WebsiteTask._count_success).center(7)}]")
