@@ -233,6 +233,7 @@ class ChromeBrowser:
             raw_cookies = cursor.fetchall()
         except Exception as e:
             logger.error(f"{e}\n{traceback.format_exc()}")
+            sys.exit(1)
         else:
             for cookie in raw_cookies:
                 last_update_time = datetime.datetime.fromtimestamp(cookie["last_update_utc"] / 10 ** 6 - 11644473600)
@@ -257,6 +258,7 @@ class ChromeBrowser:
             db = leveldb.LevelDB(self._leveldb_path)
         except Exception as e:
             logger.error(f"{e}\n{traceback.format_exc()}")
+            sys.exit(1)
         else:
             for k in db.RangeIter(include_value=False):
                 self._local_storage_items.append({"key": k, "value": db.Get(k)})
