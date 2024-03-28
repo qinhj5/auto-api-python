@@ -89,6 +89,7 @@ class ApiCoverage:
                 response.json()
             except ValueError:
                 logger.error(f"Parse Swagger docs error: {response.text}")
+                sys.exit(1)
             else:
                 swagger_dict = dict()
                 swagger_dict["static_url_list"] = []
