@@ -75,7 +75,7 @@ class ForwarderSetting:
                 subprocess.call(f"kill {pid}", shell=True)
             logger.info(f"killed: {command}")
         else:
-            logger.info(f"no result for {command}")
+            logger.warning(f"no result for {command}")
 
     def _connect_ssh_tunnel(self) -> None:
         """
@@ -91,7 +91,7 @@ class ForwarderSetting:
             subprocess.call(command)
             logger.info(f"executed: {command}")
         else:
-            logger.info(f"existed for {command}")
+            logger.warning(f"existed for {command}")
 
     def _remove_local_interfaces(self) -> None:
         """
