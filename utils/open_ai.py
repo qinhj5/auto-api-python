@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
 import json
+import sys
 import time
 import filelock
 import traceback
@@ -100,7 +101,7 @@ class OpenAi:
             with open(dialogue_contexts_path, "w", encoding="utf-8") as f:
                 json.dump(self._contexts, f, indent=4)
 
-    def _generate_response(self, prompt: str) -> str:
+    def _generate_response(self, prompt: str) -> None:
         """
         Generate a response using OpenAI model.
 
@@ -108,7 +109,7 @@ class OpenAi:
             prompt (str): The prompt for generating the response.
 
         Returns:
-            str: The text of response.
+            None
         """
         context = "\n".join(self._contexts[-self._history:])
 
@@ -123,25 +124,30 @@ class OpenAi:
             response_text = completion.choices[0].message
         except Exception as e:
             logger.error(f"{e}\n{traceback.format_exc()}")
-            response_text = "failed to generate a response"
+            raise KeyboardInterrupt
 
-        self._contexts.append(f"Prompt: {prompt}, Answer: {response_text}.")
+        self._contexts.append(f"Question: {prompt} \n Answer: {response_text}")
 
-        logger.info(f"You:\n{prompt}")
-        logger.info(f"Bot:\n{response_text}")
+        print(f"Bot:\n{response_text}")
 
-        return response_text
+    def run(self) -> None:
+        """
+        Execute dialogue and generate response based on user prompt.
 
-    def run(self):
+        Returns:
+            None
+        """
+        if not self._model:
+            logger.error("model is empty")
+            return
+
         logger.info(f"started dialogue")
-        logger.info(f"Model: {self._model}, History: {self._history}")
+        logger.info(f"model: {self._model}, history: {self._history}")
         try:
             while True:
                 time.sleep(1)
-                prompt = input("input your prompt:\n")
-                response_text = self._generate_response(prompt)
-                if response_text == "failed to generate a response":
-                    raise KeyboardInterrupt
+                prompt = input("Your prompt:\n")
+                self._generate_response(prompt)
         except KeyboardInterrupt:
             logger.info("finished dialogue")
 
