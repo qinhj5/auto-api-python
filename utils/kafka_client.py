@@ -72,6 +72,7 @@ class KafkaClient:
                 continue
             elif message.error():
                 logger.error("error occurred:", message.error())
+                break
             else:
                 messages.append(message.value().decode("utf-8"))
 
@@ -107,7 +108,8 @@ class KafkaClient:
                 if message is None:
                     continue
                 elif message.error():
-                    logger.info("error occurred:", message.error())
+                    logger.error("error occurred:", message.error())
+                    raise KeyboardInterrupt
                 else:
                     logger.info(f"""received message [{str(count).center(5)}]: \n{message.value().decode("utf-8")}""")
                     count += 1
