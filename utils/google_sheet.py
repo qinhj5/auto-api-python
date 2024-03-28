@@ -113,7 +113,8 @@ class GoogleSheet:
             None
         """
         if title in self.get_sheet_titles():
-            logger.error(f"sheet with title {title} exists.")
+            logger.error(f"title {title} of sheet dose not exist")
+            sys.exit(1)
         else:
             with self._lock:
                 self._sheet_page.add_worksheet(title=title, rows=rows, cols=cols)
