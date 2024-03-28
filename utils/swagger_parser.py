@@ -162,12 +162,13 @@ class SwaggerParser:
             try:
                 response.json()
             except ValueError:
-                logger.error(f"Please check Swagger URL response: {response.text}")
+                logger.error(f"Parse Swagger docs error: {response.text}")
+                sys.exit(1)
             else:
                 self._definitions_dict = response.json().get("definitions", dict())
                 return response.json().get("paths", dict())
         else:
-            logger.error("Failed to request Swagger URL")
+            logger.error("Cannot request Swagger URL")
             sys.exit(1)
 
     def _process_swagger_data(self) -> None:
@@ -205,7 +206,7 @@ class SwaggerParser:
         """
         matches = re.findall(r"{(.*?)}", path)
         for match in matches:
-            path = path.replace("{%s}" % match, "{%s}" % avoid_keywords(pascal_to_snake(match)))
+            path = path.replace(match, SwaggerParser._avoid_keywords(SwaggerParser._pascal_to_snake(match)))
         return path
 
     @staticmethod
@@ -340,7 +341,7 @@ class SwaggerParser:
         else:
             func_name = f"""{method}_{SwaggerParser._pascal_to_snake(api["detail"]["operationId"])}"""
 
-        logger.info(json.dumps(api["detail"]))
+        logger.debug(json.dumps(api["detail"]))
 
         summary = api["detail"].get("summary", "Null")
         summary = SwaggerParser._get_wrapped_string(summary, indent=8)
@@ -655,7 +656,7 @@ class SwaggerParser:
         self._process_swagger_data()
         self._generate_api_templates()
         self._generate_testcases_templates()
-        logger.info(f"""template dir: {os.path.abspath(os.path.join(utils_dir, "../tmp"))}""")
+        logger.info(f"""templates are generated in: {os.path.abspath(os.path.join(utils_dir, "../tmp"))}""")
 
 
 if __name__ == "__main__":
