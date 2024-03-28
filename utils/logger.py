@@ -5,13 +5,16 @@ import colorlog
 from utils.decorators import log_locker
 from logging.handlers import RotatingFileHandler
 
+# get current environment
+env = os.environ.get("ENV", "test")
+
 # setup log directory
 utils_dir = os.path.dirname(__file__)
 project_dir = os.path.abspath(os.path.join(utils_dir, ".."))
 log_dir = os.path.abspath(os.path.join(project_dir, "log"))
 
 # setup log path
-log_path = os.path.abspath(os.path.join(log_dir, "test.log"))
+log_path = os.path.abspath(os.path.join(log_dir, f"{env}.log"))
 
 # setup formatter
 log_format = "%(asctime)s - PID:%(process)s - TID:%(thread)s - %(file)s:%(line)d - [%(levelname)s] - %(message)s"
@@ -41,7 +44,7 @@ file_handler.setLevel(logging.DEBUG)
 file_handler.setFormatter(file_formatter)
 
 # setup logger
-logger = logging.getLogger("test")
+logger = logging.getLogger(env)
 logger.setLevel(logging.DEBUG)
 logger.addHandler(console_handler)
 logger.addHandler(file_handler)
