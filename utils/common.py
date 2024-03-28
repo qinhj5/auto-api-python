@@ -16,30 +16,6 @@ from openpyxl.worksheet.worksheet import Worksheet
 from utils.dirs import config_dir, data_dir, report_dir, log_request_dir, log_summary_dir
 
 
-def set_env(env: str) -> None:
-    """
-    Set the environment variable.
-
-    Args:
-        env (str): The value to set for the environment variable.
-
-    Returns:
-        None
-    """
-    os.environ["ENV"] = env
-
-
-def get_env() -> str:
-    """
-    Get the environment variable.
-
-    Returns:
-        str: The value of the environment variable.
-    """
-    env = os.environ.get("ENV", "test")
-    return env
-
-
 def get_env_conf(name: str = None) -> dict:
     """
     Get configuration information of environment.
@@ -50,7 +26,7 @@ def get_env_conf(name: str = None) -> dict:
     Returns:
         dict: Configuration item dictionary if `name` is provided, otherwise the entire configuration dictionary.
     """
-    conf_path = os.path.abspath(os.path.join(config_dir, f"conf_{get_env()}.yml"))
+    conf_path = os.path.abspath(os.path.join(config_dir, f"""conf_{os.environ.get("ENV", "test")}.yml"""))
 
     with open(conf_path, "r", encoding="utf-8") as f:
         conf = yaml.safe_load(f)
