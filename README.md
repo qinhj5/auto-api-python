@@ -2,13 +2,13 @@
 
 ---
 
-<br>
+<br/>
 
 ## 一、简介
 
 这是一个支持执行API测试的基础用例模板，主要基于**pytest**测试框架进行构建，用例依靠**requests**模块进行请求。
 
-<br>
+<br/>
 
 ## 二、特性
 
@@ -24,7 +24,7 @@
 * 提供基于swagger和log一键统计api覆盖情况的脚本
 * ...
 
-<br>
+<br/>
 
 ## 三、目录结构
 
@@ -87,7 +87,7 @@ APIAuto/
 └── requirements.txt
 ```
 
-<br>
+<br/>
 
 ## 四、使用教程
 （Ubuntu 20.04 LTS x64, Python3.8）
@@ -113,7 +113,7 @@ APIAuto/
   python3.8 main.py
 ```
 
-<br>
+<br/>
 
 ---
 
