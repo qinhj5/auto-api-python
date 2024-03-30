@@ -118,5 +118,6 @@ APIAuto/
 ---
 
 <p align="center">有错误或者改进的地方请各位积极指出！</p>
+<p align="center"><a href="https://github.com/qinhj5/APIAuto">GitHub</a> | <a href="https://blog.csdn.net/embracestar">CSDN</a></p>
 
 ---
