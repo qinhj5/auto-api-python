@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
 import json
-import sys
 import time
 import filelock
 import traceback
@@ -12,7 +11,7 @@ from utils.common import get_ext_conf
 from utils.dirs import tmp_dir, lock_dir
 
 
-class OpenAi:
+class ChatBot:
     _instance = None
 
     def __new__(cls, *args, **kwargs) -> None:
@@ -26,30 +25,30 @@ class OpenAi:
             cls._instance = super().__new__(cls)
         return cls._instance
 
-    def __init__(self, openai_conf_name: str = "open_ai") -> None:
+    def __init__(self, conf_name: str = "chat_bot") -> None:
         """
-        Initialize an instance of the OpenAi class.
+        Initialize an instance of the ChatBot class.
 
         Args:
-            openai_conf_name (str): The name of the OpenAi configuration. Defaults to "open_ai".
+            conf_name (str): The name of the ChatBot configuration. Defaults to "chat_bot".
 
         Returns:
             None
         """
-        self._lock = filelock.FileLock(os.path.abspath(os.path.join(lock_dir, "open_ai.lock")))
-        self._openai_conf = get_ext_conf(name=openai_conf_name)
-        self._model = self._openai_conf.get("model")
-        self._history = self._openai_conf.get("history")
-        self._client = OpenAI(api_key=self._openai_conf.get("api_key"))
+        self._lock = filelock.FileLock(os.path.abspath(os.path.join(lock_dir, "chat_bot.lock")))
+        self._conf = get_ext_conf(name=conf_name)
+        self._model = self._conf.get("model")
+        self._history = self._conf.get("history")
+        self._client = OpenAI(api_key=self._conf.get("api_key"), base_url=self._conf.get("base_url"))
         self._contexts = []
         self._init_contexts()
 
-    def __enter__(self) -> 'OpenAi':
+    def __enter__(self) -> 'ChatBot':
         """
         Context manager method for entering the context.
 
         Returns:
-            OpenAi: The current instance of the OpenAi class.
+            ChatBot: The current instance of the ChatBot class.
         """
         return self
 
@@ -111,22 +110,22 @@ class OpenAi:
         Returns:
             None
         """
-        context = "\n".join(self._contexts[-self._history:])
+        context = [{"role": "system", "content": "You are a helpful assistant."}]
+        context.extend(self._contexts[-self._history * 2:])
+        context.append({"role": "user", "content": prompt})
 
         try:
             completion = self._client.chat.completions.create(
                 model=self._model,
-                messages=[
-                    {"role": "system", "content": context},
-                    {"role": "user", "content": prompt}
-                ]
+                messages=context
             )
-            response_text = completion.choices[0].message
+            response_text = completion.choices[0].message.content
         except Exception as e:
             logger.error(f"{e}\n{traceback.format_exc()}")
             raise KeyboardInterrupt
-
-        self._contexts.append(f"Question: {prompt} \n Answer: {response_text}")
+        else:
+            self._contexts.extend([{"role": "user", "content": prompt},
+                                   {"role": "assistant", "content": response_text}])
 
         print(f"Bot:\n{response_text}")
 
@@ -146,12 +145,12 @@ class OpenAi:
         try:
             while True:
                 time.sleep(1)
-                prompt = input("Your prompt:\n")
+                prompt = input("You:\n")
                 self._generate_response(prompt)
         except KeyboardInterrupt:
             logger.info("finished dialogue")
 
 
 if __name__ == "__main__":
-    with OpenAi() as instance:
+    with ChatBot() as instance:
         instance.run()
