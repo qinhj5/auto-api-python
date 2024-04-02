@@ -35,7 +35,8 @@ google_api:
     file_name: ""
     sheet_name: ""
 
-open_ai:
+chat_bot:
   api_key: ""
+  base_url: "https://api.openai.com/v1"
   model: ""
   history: 0
