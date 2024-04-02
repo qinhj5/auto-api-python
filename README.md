@@ -54,6 +54,7 @@ APIAuto/
 ├── utils/
 │   ├── __init__.py
 │   ├── api_coverage.py
+│   ├── chat_bot.py
 │   ├── chrome_browser.py
 │   ├── clickhouse_connection.py
 │   ├── common.py
@@ -69,7 +70,6 @@ APIAuto/
 │   ├── kafka_client.py
 │   ├── logger.py
 │   ├── mysql_connection.py
-│   ├── open_ai.py
 │   ├── performance_test.py
 │   ├── redis_connection.py
 │   ├── swagger_parser.py
