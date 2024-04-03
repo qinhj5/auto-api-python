@@ -52,7 +52,10 @@ class EmailNotification:
             for filename in filenames:
                 if ".gitkeep" in filename or ".zip" in filename:
                     continue
-                zip_instance.write(os.path.join(path, filename), os.path.join(relevant_path, filename))
+                zip_instance.write(
+                    os.path.abspath(os.path.join(path, filename)),
+                    os.path.abspath(os.path.join(relevant_path, filename))
+                )
 
         zip_instance.close()
 
