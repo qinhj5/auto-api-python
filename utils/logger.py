@@ -5,21 +5,13 @@ import colorlog
 from utils.decorators import log_locker
 from logging.handlers import RotatingFileHandler
 
-# get current environment
-env = os.environ.get("ENV", "test")
+ENV = os.environ.get("ENV", "test")
+LOG_FORMAT = "%(asctime)s - PID:%(process)s - TID:%(thread)s - %(file)s:%(line)d - [%(levelname)s] - %(message)s"
 
-# setup log directory
-utils_dir = os.path.dirname(__file__)
-project_dir = os.path.abspath(os.path.join(utils_dir, ".."))
-log_dir = os.path.abspath(os.path.join(project_dir, "log"))
-
-# setup log path
-log_path = os.path.abspath(os.path.join(log_dir, f"{env}.log"))
-
-# setup formatter
-log_format = "%(asctime)s - PID:%(process)s - TID:%(thread)s - %(file)s:%(line)d - [%(levelname)s] - %(message)s"
-console_formatter = colorlog.ColoredFormatter(
-    f"%(log_color)s{log_format}",
+CONSOLE_HANDLER = logging.StreamHandler()
+CONSOLE_HANDLER.setLevel(logging.INFO)
+CONSOLE_FORMATTER = colorlog.ColoredFormatter(
+    f"%(log_color)s{LOG_FORMAT}",
     log_colors={
         "DEBUG": "bold_blue",
         "INFO": "bold_green",
@@ -27,29 +19,22 @@ console_formatter = colorlog.ColoredFormatter(
         "ERROR": "bold_red"
     }
 )
-file_formatter = logging.Formatter(log_format)
+CONSOLE_HANDLER.setFormatter(CONSOLE_FORMATTER)
 
-# build console handler
-console_handler = logging.StreamHandler()
-console_handler.setLevel(logging.INFO)
-console_handler.setFormatter(console_formatter)
-
-# build file handler
-file_handler = RotatingFileHandler(log_path,
+FILE_HANDLER = RotatingFileHandler(os.path.abspath(os.path.join(os.path.dirname(__file__), f"../log/{ENV}.log")),
                                    maxBytes=1024 * 1024 * 10,
                                    backupCount=3,
                                    mode="a",
                                    encoding="utf-8")
-file_handler.setLevel(logging.DEBUG)
-file_handler.setFormatter(file_formatter)
+FILE_HANDLER.setLevel(logging.DEBUG)
+FILE_FORMATTER = logging.Formatter(LOG_FORMAT)
+FILE_HANDLER.setFormatter(FILE_FORMATTER)
 
-# setup logger
-logger = logging.getLogger(env)
+logger = logging.getLogger(ENV)
 logger.setLevel(logging.DEBUG)
-logger.addHandler(console_handler)
-logger.addHandler(file_handler)
+logger.addHandler(CONSOLE_HANDLER)
+logger.addHandler(FILE_HANDLER)
 
-# add decorator
 logger.debug = log_locker(logger.debug)
 logger.info = log_locker(logger.info)
 logger.warning = log_locker(logger.warning)
