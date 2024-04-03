@@ -330,8 +330,16 @@ class ChromeBrowser:
         if not host:
             host = self._host
 
-        item_values = [item for item in self._local_storage_items
-                       if host in item["key"].decode("utf-8") and name in item["key"].decode("utf-8")]
+        item_values = []
+        for item in self._local_storage_items:
+            try:
+                item["key"].decode("utf-8")
+            except Exception as e:
+                logger.warning(f"{e}\n{traceback.format_exc()}")
+                logger.warning(f"""skip key: {item["key"]}""")
+            else:
+                if host in item["key"].decode("utf-8") and name in item["key"].decode("utf-8"):
+                    item_values.append(item)
 
         if len(item_values) == 0:
             logger.error(f"no such local storage item ({name}) for host ({host})")
@@ -342,6 +350,25 @@ class ChromeBrowser:
             sys.exit(1)
 
         return item_values[0].get("value", bytearray())
+
+    @staticmethod
+    def bytes_to_unicode(byte_array: bytearray) -> str:
+        """
+        Convert a bytearray to a Unicode string.
+
+        Args:
+            byte_array (bytearray): The bytearray to convert.
+
+        Returns:
+            str: The Unicode string representation of the bytearray.
+        """
+        sub_byte_array = byte_array[1:]
+        raw_unicode_string = "".join(
+            [r"\u{:02x}{:02x}".format(sub_byte_array[i + 1], sub_byte_array[i])
+             for i in range(0, len(sub_byte_array), 2)]
+        )
+        unicode_string = raw_unicode_string.encode().decode("unicode_escape")
+        return unicode_string
 
 
 if __name__ == "__main__":
