@@ -5,8 +5,7 @@ import filelock
 from utils.dirs import lock_dir
 from typing import Type, Callable
 
-lock_path = os.path.abspath(os.path.join(lock_dir, "log.lock"))
-log_lock = filelock.FileLock(lock_path)
+LOCK_PATH = os.path.abspath(os.path.join(lock_dir, "log.lock"))
 
 
 def log_locker(func: Callable) -> Callable:
@@ -24,7 +23,7 @@ def log_locker(func: Callable) -> Callable:
         file_path, line_number, _, _ = inspect.getframeinfo(frame)[:4]
         file_name = file_path.split("/")[-1]
         extra = {"file": file_name, "line": line_number}
-        with log_lock:
+        with filelock.FileLock(LOCK_PATH):
             return func(*args, **kwargs, extra=extra)
 
     return wrapper
