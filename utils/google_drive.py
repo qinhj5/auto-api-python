@@ -189,7 +189,7 @@ class GoogleDrive:
         response = self._drive_service.files().get_media(fileId=file_id)
 
         if destination_path is None:
-            destination_path = os.path.join(tmp_dir, file_name)
+            destination_path = os.path.abspath(os.path.join(tmp_dir, file_name))
 
         with open(destination_path, "wb") as file:
             downloader = MediaIoBaseDownload(file, response)
