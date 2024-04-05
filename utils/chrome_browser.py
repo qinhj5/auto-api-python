@@ -7,7 +7,6 @@ import shutil
 import sqlite3
 import datetime
 import traceback
-import leveldb as leveldb
 from utils.dirs import tmp_dir
 from utils.logger import logger
 from utils.common import get_env_conf
@@ -105,7 +104,7 @@ class ChromeBrowser:
             Optional[bytes]: The encryption key as bytes, or None if the platform is not supported.
         """
         if self._platform == "darwin":
-            import keyring
+            import keyring  # pip install keyring==24.3.1
             password = keyring.get_password("Chrome Safe Storage", "Chrome")
 
             if isinstance(password, str):
@@ -131,12 +130,11 @@ class ChromeBrowser:
             except Exception as e:
                 logger.error(f"{e}\n{traceback.format_exc()}")
                 sys.exit(1)
-                
+
             encrypted_key_with_header = base64.b64decode(base64_encrypted_key)
             encrypted_key = encrypted_key_with_header[5:]
-            
-            import win32crypt
 
+            import win32crypt  # pip install pywin32==306
             return win32crypt.CryptUnprotectData(encrypted_key, None, None, None, 0)[1]
         else:
             logger.error("only support macOS and Windows")
@@ -254,14 +252,30 @@ class ChromeBrowser:
         Returns:
             None
         """
-        try:
-            db = leveldb.LevelDB(self._leveldb_path)
-        except Exception as e:
-            logger.error(f"{e}\n{traceback.format_exc()}")
-            sys.exit(1)
+        if self._platform == "darwin":
+            import leveldb  # pip install leveldb==0.201
+            try:
+                db = leveldb.LevelDB(self._leveldb_path)
+            except Exception as e:
+                logger.error(f"{e}\n{traceback.format_exc()}")
+                sys.exit(1)
+            else:
+                for k in db.RangeIter(include_value=False):
+                    self._local_storage_items.append({"key": k, "value": db.Get(k)})
+        elif self._platform == "win32":
+            import plyvel  # pip install plyvel-win32==1.3.0
+            try:
+                db = plyvel.DB(self._leveldb_path, create_if_missing=False)
+            except Exception as e:
+                logger.error(f"{e}\n{traceback.format_exc()}")
+                sys.exit(1)
+            else:
+                with db.iterator(include_value=False) as it:
+                    for key in it:
+                        self._local_storage_items.append({"key": key, "value": db.get(key)})
         else:
-            for k in db.RangeIter(include_value=False):
-                self._local_storage_items.append({"key": k, "value": db.Get(k)})
+            logger.error("only support macOS and Windows")
+            sys.exit(1)
 
     def get_all_cookies(self) -> List[Dict[str, Any]]:
         """
