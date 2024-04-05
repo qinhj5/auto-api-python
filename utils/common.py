@@ -224,7 +224,7 @@ def get_code_modifiers(file_path: str, line_range: dict = None, line_number: int
         raise Exception("miss argument: line_range or line_number")
 
     modifiers = set()
-    
+
     is_installed = False
     try:
         result = subprocess.run(["git", "--version"], capture_output=True, text=True)
@@ -318,8 +318,14 @@ def clean_logs_and_reports() -> None:
     """
     if os.path.exists(report_dir):
         shutil.rmtree(report_dir)
+
+        os.makedirs(report_dir, exist_ok=True)
+        file = open(os.path.abspath(os.path.join(report_dir, ".gitkeep")), "w")
+        file.close()
+
     if os.path.exists(log_request_dir):
         shutil.rmtree(log_request_dir)
+
     if os.path.exists(log_summary_dir):
         shutil.rmtree(log_summary_dir)
 

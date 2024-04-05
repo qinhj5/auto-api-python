@@ -9,3 +9,4 @@
 **/lock/
 **/*.pyc
 **/*.lock
+**/!.gitkeep
