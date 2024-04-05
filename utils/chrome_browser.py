@@ -27,9 +27,9 @@ class ChromeBrowser:
         self._conf = get_env_conf(name=conf_name)
         self._host = self._conf.get("host")
         self._data_dir = self._conf.get("data_dir")
-        self._cookies_path = os.path.abspath(os.path.join(self._data_dir, "Default/Cookies"))
-        self._local_state_path = os.path.abspath(os.path.join(self._data_dir, "Local State"))
-        self._leveldb_path = os.path.abspath(os.path.join(self._data_dir, "Default/Local Storage/leveldb"))
+        self._cookies_path = ""
+        self._local_state_path = ""
+        self._leveldb_path = ""
         self._platform = sys.platform
         self._cookies = list()
         self._local_storage_items = list()
@@ -45,7 +45,15 @@ class ChromeBrowser:
         if not os.path.exists(tmp_dir):
             os.makedirs(tmp_dir, exist_ok=True)
 
-        cookies_path = os.path.abspath(os.path.join(self._data_dir, "Default/Cookies"))
+        if self._platform == "darwin":
+            sub_dir = "Default/Cookies"
+        elif self._platform == "win32":
+            sub_dir = "Default/Network/Cookies"
+        else:
+            logger.error("only support macOS and Windows")
+            sys.exit(1)
+
+        cookies_path = os.path.abspath(os.path.join(self._data_dir, sub_dir))
         if not os.path.exists(cookies_path):
             logger.error(f"cookies path ({cookies_path}) does not exist")
             sys.exit(1)
