@@ -29,7 +29,7 @@
 ## 三、目录结构
 
 ```
-APIAuto/
+auto-api-python/
 ├── api/
 │   ├── __init__.py
 │   ├── base_api.py
@@ -99,8 +99,8 @@ APIAuto/
 ```
 ### 2.克隆仓库
 ```
-  git clone https://github.com/qinhj5/APIAuto.git
-  cd APIAuto
+  git clone https://github.com/qinhj5/auto-api-python.git
+  cd auto-api-python
 ```
 ### 3.安装依赖
 ```
