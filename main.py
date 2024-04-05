@@ -135,4 +135,5 @@ if __name__ == "__main__":
     from utils.email_notification import send_email
     from utils.common import clean_logs_and_reports
     from utils.dirs import report_raw_dir, report_html_dir
+
     main()
