@@ -248,7 +248,7 @@ def get_code_modifiers(file_path: str, line_range: dict = None, line_number: int
             if result.returncode != 0:
                 modifiers.add(f"execute.command.error")
             else:
-                output = result.stdout
+                output = result.stdout.decode("utf-8")
                 code_modifier = output.split("\n")[2].split()[1][1:-1]
                 modifiers.add(code_modifier)
 
