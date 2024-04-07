@@ -569,10 +569,6 @@ class SwaggerParser:
         header_code += "from utils.logger import logger\n"
         header_code += "from utils.common import set_assertion_error\n\n\n"
 
-        testcases_code = ""
-        testcases_code += "@allure.severity(\"normal\")\n"
-        testcases_code += "@pytest.mark.normal\n"
-
         method = api["method"]
         snake_name = SwaggerParser._pascal_to_snake(api["detail"]["operationId"])
         if snake_name.startswith(method):
@@ -586,6 +582,11 @@ class SwaggerParser:
         words.pop(1)
         file_name = "_".join(words)
 
+        testcases_code = ""
+        testcases_code += f"class {SwaggerParser._snake_to_pascal(file_name)}:\n"
+        testcases_code += "    @allure.severity(\"normal\")\n"
+        testcases_code += "    @pytest.mark.normal\n"
+
         params = api["detail"].get("parameters", [])
         if params:
             params = SwaggerParser._get_deduplicated_params(params)
@@ -596,17 +597,17 @@ class SwaggerParser:
             param_name = SwaggerParser._pascal_to_snake(param["name"])
             param_name = SwaggerParser._avoid_keywords(param_name)
             name_list.append(param_name)
-            testcases_code += f"""@pytest.mark.parametrize("{param_name}", [None])\n"""
+            testcases_code += f"""    @pytest.mark.parametrize("{param_name}", [None])\n"""
 
         param_str = (", " + ", ".join(name_list)) if name_list else ""
-        testcases_code += f"def {test_func_name}({module}_api{param_str}):\n"
+        testcases_code += f"    def {test_func_name}(self, {module}_api{param_str}):\n"
 
         param_str = ", ".join([f"{name}={name}" for name in name_list]) if name_list else ""
-        testcases_code += f"    res = {module}_api.{api_func_name}({param_str})\n"
-        testcases_code += "    actual_code = res[\"status_code\"]\n"
-        testcases_code += "    logger.info(f\"%s status code: {actual_code}\")\n\n" % api_func_name
-        testcases_code += "    expected_code = 200\n"
-        testcases_code += "    assert actual_code == expected_code, \
+        testcases_code += f"        res = {module}_api.{api_func_name}({param_str})\n"
+        testcases_code += "        actual_code = res[\"status_code\"]\n"
+        testcases_code += "        logger.info(f\"%s status code: {actual_code}\")\n\n" % api_func_name
+        testcases_code += "        expected_code = 200\n"
+        testcases_code += "        assert actual_code == expected_code, \
                             set_assertion_error(f\"actual: {actual_code}, expected: {expected_code}\")\n"
 
         testcases_code = header_code + testcases_code
