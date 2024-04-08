@@ -63,7 +63,7 @@ class EmailNotification:
         Args:
             msg (MIMEMultipart): Email message to which attachments will be added.
             target_dir (str): The directory containing the attachments.
-            max_size_mb (int): The max size of attachment (unit - MB).
+            max_size_mb (int): The max size of attachment (unit - MB). Defaults to 20.
 
         Returns:
             MIMEMultipart: Updated email message with attachments added.
@@ -133,5 +133,5 @@ def send_email():
 
 
 if __name__ == "__main__":
-    # refer to https://myaccount.google.com/apppasswords
+    # using Google Email, can refer to https://myaccount.google.com/apppasswords
     send_email()
