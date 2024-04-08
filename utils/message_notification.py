@@ -40,7 +40,7 @@ class MessageNotification:
         except Exception as e:
             logger.error(f"{e}\n{traceback.format_exc()}")
         else:
-            logger.info(f"message: {message}")
+            logger.info(f"message sid: {message.sid}")
 
 
 def send_message():
