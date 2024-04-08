@@ -15,7 +15,7 @@ from utils.dirs import report_dir, log_dir, log_summary_dir
 class EmailNotification:
     def __init__(self, conf_name: str = "email") -> None:
         """
-        Initialize the class.
+        Initialize an instance of the EmailNotification class.
 
         Args:
             conf_name (str): The name of the configuration. Defaults to "email".
@@ -23,7 +23,7 @@ class EmailNotification:
         Returns:
             None
         """
-        self._conf = get_ext_conf(conf_name)
+        self._conf = get_ext_conf(name=conf_name)
         self._sender = self._conf.get("sender")
         self._password = self._conf.get("password")
         self._server = self._conf.get("server")

@@ -31,17 +31,17 @@ class GoogleEmail:
             cls._instance = super().__new__(cls)
         return cls._instance
 
-    def __init__(self, google_conf_name: str = "google_api") -> None:
+    def __init__(self, conf_name: str = "google_api") -> None:
         """
         Initialize an instance of the GoogleEmail class.
 
         Args:
-            google_conf_name (str): The name of the GoogleEmail configuration. Defaults to "google_api".
+            conf_name (str): The name of the configuration. Defaults to "google_api".
 
         Returns:
             None
         """
-        self._google_conf = get_ext_conf(name=google_conf_name)
+        self._conf = get_ext_conf(name=conf_name)
         self._gmail_service = None
         self._init()
 
@@ -96,7 +96,7 @@ class GoogleEmail:
                 credentials.refresh(Request())
             else:
                 flow = InstalledAppFlow.from_client_config(
-                    client_config=self._google_conf.get("client_config"),
+                    client_config=self._conf.get("client_config"),
                     scopes=["https://www.googleapis.com/auth/gmail.send"]
                 )
                 try:
@@ -138,7 +138,7 @@ class GoogleEmail:
         recipients = to_recipients.split(",")
         recipients = [recipient for recipient in recipients if recipient]
 
-        default_recipient = self._google_conf.get("google_email").get("default_recipient")
+        default_recipient = self._conf.get("google_email").get("default_recipient")
         if default_recipient:
             recipients.append(default_recipient)
         message["to"] = ",".join(recipients)

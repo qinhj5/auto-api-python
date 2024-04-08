@@ -14,16 +14,17 @@ class KafkaClient:
                  consumer_conf_name: str = "kafka_consumer",
                  servers_conf_name: str = "forwarder_servers") -> None:
         """
-        Initialize the class.
+        Initialize an instance of the KafkaClient class.
 
         Args:
-            consumer_conf_name (str): The name of the configuration to retrieve.
+            consumer_conf_name (str): The name of the consumer configuration. Defaults to "kafka_consumer".
+            servers_conf_name (str): The name of the server configuration. Defaults to "forwarder_servers".
 
         Returns:
             None
         """
-        self._consumer_conf = get_env_conf(consumer_conf_name)
-        self._servers = get_env_conf(servers_conf_name)
+        self._consumer_conf = get_env_conf(name=consumer_conf_name)
+        self._servers_list = get_env_conf(name=servers_conf_name)
         self._topic = None
 
     def _update_kafka_config(self) -> None:
@@ -41,8 +42,8 @@ class KafkaClient:
         self._topic = self._consumer_conf.pop("topic.name")
         logger.info(f"using topic: {self._topic}")
 
-        self._consumer_conf.update({"bootstrap.servers": ",".join(self._servers)})
-        logger.info(f"servers: {self._servers}")
+        self._consumer_conf.update({"bootstrap.servers": ",".join(self._servers_list)})
+        logger.info(f"servers: {self._servers_list}")
 
         self._consumer_conf.update({"auto.offset.reset": "earliest"})
 

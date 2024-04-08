@@ -30,7 +30,7 @@ class ChatBot:
         Initialize an instance of the ChatBot class.
 
         Args:
-            conf_name (str): The name of the ChatBot configuration. Defaults to "chat_bot".
+            conf_name (str): The name of the configuration. Defaults to "chat_bot".
 
         Returns:
             None

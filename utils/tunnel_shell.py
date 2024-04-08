@@ -25,18 +25,18 @@ class TunnelShell:
             cls._instance = super().__new__(cls)
         return cls._instance
 
-    def __init__(self, ssh_conf_name: str = "ssh") -> None:
+    def __init__(self, conf_name: str = "ssh") -> None:
         """
         Initialize an instance of the TunnelShell class.
 
         Args:
-            ssh_conf_name (str): The name of the SSH configuration. Defaults to "ssh".
+            conf_name (str): The name of the configuration. Defaults to "ssh".
 
         Returns:
             None
         """
-        self._lock = filelock.FileLock(os.path.abspath(os.path.join(lock_dir, f"{ssh_conf_name}.lock")))
-        self._ssh_conf = get_env_conf(name=ssh_conf_name)
+        self._lock = filelock.FileLock(os.path.abspath(os.path.join(lock_dir, f"{conf_name}.lock")))
+        self._conf = get_env_conf(name=conf_name)
         self._tunnel_client = None
 
     def __enter__(self) -> 'TunnelShell':
@@ -108,7 +108,7 @@ class TunnelShell:
         """
         try:
             if self._tunnel_client is None:
-                self._tunnel_client = TunnelShell._create_tunnel_client(self._ssh_conf)
+                self._tunnel_client = TunnelShell._create_tunnel_client(self._conf)
         except Exception as e:
             logger.error(f"{e}\n{traceback.format_exc()}")
             self.close()

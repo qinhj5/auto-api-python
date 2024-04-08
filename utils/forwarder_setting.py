@@ -7,17 +7,19 @@ from utils.common import get_env_conf
 
 
 class ForwarderSetting:
-    def __init__(self, conf_name: str = "forwarder_servers") -> None:
+    def __init__(self, server_conf_name: str = "forwarder_servers", ssh_conf_name: str = "ssh") -> None:
         """
-        Initialize the class.
+        Initialize an instance of the ForwarderSetting class.
 
         Args:
-            conf_name (str): The name of the configuration to retrieve.
+            server_conf_name (str): The name of the server configuration. Defaults to "forwarder_servers".
+            ssh_conf_name (str): The name of the ssh configuration. Defaults to "ssh".
 
         Returns:
             None
         """
-        self._forwarder_servers = get_env_conf(name=conf_name)
+        self._servers_list = get_env_conf(name=server_conf_name)
+        self._ssh_conf = get_env_conf(name=ssh_conf_name)
 
     def _build_command(self) -> list:
         """
@@ -27,11 +29,11 @@ class ForwarderSetting:
             list: The SSH command with port forwarding.
         """
         forwards = []
-        for server in self._forwarder_servers:
+        for server in self._servers_list:
             forwards += ["-L", f"{server}:{server}"]
 
-        ssh_conf = get_env_conf("ssh")
-        command = ["ssh"] + forwards + ["-N", "-f", f"""{ssh_conf.get("ssh_user")}@{ssh_conf.get("ssh_host")}"""]
+        command = ["ssh"] + forwards + \
+                  ["-N", "-f", f"""{self._ssh_conf.get("ssh_user")}@{self._ssh_conf.get("ssh_host")}"""]
 
         return command
 
@@ -101,7 +103,7 @@ class ForwarderSetting:
             None
         """
         password = getpass.getpass("please enter sudo password (possible plaintext display): ")
-        for server in self._forwarder_servers:
+        for server in self._servers_list:
             if sys.platform == "darwin":
                 command = ["sudo", "ifconfig", "lo0", "-alias", server.split(":")[0]]
             else:
@@ -122,7 +124,7 @@ class ForwarderSetting:
             None
         """
         password = getpass.getpass("please enter sudo password (possible plaintext display): ")
-        for server in self._forwarder_servers:
+        for server in self._servers_list:
             if sys.platform == "darwin":
                 command = ["sudo", "ifconfig", "lo0", "alias", server.split(":")[0]]
             else:

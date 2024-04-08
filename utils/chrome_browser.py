@@ -19,7 +19,7 @@ class ChromeBrowser:
        Initialize an instance of the ChromeBrowser class.
 
        Args:
-           conf_name (str): The name of the ChromeBrowser configuration. Defaults to "chrome_browser".
+           conf_name (str): The name of the configuration. Defaults to "chrome_browser".
 
        Returns:
            None

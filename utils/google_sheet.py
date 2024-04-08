@@ -25,18 +25,18 @@ class GoogleSheet:
             cls._instance = super().__new__(cls)
         return cls._instance
 
-    def __init__(self, google_conf_name: str = "google_api") -> None:
+    def __init__(self, conf_name: str = "google_api") -> None:
         """
         Initialize an instance of the GoogleSheet class.
 
         Args:
-            google_conf_name (str): The name of the GoogleSheet configuration. Defaults to "google_api".
+            conf_name (str): The name of the configuration. Defaults to "google_api".
 
         Returns:
             None
         """
         self._lock = filelock.FileLock(os.path.abspath(os.path.join(lock_dir, "google_sheet.lock")))
-        self._google_conf = get_ext_conf(name=google_conf_name)
+        self._conf = get_ext_conf(name=conf_name)
         self._gspread_client = None
         self._sheet_page = None
         self._active_sheet = None
@@ -78,14 +78,14 @@ class GoogleSheet:
         """
         try:
             self._gspread_client = gspread.service_account_from_dict(
-                info=self._google_conf.get("service_info"),
+                info=self._conf.get("service_info"),
                 scopes=[
                     "https://www.googleapis.com/auth/drive",
                     "https://www.googleapis.com/auth/spreadsheets"
                 ]
             )
-            self._sheet_page = self._gspread_client.open(self._google_conf.get("google_sheet").get("file_name"))
-            self._active_sheet = self._sheet_page.worksheet(self._google_conf.get("google_sheet").get("sheet_name"))
+            self._sheet_page = self._gspread_client.open(self._conf.get("google_sheet").get("file_name"))
+            self._active_sheet = self._sheet_page.worksheet(self._conf.get("google_sheet").get("sheet_name"))
         except Exception as e:
             logger.error(f"{e}\n{traceback.format_exc()}")
             sys.exit(1)

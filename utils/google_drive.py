@@ -26,18 +26,18 @@ class GoogleDrive:
             cls._instance = super().__new__(cls)
         return cls._instance
 
-    def __init__(self, google_conf_name: str = "google_api") -> None:
+    def __init__(self, conf_name: str = "google_api") -> None:
         """
         Initialize an instance of the GoogleDrive class.
 
         Args:
-            google_conf_name (str): The name of the GoogleDrive configuration. Defaults to "google_api".
+            conf_name (str): The name of the configuration. Defaults to "google_api".
 
         Returns:
             None
         """
         self._lock = filelock.FileLock(os.path.abspath(os.path.join(lock_dir, "google_drive.lock")))
-        self._google_conf = get_ext_conf(name=google_conf_name)
+        self._conf = get_ext_conf(name=conf_name)
         self._drive_service = None
         self._init()
 
@@ -76,7 +76,7 @@ class GoogleDrive:
             None
         """
         credentials = service_account.Credentials.from_service_account_info(
-            info=self._google_conf.get("service_info"),
+            info=self._conf.get("service_info"),
             scopes=[
                 "https://www.googleapis.com/auth/drive",
                 "https://www.googleapis.com/auth/drive.metadata"
@@ -150,7 +150,7 @@ class GoogleDrive:
             file_name = os.path.basename(file_path)
         file_metadata.update({"name": file_name})
 
-        folder_name = self._google_conf.get("google_drive").get("folder_name")
+        folder_name = self._conf.get("google_drive").get("folder_name")
         if not folder_name:
             folder_name = "tmp"
 
