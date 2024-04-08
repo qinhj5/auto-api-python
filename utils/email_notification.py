@@ -56,18 +56,23 @@ class EmailNotification:
         zip_instance.close()
 
     @staticmethod
-    def _add_attachment(msg: MIMEMultipart, target_dir: str) -> MIMEMultipart:
+    def _add_attachment(msg: MIMEMultipart, target_dir: str, max_size_mb: int = 20) -> MIMEMultipart:
         """
         Add attachments from a directory to an email message.
 
         Args:
             msg (MIMEMultipart): Email message to which attachments will be added.
             target_dir (str): The directory containing the attachments.
+            max_size_mb (int): The max size of attachment (unit - MB).
 
         Returns:
             MIMEMultipart: Updated email message with attachments added.
         """
         if not os.path.exists(target_dir):
+            return msg
+
+        if os.path.getsize(target_dir) / (1024 * 1024) > max_size_mb:
+            logger.warning(f"attachment {target_dir} is larger than {max_size_mb}MB")
             return msg
 
         filename = os.path.basename(target_dir)
@@ -87,11 +92,11 @@ class EmailNotification:
 
         msg = MIMEMultipart()
         now = time.strftime("%Y-%m-%d %H:%M:%S")
-        subject = "Test finished at " + now
+        subject = f"Test finished at {now}"
         msg["Subject"] = subject
-        msg["from"] = self._sender
-        msg["to"] = self._recipients
-        
+        msg["From"] = self._sender
+        msg["To"] = self._recipients
+
         report_zip_path = os.path.abspath(os.path.join(report_dir, "report.zip"))
         EmailNotification._zip_file(report_dir, report_zip_path)
         msg = EmailNotification._add_attachment(msg, report_zip_path)
@@ -108,17 +113,25 @@ class EmailNotification:
                     for line in lines:
                         msg.attach(MIMEText(line, "plain", _charset="utf-8"))
 
-        smtp = smtplib.SMTP()
+        server = None
         try:
-            smtp.connect(self._server)
-            smtp.login(self._sender, self._password)
-            smtp.sendmail(self._sender, self._recipients.split(","), msg.as_string())
+            server = smtplib.SMTP(self._server, 587)
+            server.starttls()
+            server.login(self._sender, self._password)
+            server.send_message(msg)
         except Exception as e:
             logger.error(f"{e}\n{traceback.format_exc()}")
+        else:
+            logger.info(f"email sent at {now}")
         finally:
-            if smtp:
-                smtp.quit()
+            if server:
+                server.quit()
 
 
 def send_email():
     EmailNotification().send_email()
+
+
+if __name__ == "__main__":
+    # refer to https://myaccount.google.com/apppasswords
+    send_email()

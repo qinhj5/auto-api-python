@@ -17,7 +17,8 @@ class MessageNotification:
             None
         """
         self._conf = get_ext_conf(name=conf_name)
-        self._client = Client(self._conf.get("account_sid"), self._conf.get("auth_token"))
+        self._account_sid = self._conf.get("account_sid")
+        self._auth_token = self._conf.get("auth_token")
         self._from = self._conf.get("from")
         self._to = self._conf.get("to")
 
@@ -32,7 +33,8 @@ class MessageNotification:
             None
         """
         try:
-            message = self._client.messages.create(
+
+            message = Client(self._conf.get("account_sid"), self._conf.get("auth_token")).messages.create(
                 body=body,
                 from_=self._from,
                 to=self._to
@@ -45,3 +47,8 @@ class MessageNotification:
 
 def send_message():
     MessageNotification().send_message()
+
+
+if __name__ == "__main__":
+    # refer to https://www.twilio.com
+    send_message()
