@@ -11,6 +11,7 @@ import datetime
 import traceback
 import subprocess
 from utils.logger import logger
+from openpyxl.styles import Alignment
 from typing import Any, List, Union, Dict
 from openpyxl.worksheet.worksheet import Worksheet
 from utils.dirs import config_dir, data_dir, report_dir, log_request_dir, log_summary_dir
@@ -239,18 +240,24 @@ def get_code_modifiers(file_path: str, line_range: dict = None, line_number: int
     if is_installed:
 
         if line_number:
-            line_range = {"start_line": line_number, "end_line": line_number}
+            start_line = line_number
+            end_line = line_number
+        else:
+            start_line = line_range.get("start_line")
+            end_line = line_range.get("end_line")
 
-        for line_number in range(line_range["start_line"], line_range["end_line"] + 1):
-            command = f"git blame --line-porcelain -L {line_number},{line_number} {file_path}"
-            result = subprocess.run(command, shell=True, capture_output=True)
+        command = f"git blame --line-porcelain -L {start_line},{end_line} {file_path}"
+        result = subprocess.run(command, shell=True, capture_output=True)
 
-            if result.returncode != 0:
-                modifiers.add(f"execute.command.error")
-            else:
-                output = result.stdout.decode("utf-8")
-                code_modifier = output.split("\n")[2].split()[1][1:-1]
-                modifiers.add(code_modifier)
+        if result.returncode != 0:
+            modifiers.add(f"execute.command.error")
+        else:
+            output = result.stdout.decode("utf-8")
+            lines = output.split("\n")
+
+            for line in lines:
+                if line.startswith("author-mail"):
+                    modifiers.add(line.split()[1][1:-1])
 
     return list(modifiers)
 
@@ -363,10 +370,14 @@ def adjust_column_width(worksheet: Worksheet) -> None:
         max_length = 0
         column = column_cells[0].column_letter
         for cell in column_cells:
+            cell.alignment = Alignment(wrapText=True)
+
+            text = cell.value
+            length = len(text[:text.find("\n")])
             try:
-                if len(str(cell.value)) > max_length:
-                    max_length = len(cell.value)
+                if length > max_length:
+                    max_length = length
             except Exception as e:
                 logger.error(f"{e}\n{traceback.format_exc()}")
-        adjusted_width = (max_length + 2)
-        worksheet.column_dimensions[column].width = adjusted_width
+
+        worksheet.column_dimensions[column].width = max_length + 2

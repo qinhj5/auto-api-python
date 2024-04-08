@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
+import re
 import json
 import time
 import pytest
@@ -78,11 +79,22 @@ def pytest_runtest_makereport(item, call):
     request = item.parent
     reruns = request.config.getoption("--reruns", 0)
     if call.when == "call" and call.excinfo is not None and item.execution_count == (reruns + 1):
-        file = item.fspath.strpath
-        func = item.name
-        line = traceback.extract_tb(call.excinfo.tb)[-1][1]
-        modifiers = json.dumps(get_code_modifiers(file_path=file, line_number=line))
-        error = traceback.format_tb(call.excinfo.tb)[-1].strip()
+        file_path = item.fspath.strpath
+        case_name = item.location[-1]
+
+        error_list = traceback.format_list(traceback.extract_tb(call.excinfo.tb))
+        error_list = [error.strip() for error in error_list]
+
+        error_idx = 0
+        for idx, error in enumerate(error_list):
+            if file_path in error:
+                error_idx = idx
+                break
+
+        traceback_error = ("\n".join(error_list[error_idx:])).strip()
+
+        line_number = re.search(r"line (\d+)", error_list[error_idx]).group(1)
+        code_modifiers = json.dumps(get_code_modifiers(file_path=file_path, line_number=line_number))
 
         with failure_lock:
             xlsx_path = os.path.abspath(os.path.join(report_sheet_dir, "failed_cases.xlsx"))
@@ -94,13 +106,13 @@ def pytest_runtest_makereport(item, call):
                 workbook.remove(default_sheet)
 
                 failure_summary_sheet = workbook.create_sheet("failure_summary")
-                failure_summary_sheet.append(["file", "func", "line", "modifiers", "error"])
+                failure_summary_sheet.append(["file path", "case name", "code modifiers", "traceback error"])
             else:
                 workbook = load_workbook(xlsx_path)
 
                 failure_summary_sheet = workbook["failure_summary"]
 
-            failure_summary_sheet.append([file, func, line, modifiers, error])
+            failure_summary_sheet.append([file_path, case_name, code_modifiers, traceback_error])
             adjust_column_width(failure_summary_sheet)
             workbook.save(xlsx_path)
 
