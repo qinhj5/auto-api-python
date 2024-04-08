@@ -110,6 +110,7 @@ def pre_action():
 
 def post_action():
     send_email()
+    send_message()
 
 
 def main():
@@ -134,6 +135,7 @@ if __name__ == "__main__":
     from utils.logger import logger
     from utils.email_notification import send_email
     from utils.common import clean_logs_and_reports
+    from utils.message_notification import send_message
     from utils.dirs import report_raw_dir, report_html_dir
 
     main()

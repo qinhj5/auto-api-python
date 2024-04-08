@@ -11,27 +11,23 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.application import MIMEApplication
 from utils.dirs import report_dir, log_dir, log_summary_dir
 
-EMAIL_CONF = get_ext_conf(name="email")
-
 
 class EmailNotification:
-    def __init__(self, sender: str, password: str, server: str, recipients: str) -> None:
+    def __init__(self, conf_name: str = "email") -> None:
         """
         Initialize the class.
 
         Args:
-            sender (str): The email address of the sender.
-            password (str): The password of the email account of sender.
-            server (str): The SMTP server address.
-            recipients (str): Comma-separated list of email addresses of the recipients.
+            conf_name (str): The name of the configuration. Defaults to "email".
 
         Returns:
             None
         """
-        self._sender = sender
-        self._password = password
-        self._server = server
-        self._recipients = recipients
+        self._conf = get_ext_conf(conf_name)
+        self._sender = self._conf.get("sender")
+        self._password = self._conf.get("password")
+        self._server = self._conf.get("server")
+        self._recipients = self._conf.get("recipients")
 
     @staticmethod
     def _zip_file(target_dir: str, zip_path: str) -> None:
@@ -125,4 +121,4 @@ class EmailNotification:
 
 
 def send_email():
-    EmailNotification(**EMAIL_CONF).send_email()
+    EmailNotification().send_email()

@@ -4,6 +4,12 @@ email:
   server: ""
   recipients: ""
 
+message:
+  account_sid: ""
+  auth_token: ""
+  from: ""
+  to: ""
+
 google_api:
   client_config:
     installed:
