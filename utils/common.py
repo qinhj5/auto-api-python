@@ -372,7 +372,7 @@ def adjust_column_width(worksheet: Worksheet) -> None:
         for cell in column_cells:
             cell.alignment = Alignment(wrapText=True)
 
-            text = cell.value
+            text = str(cell.value)
             length = len(text[:text.find("\n")])
             try:
                 if length > max_length:
@@ -380,4 +380,4 @@ def adjust_column_width(worksheet: Worksheet) -> None:
             except Exception as e:
                 logger.error(f"{e}\n{traceback.format_exc()}")
 
-        worksheet.column_dimensions[column].width = max_length + 2
+        worksheet.column_dimensions[column].width = max_length + 10

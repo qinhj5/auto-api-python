@@ -192,7 +192,7 @@ class ApiCoverage:
         coverage_summary_sheet.append(["ratio", "percentage (%)"])
 
         for sheet in [fully_covered_sheet, likely_covered_sheet]:
-            sheet.append(["module", "url", "method", "cases"])
+            sheet.append(["module", "url", "method", "count"])
 
         never_cover_sheet.append(["module", "url", "method"])
         unknown_request_sheet.append(["url", "method"])
