@@ -100,8 +100,8 @@ def pytest_runtest_makereport(item, call):
     line_number = 1
     for idx, error in enumerate(error_list):
         if file_path in error:
-            line_number = re.search(r"line (\d+)", error_list[error_idx]).group(1)
             error_idx = idx
+            line_number = re.search(r"line (\d+)", error_list[error_idx]).group(1)
             break
 
     traceback_error = ("\n".join(error_list[error_idx:])).strip()
