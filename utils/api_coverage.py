@@ -7,7 +7,7 @@ import traceback
 from openpyxl import Workbook
 from config.conf import Global
 from utils.logger import logger
-from utils.common import adjust_column_width
+from utils.common import set_column_max_width
 from typing import List, Dict, Union, Optional, Tuple
 from utils.dirs import log_request_dir, report_sheet_dir
 
@@ -37,10 +37,17 @@ class ApiCoverage:
         with open(self._request_log_path, "w", encoding="utf-8") as output_file:
             for log_file in log_files:
                 file_path = os.path.abspath(os.path.join(log_request_dir, log_file))
-                with open(file_path, "r") as input_file:
-                    output_file.write(input_file.read().strip())
+                if not os.path.exists(file_path):
+                    logger.error(f"file not found: {file_path}")
+                    continue
 
-                output_file.write("\n")
+                try:
+                    with open(file_path, "r") as input_file:
+                        output_file.write(input_file.read().strip())
+                except Exception as e:
+                    logger.error(f"{e}\n{traceback.format_exc()}")
+                else:
+                    output_file.write("\n")
 
     def _get_requests_from_logs(self) -> List[Dict[str, Union[str, bool]]]:
         """
@@ -231,7 +238,7 @@ class ApiCoverage:
                                               request_url["method"]])
 
         for sheet_name in workbook.sheetnames:
-            adjust_column_width(workbook[sheet_name])
+            set_column_max_width(workbook[sheet_name])
 
         xlsx_path = os.path.abspath(os.path.join(report_sheet_dir, "api_coverage.xlsx"))
         os.makedirs(report_sheet_dir, exist_ok=True)

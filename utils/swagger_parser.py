@@ -2,7 +2,6 @@
 import os
 import re
 import sys
-import json
 import black
 import shutil
 import keyword
@@ -148,9 +147,6 @@ class SwaggerParser:
 
         Returns:
             dict: Path data of swagger.
-
-        Raises:
-            ValueError: If the Swagger URL response is not a valid JSON.
         """
         try:
             response = requests.get(self._swagger_url, headers=Global.constants.HEADERS)
@@ -340,8 +336,6 @@ class SwaggerParser:
             func_name = snake_name
         else:
             func_name = f"""{method}_{SwaggerParser._pascal_to_snake(api["detail"]["operationId"])}"""
-
-        logger.debug(json.dumps(api["detail"]))
 
         summary = api["detail"].get("summary", "Null")
         summary = SwaggerParser._get_wrapped_string(summary, indent=8)
