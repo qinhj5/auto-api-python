@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 import os
-import json
+import sys
 import time
 import filelock
 import traceback
 from openai import OpenAI
 from utils.logger import logger
 from types import TracebackType
-from utils.common import get_ext_conf
 from utils.dirs import tmp_dir, lock_dir
+from utils.common import get_ext_conf, dump_json, load_json
 
 
 class ChatBot:
@@ -81,12 +81,18 @@ class ChatBot:
         os.makedirs(tmp_dir, exist_ok=True)
         dialogue_contexts_path = os.path.abspath(os.path.join(tmp_dir, "dialogue_contexts.json"))
         if os.path.exists(dialogue_contexts_path):
-            with open(dialogue_contexts_path, "r", encoding="utf-8") as f:
-                self._contexts = json.load(f)
+            try:
+                self._contexts = load_json(dialogue_contexts_path)
+            except Exception as e:
+                logger.error(f"{e}\n{traceback.format_exc()}")
+                sys.exit(1)
         else:
             with self._lock:
-                with open(dialogue_contexts_path, "w", encoding="utf-8") as f:
-                    json.dump(self._contexts, f, indent=4)
+                try:
+                    dump_json(dialogue_contexts_path, self._contexts)
+                except Exception as e:
+                    logger.error(f"{e}\n{traceback.format_exc()}")
+                    sys.exit(1)
 
     def _save_contexts(self) -> None:
         """
@@ -97,8 +103,11 @@ class ChatBot:
         """
         dialogue_contexts_path = os.path.abspath(os.path.join(tmp_dir, "dialogue_contexts.json"))
         with self._lock:
-            with open(dialogue_contexts_path, "w", encoding="utf-8") as f:
-                json.dump(self._contexts, f, indent=4)
+            try:
+                dump_json(dialogue_contexts_path, self._contexts)
+            except Exception as e:
+                logger.error(f"{e}\n{traceback.format_exc()}")
+                sys.exit(1)
 
     def _generate_response(self, prompt: str) -> None:
         """

@@ -2,14 +2,15 @@
 import os
 import sys
 import base64
+import filelock
 import traceback
 from email import encoders
-from utils.dirs import tmp_dir
 from utils.logger import logger
 from types import TracebackType
 from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
 from utils.common import get_ext_conf
+from utils.dirs import tmp_dir, lock_dir
 from googleapiclient.discovery import build
 from email.mime.multipart import MIMEMultipart
 from google.oauth2.credentials import Credentials
@@ -41,6 +42,7 @@ class GoogleEmail:
         Returns:
             None
         """
+        self._lock = filelock.FileLock(os.path.abspath(os.path.join(lock_dir, "google_email.lock")))
         self._conf = get_ext_conf(name=conf_name)
         self._gmail_service = None
         self._init()
@@ -104,8 +106,10 @@ class GoogleEmail:
                 except Exception as e:
                     logger.error(f"{e}\n{traceback.format_exc()}")
                     sys.exit(1)
-            with open(google_token_path, "w") as f:
-                f.write(credentials.to_json())
+
+            with self._lock:
+                with open(google_token_path, "w", encoding="utf-8") as f:
+                    f.write(credentials.to_json())
 
         self._gmail_service = build("gmail", "v1", credentials=credentials)
 
@@ -152,8 +156,16 @@ class GoogleEmail:
         if attachment_path:
             attachment_name = os.path.basename(attachment_path)
             attachment = MIMEBase("application", "octet-stream")
-            with open(attachment_path, "rb") as f:
-                attachment.set_payload(f.read())
+
+            if not os.path.exists(attachment_path):
+                logger.error(f"file not found: {attachment_path}")
+            else:
+                try:
+                    with open(attachment_path, "rb") as f:
+                        attachment.set_payload(f.read())
+                except Exception as e:
+                    logger.error(f"{e}\n{traceback.format_exc()}")
+
             encoders.encode_base64(attachment)
             attachment.add_header("Content-Disposition", f"attachment; filename={attachment_name}")
             message.attach(attachment)

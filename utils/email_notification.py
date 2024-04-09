@@ -108,8 +108,16 @@ class EmailNotification:
         for filename in os.listdir(log_summary_dir):
             if filename == "summary.log":
                 log_summary_path = os.path.abspath(os.path.join(log_summary_dir, "summary.log"))
-                with open(log_summary_path, "r", encoding="utf-8") as f:
-                    lines = f.readlines()
+                if not os.path.exists(log_summary_path):
+                    logger.error(f"file not found: {log_summary_path}")
+                    break
+
+                try:
+                    with open(log_summary_path, "r", encoding="utf-8") as f:
+                        lines = f.readlines()
+                except Exception as e:
+                    logger.error(f"{e}\n{traceback.format_exc()}")
+                else:
                     for line in lines:
                         msg.attach(MIMEText(line, "plain", _charset="utf-8"))
 

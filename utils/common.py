@@ -7,14 +7,17 @@ import yaml
 import shutil
 import random
 import allure
+import filelock
 import datetime
 import traceback
 import subprocess
 from utils.logger import logger
+from typing import Any, List, Union
 from openpyxl.styles import Alignment
-from typing import Any, List, Union, Dict
 from openpyxl.worksheet.worksheet import Worksheet
-from utils.dirs import config_dir, data_dir, report_dir, log_request_dir, log_summary_dir
+from utils.dirs import config_dir, data_dir, report_dir, log_request_dir, log_summary_dir, lock_dir
+
+common_lock = filelock.FileLock(os.path.abspath(os.path.join(lock_dir, f"common.lock")))
 
 
 def get_env_conf(name: str = None) -> dict:
@@ -25,14 +28,24 @@ def get_env_conf(name: str = None) -> dict:
         name (str): Configuration item name. Defaults to None.
 
     Returns:
-        dict: Configuration item dictionary if `name` is provided, otherwise the entire configuration dictionary.
+        dict: Configuration item dictionary if name is provided, otherwise the entire configuration dictionary.
     """
+    conf = {}
     conf_path = os.path.abspath(os.path.join(config_dir, f"""conf_{os.environ.get("ENV", "test")}.yml"""))
 
-    with open(conf_path, "r", encoding="utf-8") as f:
-        conf = yaml.safe_load(f)
+    if not os.path.exists(conf_path):
+        logger.error(f"file not found: {conf_path}")
+        return conf
+
+    try:
+        with open(conf_path, "r", encoding="utf-8") as f:
+            conf = yaml.safe_load(f)
+    except Exception as e:
+        logger.error(f"{e}\n{traceback.format_exc()}")
+    else:
         if name:
-            return conf.get(name)
+            conf = conf.get(name)
+    finally:
         return conf
 
 
@@ -44,14 +57,24 @@ def get_ext_conf(name: str = None) -> dict:
         name (str): Configuration item name. Defaults to None.
 
     Returns:
-        dict: Configuration item dictionary if `name` is provided, otherwise the entire configuration dictionary.
+        dict: Configuration item dictionary if name is provided, otherwise the entire configuration dictionary.
     """
+    conf = {}
     conf_path = os.path.abspath(os.path.join(config_dir, f"conf_ext.yml"))
 
-    with open(conf_path, "r", encoding="utf-8") as f:
-        conf = yaml.safe_load(f)
+    if not os.path.exists(conf_path):
+        logger.error(f"file not found: {conf_path}")
+        return conf
+
+    try:
+        with open(conf_path, "r", encoding="utf-8") as f:
+            conf = yaml.safe_load(f)
+    except Exception as e:
+        logger.error(f"{e}\n{traceback.format_exc()}")
+    else:
         if name:
-            return conf.get(name)
+            conf = conf.get(name)
+    finally:
         return conf
 
 
@@ -62,9 +85,7 @@ def get_current_datetime() -> str:
     Returns:
         str: The string representation of the current time, formatted as "%Y-%m-%d %H:%M:%S".
     """
-    current_datetime = datetime.datetime.now()
-    formatted_datetime = current_datetime.strftime("%Y%m%d_%H%M%S")
-    return formatted_datetime
+    return datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
 
 
 def get_current_timestamp() -> int:
@@ -74,8 +95,7 @@ def get_current_timestamp() -> int:
     Returns:
         int: The timestamp of the current time (milliseconds).
     """
-    milliseconds = int(time.time() * 1000)
-    return milliseconds
+    return int(time.time() * 1000)
 
 
 def is_json_object(obj: Any) -> bool:
@@ -83,15 +103,12 @@ def is_json_object(obj: Any) -> bool:
     Check if an object is a JSON object.
 
     Args:
-        obj: Object.
+        obj (Any): Object.
 
     Returns:
-        bool: True if the object is a list, tuple, or dictionary; False otherwise.
+        bool: True if the object is a list or dictionary; False otherwise.
     """
-    if isinstance(obj, list) or isinstance(obj, tuple) or isinstance(obj, dict):
-        return True
-    else:
-        return False
+    return isinstance(obj, list) or isinstance(obj, dict)
 
 
 def is_json_string(string: str) -> bool:
@@ -106,12 +123,13 @@ def is_json_string(string: str) -> bool:
     """
     try:
         json.loads(string)
-        return True
     except ValueError:
         return False
+    else:
+        return True
 
 
-def loads_json_string(string: str) -> Any:
+def loads_json(string: str) -> Any:
     """
     Parse a JSON string into an object.
 
@@ -121,36 +139,54 @@ def loads_json_string(string: str) -> Any:
     Returns:
         Any: Parsed object.
     """
-    obj = json.loads(string)
-    return obj
+    return json.loads(string)
 
 
-def get_formatted_json_string(data: dict) -> str:
+def dumps_json(data: Any) -> str:
     """
     Get the formatted JSON string.
 
     Args:
-        data (dict): Dictionary data.
+        data (Any): Dictionary data.
 
     Returns:
         str: The formatted JSON string.
     """
-    json_str = json.dumps(data, indent=4, sort_keys=True)
-    return json_str
+    return json.dumps(data)
 
 
-def print_formatted_json_string(data: dict) -> None:
+def load_json(json_path: str) -> Any:
     """
-    Print the formatted JSON string.
+    Load json from a file.
 
     Args:
-        data (dict): Dictionary data.
+        json_path (str): The path to the JSON file.
+
+    Returns:
+        Any: The loaded JSON data.
+    """
+    logger.info(f"load json file: {json_path}")
+
+    with open(json_path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def dump_json(json_path: str, data: Any) -> None:
+    """
+    Dump json to a file.
+
+    Args:
+        json_path (str): The path to the JSON file.
+        data (Any): The JSON data to be dumped.
 
     Returns:
         None
     """
-    json_str = json.dumps(data, indent=4, sort_keys=True)
-    print(json_str)
+    logger.info(f"dump json file: {json_path}")
+
+    with common_lock:
+        with open(json_path, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=4)
 
 
 def set_console_detail(name: str, body: Any) -> None:
@@ -167,7 +203,7 @@ def set_console_detail(name: str, body: Any) -> None:
     start_str = name.center(64, "-")
     end_str = "-" * 64
     if is_json_object(body):
-        body = get_formatted_json_string(body)
+        body = dumps_json(body)
     else:
         body = str(body)
     print(f"\n{start_str}\n{body}\n{end_str}")
@@ -186,7 +222,7 @@ def set_allure_detail(name: str, body: Any) -> None:
     """
     attachment_type = allure.attachment_type.TEXT
     if is_json_object(body):
-        body = json.dumps(body)
+        body = dumps_json(body)
         attachment_type = allure.attachment_type.JSON
     else:
         body = str(body)
@@ -207,6 +243,20 @@ def set_allure_and_console_output(name: str, body: Any) -> None:
     """
     set_console_detail(name, body)
     set_allure_detail(name, body)
+
+
+def set_assertion_error(detail: str) -> str:
+    """
+    Set detailed information for both Allure report and console output in case of an assertion error.
+
+    Args:
+        detail (str): Error detail.
+
+    Returns:
+        str: Error detail.
+    """
+    set_allure_and_console_output(name="assertion error", body=detail)
+    return detail
 
 
 def get_code_modifiers(file_path: str, line_range: dict = None, line_number: int = None) -> List[str]:
@@ -274,15 +324,22 @@ def get_csv_data(csv_name: str) -> List[List[str]]:
     """
     res = []
     csv_path = os.path.abspath(os.path.join(data_dir, f"{csv_name}.csv"))
-    logger.info(f"read csv file: {csv_path}")
+
+    if not os.path.exists(csv_path):
+        logger.error(f"file not found: {csv_path}")
+        return res
+
+    logger.info(f"get csv data: {csv_path}")
+
     with open(csv_path, "r", encoding="utf-8") as f:
         reader = csv.reader(f)
         for _, row in enumerate(reader):
             res.append(row)
+
     return res
 
 
-def get_json_data(json_name: str) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
+def get_json_data(json_name: str) -> Union[dict, list]:
     """
     Get the data from a json file.
 
@@ -290,30 +347,20 @@ def get_json_data(json_name: str) -> Union[Dict[str, Any], List[Dict[str, Any]]]
         json_name (str): Name of the json file (without the extension).
 
     Returns:
-        Union[Dict[str, Any], List[Dict[str, Any]]]: The data from the json file, which can be a dict or a list of dict.
+       Union[dict, list]: The data from the json file, which can be a dict or a list of dict.
     """
-    res = None
+    res = {}
     json_path = os.path.abspath(os.path.join(data_dir, f"{json_name}.json"))
-    logger.info(f"read json file: {json_path}")
-    with open(json_path, "r", encoding="utf-8") as f:
-        data = json.load(f)
-        if isinstance(data, (dict, list)):
-            res = data
+
+    if not os.path.exists(json_path):
+        logger.error(f"file not found: {json_path}")
+        return res
+
+    logger.info(f"get json data: {json_path}")
+
+    res = load_json(json_path)
+
     return res
-
-
-def set_assertion_error(detail: str) -> str:
-    """
-    Set detailed information for both Allure report and console output in case of an assertion error.
-
-    Args:
-        detail (str): Error detail.
-
-    Returns:
-        str: Error detail.
-    """
-    set_allure_and_console_output(name="assertion error", body=detail)
-    return detail
 
 
 def clean_logs_and_reports() -> None:
@@ -327,8 +374,7 @@ def clean_logs_and_reports() -> None:
         shutil.rmtree(report_dir)
 
         os.makedirs(report_dir, exist_ok=True)
-        file = open(os.path.abspath(os.path.join(report_dir, ".gitkeep")), "w")
-        file.close()
+        open(os.path.abspath(os.path.join(report_dir, ".gitkeep")), "w").close()
 
     if os.path.exists(log_request_dir):
         shutil.rmtree(log_request_dir)
@@ -356,9 +402,9 @@ def generate_random_string(num: int, charset: str) -> str:
     return "".join(random.choice(charset) for _ in range(num))
 
 
-def adjust_column_width(worksheet: Worksheet) -> None:
+def set_column_max_width(worksheet: Worksheet) -> None:
     """
-    Adjusts the column width in the worksheet.
+    Set the column with max width in the worksheet.
 
     Args:
         worksheet (Worksheet): The worksheet to adjust the column width.
@@ -374,10 +420,8 @@ def adjust_column_width(worksheet: Worksheet) -> None:
 
             text = str(cell.value)
             length = len(text[:text.find("\n")])
-            try:
-                if length > max_length:
-                    max_length = length
-            except Exception as e:
-                logger.error(f"{e}\n{traceback.format_exc()}")
+
+            if length > max_length:
+                max_length = length
 
         worksheet.column_dimensions[column].width = max_length + 10

@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
 import re
-import json
 import time
 import pytest
 import inspect
@@ -15,10 +14,16 @@ from utils.mysql_connection import MysqlConnection
 from utils.redis_connection import RedisConnection
 from utils.clickhouse_connection import ClickhouseConnection
 from utils.dirs import log_request_dir, log_summary_dir, lock_dir, report_sheet_dir
-from utils.common import set_allure_and_console_output, get_code_modifiers, adjust_column_width, get_current_datetime
+from utils.common import (
+    dumps_json,
+    get_code_modifiers,
+    set_column_max_width,
+    get_current_datetime,
+    set_allure_and_console_output,
+)
 
 session_start_time = time.time()
-failure_lock = filelock.FileLock(os.path.abspath(os.path.join(lock_dir, f"failure.lock")))
+conftest_lock = filelock.FileLock(os.path.abspath(os.path.join(lock_dir, f"conftest.lock")))
 
 
 @pytest.fixture(scope="session")
@@ -76,45 +81,51 @@ def case_info(request):
 
 
 def pytest_runtest_makereport(item, call):
-    request = item.parent
-    reruns = request.config.getoption("--reruns", 0)
-    if call.when == "call" and call.excinfo is not None and item.execution_count == (reruns + 1):
-        file_path = item.fspath.strpath
-        case_name = item.location[-1]
+    if call.when != "call" or call.excinfo is None:
+        return
 
-        error_list = traceback.format_list(traceback.extract_tb(call.excinfo.tb))
-        error_list = [error.strip() for error in error_list]
+    reruns = item.parent.config.getoption("--reruns", 0)
+    has_execution_count = hasattr(item, "execution_count")
 
-        error_idx = 0
-        line_number = 1
-        for idx, error in enumerate(error_list):
-            if file_path in error:
-                line_number = re.search(r"line (\d+)", error_list[error_idx]).group(1)
-                error_idx = idx
-                break
+    if not has_execution_count or (has_execution_count and item.execution_count != (reruns + 1)):
+        return
 
-        traceback_error = ("\n".join(error_list[error_idx:])).strip()
-        code_modifiers = json.dumps(get_code_modifiers(file_path=file_path, line_number=line_number))
+    file_path = item.fspath.strpath
+    case_name = item.location[-1]
 
-        with failure_lock:
-            xlsx_path = os.path.abspath(os.path.join(report_sheet_dir, "failed_cases.xlsx"))
-            if not os.path.exists(xlsx_path):
-                os.makedirs(report_sheet_dir, exist_ok=True)
+    error_list = traceback.format_list(traceback.extract_tb(call.excinfo.tb))
+    error_list = [error.strip() for error in error_list]
 
-                workbook = Workbook()
-                default_sheet = workbook.active
-                workbook.remove(default_sheet)
+    error_idx = 0
+    line_number = 1
+    for idx, error in enumerate(error_list):
+        if file_path in error:
+            line_number = re.search(r"line (\d+)", error_list[error_idx]).group(1)
+            error_idx = idx
+            break
 
-                failure_summary_sheet = workbook.create_sheet("failure_summary")
-                failure_summary_sheet.append(["file path", "case name", "code modifiers", "traceback error"])
-            else:
-                workbook = load_workbook(xlsx_path)
+    traceback_error = ("\n".join(error_list[error_idx:])).strip()
+    code_modifiers = dumps_json(get_code_modifiers(file_path=file_path, line_number=line_number))
 
-                failure_summary_sheet = workbook["failure_summary"]
+    with conftest_lock:
+        xlsx_path = os.path.abspath(os.path.join(report_sheet_dir, "failed_cases.xlsx"))
+        if not os.path.exists(xlsx_path):
+            os.makedirs(report_sheet_dir, exist_ok=True)
 
-            failure_summary_sheet.append([file_path, case_name, code_modifiers, traceback_error])
-            adjust_column_width(failure_summary_sheet)
-            workbook.save(xlsx_path)
+            workbook = Workbook()
+            default_sheet = workbook.active
+            workbook.remove(default_sheet)
+
+            failure_summary_sheet = workbook.create_sheet("failure_summary")
+            failure_summary_sheet.append(["file path", "case name", "code modifiers", "traceback error"])
+        else:
+            workbook = load_workbook(xlsx_path)
+
+            failure_summary_sheet = workbook["failure_summary"]
+
+        failure_summary_sheet.append([file_path, case_name, code_modifiers, traceback_error])
+        set_column_max_width(failure_summary_sheet)
+        workbook.save(xlsx_path)
 
 
 def pytest_sessionstart():
@@ -145,21 +156,22 @@ def pytest_terminal_summary(terminalreporter, config):
     num_skipped = len(terminalreporter.stats.get("skipped", []))
     num_collected = num_passed + num_failed + num_error + num_skipped
 
-    with open(log_path, "w", encoding="utf-8") as f:
-        f.writelines("Total cases: {}\n".format(num_collected))
-        f.writelines("Passed cases: {}\n".format(num_passed))
-        f.writelines("Failed cases: {}\n".format(num_failed))
-        f.writelines("Error cases: {}\n".format(num_error))
-        f.writelines("Skipped cases: {}\n".format(num_skipped))
+    with conftest_lock:
+        with open(log_path, "w", encoding="utf-8") as f:
+            f.writelines("Total cases: {}\n".format(num_collected))
+            f.writelines("Passed cases: {}\n".format(num_passed))
+            f.writelines("Failed cases: {}\n".format(num_failed))
+            f.writelines("Error cases: {}\n".format(num_error))
+            f.writelines("Skipped cases: {}\n".format(num_skipped))
 
-        duration = time.time() - session_start_time
-        hours = int(duration // 3600)
-        minutes = int((duration % 3600) // 60)
-        seconds = int(duration % 60)
+            duration = time.time() - session_start_time
+            hours = int(duration // 3600)
+            minutes = int((duration % 3600) // 60)
+            seconds = int(duration % 60)
 
-        formatted_duration = "{:02d}:{:02d}:{:02d}".format(hours, minutes, seconds)
+            formatted_duration = "{:02d}:{:02d}:{:02d}".format(hours, minutes, seconds)
 
-        f.writelines("Elapsed time: {}".format(formatted_duration))
+            f.writelines("Elapsed time: {}".format(formatted_duration))
 
 
 @pytest.fixture(scope="session", autouse=True)

@@ -3,7 +3,7 @@ import curlify
 import requests
 from http import HTTPStatus
 from typing import Any, Dict
-from utils.common import set_allure_and_console_output, is_json_string, loads_json_string
+from utils.common import set_allure_and_console_output, is_json_string, loads_json
 
 
 class BaseAPI:
@@ -72,7 +72,7 @@ class BaseAPI:
 
             if len(r.text) < 1024 * 256:
                 if is_json_string(r.text):
-                    response_body = loads_json_string(r.text)
+                    response_body = loads_json(r.text)
                     response_body.update({"status_code": r.status_code})
                 else:
                     response_body = {"status_code": r.status_code, "text": r.text}

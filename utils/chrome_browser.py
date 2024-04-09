@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
 import sys
-import json
 import base64
 import shutil
 import sqlite3
@@ -9,7 +8,7 @@ import datetime
 import traceback
 from utils.dirs import tmp_dir
 from utils.logger import logger
-from utils.common import get_env_conf
+from utils.common import get_env_conf, load_json
 from typing import Tuple, List, Dict, Any, Optional
 
 
@@ -133,8 +132,7 @@ class ChromeBrowser:
             return kdf.derive(password)
         elif self._platform == "win32":
             try:
-                with open(self._local_state_path, "r", encoding="utf-8") as f:
-                    base64_encrypted_key = json.load(f)["os_crypt"]["encrypted_key"]
+                base64_encrypted_key = load_json(self._local_state_path).get("os_crypt").get("encrypted_key")
             except Exception as e:
                 logger.error(f"{e}\n{traceback.format_exc()}")
                 sys.exit(1)
