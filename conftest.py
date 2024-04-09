@@ -86,14 +86,14 @@ def pytest_runtest_makereport(item, call):
         error_list = [error.strip() for error in error_list]
 
         error_idx = 0
+        line_number = 1
         for idx, error in enumerate(error_list):
             if file_path in error:
+                line_number = re.search(r"line (\d+)", error_list[error_idx]).group(1)
                 error_idx = idx
                 break
 
         traceback_error = ("\n".join(error_list[error_idx:])).strip()
-
-        line_number = re.search(r"line (\d+)", error_list[error_idx]).group(1)
         code_modifiers = json.dumps(get_code_modifiers(file_path=file_path, line_number=line_number))
 
         with failure_lock:
