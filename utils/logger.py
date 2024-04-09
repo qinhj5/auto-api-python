@@ -6,7 +6,7 @@ from utils.decorators import log_locker
 from logging.handlers import RotatingFileHandler
 
 ENV = os.environ.get("ENV", "test")
-LOG_FORMAT = "%(asctime)s - PID:%(process)s - TID:%(thread)s - %(file)s:%(line)d - [%(levelname)s] - %(message)s"
+LOG_FORMAT = "%(asctime)s - PID:%(process)s - TID:%(thread)s - [%(levelname)s] - %(file)s:%(line)d - %(message)s"
 
 CONSOLE_HANDLER = logging.StreamHandler()
 CONSOLE_HANDLER.setLevel(logging.INFO)
