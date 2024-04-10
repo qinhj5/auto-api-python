@@ -64,9 +64,10 @@ class ChatBot:
         Returns:
             None
         """
-        self._save_contexts()
         if exc_type:
             logger.error(f"""{exc_val}\n{"".join(traceback.format_tb(exc_tb))}""")
+
+        self._save_contexts()
 
     def _init_contexts(self) -> None:
         """
