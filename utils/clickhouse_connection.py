@@ -69,10 +69,7 @@ class ClickhouseConnection:
             None
         """
         if exc_type:
-            logger.error(f"an exception of type {exc_type} occurred: {exc_val}")
-
-        if exc_tb:
-            logger.error("".join(traceback.format_tb(exc_tb)))
+            logger.error(f"""{exc_val}\n{"".join(traceback.format_tb(exc_tb))}""")
 
         self.close()
 
