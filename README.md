@@ -74,6 +74,7 @@ auto-api-python/
 │   ├── performance_test.py
 │   ├── redis_connection.py
 │   ├── swagger_parser.py
+│   ├── swagger_diff.py
 │   ├── tunnel_shell.py
 │   └── xmind_parser.py
 ├── .dockerignore
