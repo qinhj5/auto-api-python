@@ -20,7 +20,7 @@ class SwaggerParser:
         Initialize the class.
 
         Args:
-            swagger_url (str): The URL of the Swagger file.
+            swagger_url (str): The url of the swagger file.
 
         Returns:
             None
@@ -129,13 +129,13 @@ class SwaggerParser:
     @staticmethod
     def _snake_to_pascal(snake_name: str) -> str:
         """
-        Converts snake_case to PascalCase.
+        Converts snake_case to pascal case.
 
         Args:
             snake_name (str): The input snake_case string.
 
         Returns:
-            str: The converted PascalCase string.
+            str: The converted pascal case string.
         """
         words = snake_name.split("_")
         pascal_name = "".join(word.capitalize() for word in words)
@@ -143,7 +143,7 @@ class SwaggerParser:
 
     def _get_swagger_data(self) -> dict:
         """
-        Get Swagger JSON data by making a request to the specified Swagger URL.
+        Get swagger json data by making a request to the specified swagger url.
 
         Returns:
             dict: Path data of swagger.
@@ -158,13 +158,13 @@ class SwaggerParser:
             try:
                 response.json()
             except ValueError:
-                logger.error(f"Parse Swagger docs error: {response.text}")
+                logger.error(f"parse swagger docs error: {response.text}")
                 sys.exit(1)
             else:
                 self._definitions_dict = response.json().get("definitions", dict())
                 return response.json().get("paths", dict())
         else:
-            logger.error("Cannot request Swagger URL")
+            logger.error("cannot request swagger url")
             sys.exit(1)
 
     def _process_swagger_data(self) -> None:
@@ -192,10 +192,10 @@ class SwaggerParser:
     @staticmethod
     def _convert_path_params(path: str) -> str:
         """
-        Convert Swagger path parameters to snake_case.
+        Convert swagger path parameters to snake_case.
 
         Args:
-            path (str): The Swagger API path.
+            path (str): The swagger API path.
 
         Returns:
             str: The converted path with parameters in snake_case.
@@ -211,10 +211,10 @@ class SwaggerParser:
         Deduplicate parameters by removing duplicates based on snake_case names.
 
         Args:
-            params (list): List of Swagger API parameters.
+            params (list): List of swagger API parameters.
 
         Returns:
-            list: Deduplicated list of Swagger API parameters.
+            list: Deduplicated list of swagger API parameters.
         """
         params.reverse()
         deduplicated_params = []
@@ -322,10 +322,10 @@ class SwaggerParser:
 
     def _get_api_func(self, api: dict) -> Tuple[str, bool]:
         """
-        Generate API function code based on Swagger API details.
+        Generate API function code based on swagger API details.
 
         Args:
-            api (dict): Swagger API details.
+            api (dict): swagger API details.
 
         Returns:
             Tuple[str, bool]: The generated function code and a boolean indicating whether List is used in the function.
@@ -483,7 +483,7 @@ class SwaggerParser:
 
     def _generate_api_templates(self) -> None:
         """
-        Generate API templates based on Swagger data and write them to files.
+        Generate API templates based on swagger data and write them to files.
 
         Returns:
             None
@@ -552,7 +552,7 @@ class SwaggerParser:
 
         Args:
             module (str): The name of the module.
-            api (dict): Swagger API details.
+            api (dict): swagger API details.
 
         Returns:
             Tuple[str, str]: The generated test function code and the file name.
@@ -631,7 +631,7 @@ class SwaggerParser:
 
     def _generate_testcases_templates(self) -> None:
         """
-        Generate test function templates based on Swagger data and write them to files.
+        Generate test function templates based on swagger data and write them to files.
 
         Returns:
             None
@@ -645,7 +645,7 @@ class SwaggerParser:
 
     def generate_templates(self) -> None:
         """
-        Generate API and test function templates based on Swagger data.
+        Generate API and test function templates based on swagger data.
 
         Returns:
             None

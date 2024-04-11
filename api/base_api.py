@@ -12,7 +12,7 @@ class BaseAPI:
         Initialize an instance of the BaseAPI class.
 
         Args:
-            base_url (str): The base URL of the API.
+            base_url (str): The base url of the API.
             headers (Dict[str, Any]): The header information for the requests.
 
         Returns:
@@ -36,8 +36,8 @@ class BaseAPI:
             uri (str): The URI of the request.
             method (str): The method of the request.
             data (Dict[str, Any]): The data of the request as a dictionary.
-            params (Dict[str, Any]): The URL parameters of the request as a dictionary.
-            json (Dict[str, Any]): The JSON data of the request as a dictionary.
+            params (Dict[str, Any]): The url parameters of the request as a dictionary.
+            json (Dict[str, Any]): The json data of the request as a dictionary.
             headers (Dict[str, Any]): The header information of the request as a dictionary.
             files (Any): The files to be included in the request.
 

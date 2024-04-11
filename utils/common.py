@@ -100,7 +100,7 @@ def get_current_timestamp() -> int:
 
 def is_json_object(obj: Any) -> bool:
     """
-    Check if an object is a JSON object.
+    Check if an object is a json object.
 
     Args:
         obj (Any): Object.
@@ -113,13 +113,13 @@ def is_json_object(obj: Any) -> bool:
 
 def is_json_string(string: str) -> bool:
     """
-    Check if a string is a JSON string.
+    Check if a string is a json string.
 
     Args:
         string (str): String.
 
     Returns:
-        bool: True if the string is a valid JSON string; False otherwise.
+        bool: True if the string is a valid json string; False otherwise.
     """
     try:
         json.loads(string)
@@ -131,10 +131,10 @@ def is_json_string(string: str) -> bool:
 
 def loads_json(string: str) -> Any:
     """
-    Parse a JSON string into an object.
+    Parse a json string into an object.
 
     Args:
-        string (str): JSON string.
+        string (str): json string.
 
     Returns:
         Any: Parsed object.
@@ -144,13 +144,13 @@ def loads_json(string: str) -> Any:
 
 def dumps_json(data: Any) -> str:
     """
-    Get the formatted JSON string.
+    Get the formatted json string.
 
     Args:
         data (Any): Dictionary data.
 
     Returns:
-        str: The formatted JSON string.
+        str: The formatted json string.
     """
     return json.dumps(data)
 
@@ -160,10 +160,10 @@ def load_json(json_path: str) -> Any:
     Load json from a file.
 
     Args:
-        json_path (str): The path to the JSON file.
+        json_path (str): The path to the json file.
 
     Returns:
-        Any: The loaded JSON data.
+        Any: The loaded json data.
     """
     logger.info(f"load json file: {json_path}")
 
@@ -176,8 +176,8 @@ def dump_json(json_path: str, data: Any) -> None:
     Dump json to a file.
 
     Args:
-        json_path (str): The path to the JSON file.
-        data (Any): The JSON data to be dumped.
+        json_path (str): The path to the json file.
+        data (Any): The json data to be dumped.
 
     Returns:
         None

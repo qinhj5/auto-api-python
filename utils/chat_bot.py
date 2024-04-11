@@ -94,7 +94,7 @@ class ChatBot:
 
     def _save_contexts(self) -> None:
         """
-        Save dialogue contexts to a JSON file.
+        Save dialogue contexts to a json file.
 
         Returns:
             None

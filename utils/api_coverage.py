@@ -18,7 +18,7 @@ class ApiCoverage:
         Initialize the class.
 
         Args:
-            swagger_url (str): The URL of the Swagger file.
+            swagger_url (str): The url of the swagger file.
 
         Returns:
             None
@@ -54,7 +54,7 @@ class ApiCoverage:
         Get requests from merged request logs.
 
         Returns:
-            List[Dict[str, Union[str, bool]]]: A list of request URLs and methods.
+            List[Dict[str, Union[str, bool]]]: A list of request urls and methods.
         """
         self._merge_request_logs()
 
@@ -79,11 +79,11 @@ class ApiCoverage:
 
     def _get_requests_from_swagger(self) -> Optional[Dict[str, List[Dict[str, Union[str, int]]]]]:
         """
-        Get requests from Swagger documentation.
+        Get requests from swagger documentation.
 
         Returns:
             Optional[Dict[str, List[Dict[str, Union[str, int]]]]]: A dictionary containing static_url_list and
-            dynamic_url_list, each of which is a list of request URLs, methods, and counts.
+            dynamic_url_list, each of which is a list of request urls, methods, and counts.
         """
         try:
             response = requests.get(self._swagger_url, headers=Global.constants.HEADERS)
@@ -95,7 +95,7 @@ class ApiCoverage:
             try:
                 response.json()
             except ValueError:
-                logger.error(f"Parse Swagger docs error: {response.text}")
+                logger.error(f"parse swagger docs error: {response.text}")
                 sys.exit(1)
             else:
                 swagger_dict = dict()
@@ -126,20 +126,20 @@ class ApiCoverage:
 
                 return swagger_dict
         else:
-            logger.error("Cannot request Swagger URL")
+            logger.error("cannot request swagger url")
             sys.exit(1)
 
     @staticmethod
     def _is_similar_url(request_url: str, swagger_url: str) -> bool:
         """
-        Check if the request URL is similar to the Swagger URL pattern.
+        Check if the request url is similar to the swagger url pattern.
 
         Args:
-            request_url (str): The request URL to check.
-            swagger_url (str): The Swagger URL pattern to compare against.
+            request_url (str): The request url to check.
+            swagger_url (str): The swagger url pattern to compare against.
 
         Returns:
-            bool: True if the request URL matches the Swagger URL pattern, False otherwise.
+            bool: True if the request url matches the swagger url pattern, False otherwise.
         """
         reg = r"{[^/]+?}"
         url_reg = re.sub(reg, r"[^/]+?", swagger_url)
@@ -148,13 +148,13 @@ class ApiCoverage:
 
     def _process(self) -> Tuple[List[Dict[str, Union[str, bool]]], Dict[str, List[Dict[str, Union[str, int]]]]]:
         """
-        Process API coverage by comparing requests from logs with requests from Swagger documentation.
+        Process API coverage by comparing requests from logs with requests from swagger documentation.
 
         Returns:
             Tuple[List[Dict[str, Union[str, bool]]], Dict[str, List[Dict[str, Union[str, int]]]]]:
-            1. request_list: A list of request URLs, methods, and match status.
+            1. request_list: A list of request urls, methods, and match status.
             2. swagger_dict: A dictionary containing static_url_list and dynamic_url_list, each of which is a list of
-            request URLs, methods, and counts.
+            request urls, methods, and counts.
         """
         request_list = self._get_requests_from_logs()
         swagger_dict = self._get_requests_from_swagger()
