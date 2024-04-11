@@ -331,11 +331,12 @@ class SwaggerParser:
             Tuple[str, bool]: The generated function code and a boolean indicating whether List is used in the function.
         """
         method = api["method"]
+        # snake_name = SwaggerParser._pascal_to_snake(api["uri"])
         snake_name = SwaggerParser._pascal_to_snake(api["detail"]["operationId"])
         if snake_name.startswith(method):
             func_name = snake_name
         else:
-            func_name = f"""{method}_{SwaggerParser._pascal_to_snake(api["detail"]["operationId"])}"""
+            func_name = f"""{method}_{snake_name}"""
 
         summary = api["detail"].get("summary", "Null")
         summary = SwaggerParser._get_wrapped_string(summary, indent=8)
@@ -564,12 +565,13 @@ class SwaggerParser:
         header_code += "from utils.common import set_assertion_error\n\n\n"
 
         method = api["method"]
+        # snake_name = SwaggerParser._pascal_to_snake(api["uri"])
         snake_name = SwaggerParser._pascal_to_snake(api["detail"]["operationId"])
         if snake_name.startswith(method):
             api_func_name = snake_name
             test_func_name = f"test_{api_func_name}"
         else:
-            api_func_name = f"""{method}_{SwaggerParser._pascal_to_snake(api["detail"]["operationId"])}"""
+            api_func_name = f"""{method}_{snake_name}"""
             test_func_name = f"""test_{api_func_name}"""
 
         words = test_func_name.split("_")
