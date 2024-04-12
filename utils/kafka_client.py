@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import time
 import string
+import traceback
 from typing import List
 from utils.logger import logger
 from confluent_kafka import Consumer
@@ -114,4 +115,7 @@ class KafkaClient:
 
 
 if __name__ == "__main__":
-    KafkaClient().get_realtime_kafka_message()
+    try:
+        KafkaClient().get_realtime_kafka_message()
+    except Exception as e:
+        logger.error(f"{e}\n{traceback.format_exc()}")

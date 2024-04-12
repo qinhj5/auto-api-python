@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import traceback
 from utils.logger import logger
 from xmindparser import xmind_to_dict
 
@@ -58,5 +59,8 @@ class XmindParser:
 
 
 if __name__ == "__main__":
-    # xmind_file_path is the path of your xmind file
-    XmindParser(xmind_file_path="").get_leaf_summary()
+    try:
+        # xmind_file_path is the path of your xmind file
+        XmindParser(xmind_file_path="").get_leaf_summary()
+    except Exception as e:
+        logger.error(f"{e}\n{traceback.format_exc()}")

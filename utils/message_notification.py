@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import traceback
 from twilio.rest import Client
 from utils.logger import logger
 from utils.common import get_ext_conf
@@ -45,5 +46,8 @@ def send_message():
 
 
 if __name__ == "__main__":
-    # refer to https://www.twilio.com
-    send_message()
+    try:
+        # refer to https://www.twilio.com
+        send_message()
+    except Exception as e:
+        logger.error(f"{e}\n{traceback.format_exc()}")

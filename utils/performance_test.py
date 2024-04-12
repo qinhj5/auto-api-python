@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
+import traceback
 import subprocess
 from config.conf import Global
 from utils.logger import logger
@@ -61,4 +62,7 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        logger.error(f"{e}\n{traceback.format_exc()}")

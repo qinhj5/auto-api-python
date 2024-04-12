@@ -2,6 +2,7 @@
 import os
 import sys
 import requests
+import traceback
 from datetime import datetime
 from config.conf import Global
 from utils.dirs import tmp_dir
@@ -142,5 +143,8 @@ class SwaggerDiff:
 
 
 if __name__ == "__main__":
-    # swagger_url is the link to the swagger api-docs
-    SwaggerDiff(swagger_url="").swagger_scanning()
+    try:
+        # swagger_url is the link to the swagger api-docs
+        SwaggerDiff(swagger_url="").swagger_scanning()
+    except Exception as e:
+        logger.error(f"{e}\n{traceback.format_exc()}")

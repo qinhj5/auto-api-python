@@ -7,6 +7,7 @@ import shutil
 import keyword
 import requests
 import builtins
+import traceback
 from config.conf import Global
 from utils.logger import logger
 from typing import Tuple, Union
@@ -645,5 +646,8 @@ class SwaggerParser:
 
 
 if __name__ == "__main__":
-    # swagger_url is the link to the swagger api-docs
-    SwaggerParser(swagger_url="").generate_templates()
+    try:
+        # swagger_url is the link to the swagger api-docs
+        SwaggerParser(swagger_url="").generate_templates()
+    except Exception as e:
+        logger.error(f"{e}\n{traceback.format_exc()}")
