@@ -7,7 +7,6 @@ import shutil
 import keyword
 import requests
 import builtins
-import traceback
 from config.conf import Global
 from utils.logger import logger
 from typing import Tuple, Union
@@ -151,21 +150,10 @@ class SwaggerParser:
         Returns:
             dict: Path data of swagger.
         """
-        try:
-            response = requests.get(self._swagger_url, headers=Global.constants.HEADERS)
-        except Exception as e:
-            logger.error(f"{e}\n{traceback.format_exc()}")
-            sys.exit(1)
+        response = requests.get(self._swagger_url, headers=Global.constants.HEADERS)
 
         if response.status_code == 200:
-            try:
-                response.json()
-            except ValueError:
-                logger.error(f"parse swagger docs error: {response.text}")
-                sys.exit(1)
-            else:
-                self._definitions_dict = response.json().get("definitions", dict())
-                return response.json().get("paths", dict())
+            return response.json().get("paths", dict())
         else:
             logger.error("cannot request swagger url")
             sys.exit(1)

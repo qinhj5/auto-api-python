@@ -2,7 +2,6 @@
 import os
 import sys
 import requests
-import traceback
 from datetime import datetime
 from config.conf import Global
 from utils.dirs import tmp_dir
@@ -35,20 +34,10 @@ class SwaggerDiff:
         Returns:
             dict: Total data of swagger.
         """
-        try:
-            response = requests.get(self._swagger_url, headers=Global.constants.HEADERS)
-        except Exception as e:
-            logger.error(f"{e}\n{traceback.format_exc()}")
-            sys.exit(1)
+        response = requests.get(self._swagger_url, headers=Global.constants.HEADERS)
 
         if response.status_code == 200:
-            try:
-                response.json()
-            except ValueError:
-                logger.error(f"parse swagger docs error: {response.text}")
-                sys.exit(1)
-            else:
-                return response.json()
+            return response.json()
         else:
             logger.error("cannot request swagger url")
             sys.exit(1)
@@ -133,27 +122,23 @@ class SwaggerDiff:
         Returns:
             None
         """
-        try:
-            removed_dicts, added_dicts, changed_dicts = self._get_swagger_diff()
-        except Exception as e:
-            logger.error(f"{e}\n{traceback.format_exc()}")
-            sys.exit(1)
-        else:
-            if (not removed_dicts) & (not added_dicts) & (not changed_dicts):
-                logger.info("current swagger remain unchanged")
-            else:
-                result = {"old": self._old_json_path,
-                          "new": self._new_json_path,
-                          "removed": removed_dicts,
-                          "added": added_dicts,
-                          "changed": changed_dicts}
-                os.makedirs(self._swagger_diff_dir, exist_ok=True)
-                swagger_diff_path = os.path.abspath(os.path.join(self._swagger_diff_dir,
-                                                                 f"{get_current_datetime()}.json"))
-                logger.info(f"swagger changed")
-                dump_json(swagger_diff_path, result)
+        removed_dicts, added_dicts, changed_dicts = self._get_swagger_diff()
 
-                dump_json(self._new_json_path, self._current_swagger_json)
+        if (not removed_dicts) & (not added_dicts) & (not changed_dicts):
+            logger.info("current swagger remain unchanged")
+        else:
+            result = {"old": self._old_json_path,
+                      "new": self._new_json_path,
+                      "removed": removed_dicts,
+                      "added": added_dicts,
+                      "changed": changed_dicts}
+            os.makedirs(self._swagger_diff_dir, exist_ok=True)
+            swagger_diff_path = os.path.abspath(os.path.join(self._swagger_diff_dir,
+                                                             f"{get_current_datetime()}.json"))
+            logger.info(f"swagger changed")
+            dump_json(swagger_diff_path, result)
+
+            dump_json(self._new_json_path, self._current_swagger_json)
 
 
 if __name__ == "__main__":

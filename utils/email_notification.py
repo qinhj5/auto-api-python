@@ -3,7 +3,6 @@ import os
 import time
 import zipfile
 import smtplib
-import traceback
 from utils.logger import logger
 from email.mime.text import MIMEText
 from utils.common import get_ext_conf

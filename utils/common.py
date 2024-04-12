@@ -9,7 +9,6 @@ import random
 import allure
 import filelock
 import datetime
-import traceback
 import subprocess
 from utils.logger import logger
 from typing import Any, List, Union

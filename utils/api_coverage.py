@@ -3,7 +3,6 @@ import os
 import re
 import sys
 import requests
-import traceback
 from openpyxl import Workbook
 from config.conf import Global
 from utils.logger import logger
