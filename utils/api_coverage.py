@@ -3,6 +3,7 @@ import os
 import re
 import sys
 import requests
+import traceback
 from openpyxl import Workbook
 from config.conf import Global
 from utils.logger import logger
@@ -233,5 +234,8 @@ class ApiCoverage:
 
 
 if __name__ == "__main__":
-    # swagger_url is the link to the swagger api-docs
-    ApiCoverage(swagger_url="").get_coverage_summary()
+    try:
+        # swagger_url is the link to the swagger api-docs
+        ApiCoverage(swagger_url="").get_coverage_summary()
+    except Exception as e:
+        logger.error(f"{e}\n{traceback.format_exc()}")

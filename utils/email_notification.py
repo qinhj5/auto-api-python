@@ -3,6 +3,7 @@ import os
 import time
 import zipfile
 import smtplib
+import traceback
 from utils.logger import logger
 from email.mime.text import MIMEText
 from utils.common import get_ext_conf
@@ -131,5 +132,8 @@ def send_email():
 
 
 if __name__ == "__main__":
-    # using Google Email, can refer to https://myaccount.google.com/apppasswords
-    send_email()
+    try:
+        # using Google Email, can refer to https://myaccount.google.com/apppasswords
+        send_email()
+    except Exception as e:
+        logger.error(f"{e}\n{traceback.format_exc()}")

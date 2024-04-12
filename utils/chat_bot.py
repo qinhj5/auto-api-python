@@ -146,5 +146,8 @@ class ChatBot:
 
 
 if __name__ == "__main__":
-    with ChatBot() as instance:
-        instance.run()
+    try:
+        with ChatBot() as instance:
+            instance.run()
+    except Exception as e:
+        logger.error(f"{e}\n{traceback.format_exc()}")

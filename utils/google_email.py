@@ -161,5 +161,8 @@ class GoogleEmail:
 
 
 if __name__ == "__main__":
-    # OAuth consent screen is required before using Gmail API
-    GoogleEmail().send(to_recipients="", subject="", body="")
+    try:
+        # OAuth consent screen is required before using Gmail API
+        GoogleEmail().send(to_recipients="", subject="", body="")
+    except Exception as e:
+        logger.error(f"{e}\n{traceback.format_exc()}")

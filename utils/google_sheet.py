@@ -172,5 +172,8 @@ class GoogleSheet:
 
 
 if __name__ == "__main__":
-    # for the specific file in config, should grant Editor access to service account manually
-    logger.info(GoogleSheet().get_sheet_titles())
+    try:
+        # for the specific file in config, should grant Editor access to service account manually
+        logger.info(GoogleSheet().get_sheet_titles())
+    except Exception as e:
+        logger.error(f"{e}\n{traceback.format_exc()}")

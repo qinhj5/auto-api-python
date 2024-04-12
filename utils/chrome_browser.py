@@ -5,6 +5,7 @@ import base64
 import shutil
 import sqlite3
 import datetime
+import traceback
 from utils.dirs import tmp_dir
 from utils.logger import logger
 from utils.common import get_env_conf, load_json
@@ -375,6 +376,9 @@ class ChromeBrowser:
 
 
 if __name__ == "__main__":
-    cookies = ChromeBrowser().get_all_cookies()
-    for c in cookies:
-        logger.info(c)
+    try:
+        cookies = ChromeBrowser().get_all_cookies()
+        for c in cookies:
+            logger.info(c)
+    except Exception as e:
+        logger.error(f"{e}\n{traceback.format_exc()}")

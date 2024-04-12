@@ -220,5 +220,8 @@ class GoogleDrive:
 
 
 if __name__ == "__main__":
-    # files will be managed in Google Drive of the service account
-    GoogleDrive().upload_file(file_path="")
+    try:
+        # files will be managed in Google Drive of the service account
+        GoogleDrive().upload_file(file_path="")
+    except Exception as e:
+        logger.error(f"{e}\n{traceback.format_exc()}")

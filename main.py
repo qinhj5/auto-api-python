@@ -3,6 +3,7 @@ import os
 import sys
 import pytest
 import argparse
+import traceback
 
 project_dir = os.path.dirname(__file__)
 sys.path.append(project_dir)
@@ -138,4 +139,7 @@ if __name__ == "__main__":
     from utils.message_notification import send_message
     from utils.dirs import report_raw_dir, report_html_dir
 
-    main()
+    try:
+        main()
+    except Exception as e:
+        logger.error(f"{e}\n{traceback.format_exc()}")

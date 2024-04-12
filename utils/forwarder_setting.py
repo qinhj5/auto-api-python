@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import sys
 import getpass
+import traceback
 import subprocess
 from utils.logger import logger
 from utils.common import get_env_conf
@@ -159,4 +160,7 @@ class ForwarderSetting:
 
 
 if __name__ == "__main__":
-    ForwarderSetting().activate_forwarder()
+    try:
+        ForwarderSetting().activate_forwarder()
+    except Exception as e:
+        logger.error(f"{e}\n{traceback.format_exc()}")
