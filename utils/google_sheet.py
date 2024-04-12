@@ -73,19 +73,15 @@ class GoogleSheet:
         Returns:
             None
         """
-        try:
-            self._gspread_client = gspread.service_account_from_dict(
-                info=self._conf.get("service_info"),
-                scopes=[
-                    "https://www.googleapis.com/auth/drive",
-                    "https://www.googleapis.com/auth/spreadsheets"
-                ]
-            )
-            self._sheet_page = self._gspread_client.open(self._conf.get("google_sheet").get("file_name"))
-            self._active_sheet = self._sheet_page.worksheet(self._conf.get("google_sheet").get("sheet_name"))
-        except Exception as e:
-            logger.error(f"{e}\n{traceback.format_exc()}")
-            sys.exit(1)
+        self._gspread_client = gspread.service_account_from_dict(
+            info=self._conf.get("service_info"),
+            scopes=[
+                "https://www.googleapis.com/auth/drive",
+                "https://www.googleapis.com/auth/spreadsheets"
+            ]
+        )
+        self._sheet_page = self._gspread_client.open(self._conf.get("google_sheet").get("file_name"))
+        self._active_sheet = self._sheet_page.worksheet(self._conf.get("google_sheet").get("sheet_name"))
 
     def clear_active_sheet(self) -> None:
         """

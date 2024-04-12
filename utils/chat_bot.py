@@ -79,18 +79,10 @@ class ChatBot:
         os.makedirs(tmp_dir, exist_ok=True)
         dialogue_contexts_path = os.path.abspath(os.path.join(tmp_dir, "dialogue_contexts.json"))
         if os.path.exists(dialogue_contexts_path):
-            try:
-                self._contexts = load_json(dialogue_contexts_path)
-            except Exception as e:
-                logger.error(f"{e}\n{traceback.format_exc()}")
-                sys.exit(1)
+            self._contexts = load_json(dialogue_contexts_path)
         else:
             with self._lock:
-                try:
-                    dump_json(dialogue_contexts_path, self._contexts)
-                except Exception as e:
-                    logger.error(f"{e}\n{traceback.format_exc()}")
-                    sys.exit(1)
+                dump_json(dialogue_contexts_path, self._contexts)
 
     def _save_contexts(self) -> None:
         """
@@ -101,11 +93,7 @@ class ChatBot:
         """
         dialogue_contexts_path = os.path.abspath(os.path.join(tmp_dir, "dialogue_contexts.json"))
         with self._lock:
-            try:
-                dump_json(dialogue_contexts_path, self._contexts)
-            except Exception as e:
-                logger.error(f"{e}\n{traceback.format_exc()}")
-                sys.exit(1)
+            dump_json(dialogue_contexts_path, self._contexts)
 
     def _generate_response(self, prompt: str) -> None:
         """

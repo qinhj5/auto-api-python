@@ -72,18 +72,14 @@ class GoogleDrive:
         Returns:
             None
         """
-        try:
-            credentials = service_account.Credentials.from_service_account_info(
-                info=self._conf.get("service_info"),
-                scopes=[
-                    "https://www.googleapis.com/auth/drive",
-                    "https://www.googleapis.com/auth/drive.metadata"
-                ]
-            )
-            self._drive_service = build(serviceName="drive", version="v3", credentials=credentials)
-        except Exception as e:
-            logger.error(f"{e}\n{traceback.format_exc()}")
-            sys.exit(1)
+        credentials = service_account.Credentials.from_service_account_info(
+            info=self._conf.get("service_info"),
+            scopes=[
+                "https://www.googleapis.com/auth/drive",
+                "https://www.googleapis.com/auth/drive.metadata"
+            ]
+        )
+        self._drive_service = build(serviceName="drive", version="v3", credentials=credentials)
 
     def _create_folder(self, folder_name: str, parent_folder_id: str = None) -> str:
         """

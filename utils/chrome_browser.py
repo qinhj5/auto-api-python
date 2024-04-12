@@ -5,7 +5,6 @@ import base64
 import shutil
 import sqlite3
 import datetime
-import traceback
 from utils.dirs import tmp_dir
 from utils.logger import logger
 from utils.common import get_env_conf, load_json
@@ -131,11 +130,7 @@ class ChromeBrowser:
 
             return kdf.derive(password)
         elif self._platform == "win32":
-            try:
-                base64_encrypted_key = load_json(self._local_state_path).get("os_crypt").get("encrypted_key")
-            except Exception as e:
-                logger.error(f"{e}\n{traceback.format_exc()}")
-                sys.exit(1)
+            base64_encrypted_key = load_json(self._local_state_path).get("os_crypt").get("encrypted_key")
 
             encrypted_key_with_header = base64.b64decode(base64_encrypted_key)
             encrypted_key = encrypted_key_with_header[5:]
@@ -227,29 +222,25 @@ class ChromeBrowser:
         conn.row_factory = ChromeBrowser._dict_factory
         cursor = conn.cursor()
 
-        try:
-            cursor.execute("SELECT host_key, \
-                            name, \
-                            encrypted_value, \
-                            expires_utc, \
-                            has_expires, \
-                            last_update_utc FROM cookies;")
-            raw_cookies = cursor.fetchall()
-        except Exception as e:
-            logger.error(f"{e}\n{traceback.format_exc()}")
-            sys.exit(1)
-        else:
-            for cookie in raw_cookies:
-                last_update_time = datetime.datetime.fromtimestamp(cookie["last_update_utc"] / 10 ** 6 - 11644473600)
-                self._cookies.append(
-                    {"name": cookie["name"],
-                     "value": self._decrypt_cookie_value(cookie["encrypted_value"]),
-                     "host": cookie["host_key"],
-                     "is_expired": ChromeBrowser._is_expired(cookie["expires_utc"]) if cookie["has_expires"] else False,
-                     "update_time": last_update_time.strftime("%Y-%m-%d %H:%M:%S")}
-                )
-        finally:
-            conn.close()
+        cursor.execute("SELECT host_key, \
+                                    name, \
+                                    encrypted_value, \
+                                    expires_utc, \
+                                    has_expires, \
+                                    last_update_utc FROM cookies;")
+        raw_cookies = cursor.fetchall()
+
+        for cookie in raw_cookies:
+            last_update_time = datetime.datetime.fromtimestamp(cookie["last_update_utc"] / 10 ** 6 - 11644473600)
+            self._cookies.append(
+                {"name": cookie["name"],
+                 "value": self._decrypt_cookie_value(cookie["encrypted_value"]),
+                 "host": cookie["host_key"],
+                 "is_expired": ChromeBrowser._is_expired(cookie["expires_utc"]) if cookie["has_expires"] else False,
+                 "update_time": last_update_time.strftime("%Y-%m-%d %H:%M:%S")}
+            )
+
+        conn.close()
 
     def _fetch_browser_local_storage_items(self) -> None:
         """
@@ -260,25 +251,17 @@ class ChromeBrowser:
         """
         if self._platform == "darwin":
             import leveldb  # pip install leveldb==0.201
-            try:
-                db = leveldb.LevelDB(self._leveldb_path)
-            except Exception as e:
-                logger.error(f"{e}\n{traceback.format_exc()}")
-                sys.exit(1)
-            else:
-                for k in db.RangeIter(include_value=False):
-                    self._local_storage_items.append({"key": k, "value": db.Get(k)})
+            db = leveldb.LevelDB(self._leveldb_path)
+
+            for k in db.RangeIter(include_value=False):
+                self._local_storage_items.append({"key": k, "value": db.Get(k)})
         elif self._platform == "win32":
             import plyvel  # pip install plyvel-win32==1.3.0
-            try:
-                db = plyvel.DB(self._leveldb_path, create_if_missing=False)
-            except Exception as e:
-                logger.error(f"{e}\n{traceback.format_exc()}")
-                sys.exit(1)
-            else:
-                with db.iterator(include_value=False) as it:
-                    for key in it:
-                        self._local_storage_items.append({"key": key, "value": db.get(key)})
+            db = plyvel.DB(self._leveldb_path, create_if_missing=False)
+
+            with db.iterator(include_value=False) as it:
+                for key in it:
+                    self._local_storage_items.append({"key": key, "value": db.get(key)})
         else:
             logger.error("only support macOS and Windows")
             sys.exit(1)
@@ -355,7 +338,7 @@ class ChromeBrowser:
             try:
                 item["key"].decode("utf-8")
             except Exception as e:
-                logger.warning(f"{e}\n{traceback.format_exc()}")
+                logger.warning(e)
                 logger.warning(f"""skip key: {item["key"]}""")
             else:
                 if host in item["key"].decode("utf-8") and name in item["key"].decode("utf-8"):

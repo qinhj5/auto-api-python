@@ -37,16 +37,13 @@ def get_env_conf(name: str = None) -> dict:
         logger.error(f"file not found: {conf_path}")
         return conf
 
-    try:
-        with open(conf_path, "r", encoding="utf-8") as f:
-            conf = yaml.safe_load(f)
-    except Exception as e:
-        logger.error(f"{e}\n{traceback.format_exc()}")
-    else:
-        if name:
-            conf = conf.get(name)
-    finally:
-        return conf
+    with open(conf_path, "r", encoding="utf-8") as f:
+        conf = yaml.safe_load(f)
+
+    if name:
+        conf = conf.get(name)
+
+    return conf
 
 
 def get_ext_conf(name: str = None) -> dict:
@@ -66,16 +63,13 @@ def get_ext_conf(name: str = None) -> dict:
         logger.error(f"file not found: {conf_path}")
         return conf
 
-    try:
-        with open(conf_path, "r", encoding="utf-8") as f:
-            conf = yaml.safe_load(f)
-    except Exception as e:
-        logger.error(f"{e}\n{traceback.format_exc()}")
-    else:
-        if name:
-            conf = conf.get(name)
-    finally:
-        return conf
+    with open(conf_path, "r", encoding="utf-8") as f:
+        conf = yaml.safe_load(f)
+
+    if name:
+        conf = conf.get(name)
+
+    return conf
 
 
 def get_current_datetime() -> str:

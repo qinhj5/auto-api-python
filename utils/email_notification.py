@@ -112,28 +112,19 @@ class EmailNotification:
                     logger.error(f"file not found: {log_summary_path}")
                     break
 
-                try:
-                    with open(log_summary_path, "r", encoding="utf-8") as f:
-                        lines = f.readlines()
-                except Exception as e:
-                    logger.error(f"{e}\n{traceback.format_exc()}")
-                else:
-                    for line in lines:
-                        msg.attach(MIMEText(line, "plain", _charset="utf-8"))
+                with open(log_summary_path, "r", encoding="utf-8") as f:
+                    lines = f.readlines()
 
-        server = None
-        try:
-            server = smtplib.SMTP(self._server, 587)
-            server.starttls()
-            server.login(self._sender, self._password)
-            server.send_message(msg)
-        except Exception as e:
-            logger.error(f"{e}\n{traceback.format_exc()}")
-        else:
-            logger.info(f"email sent at {now}")
-        finally:
-            if server:
-                server.quit()
+                for line in lines:
+                    msg.attach(MIMEText(line, "plain", _charset="utf-8"))
+
+        server = smtplib.SMTP(self._server, 587)
+        server.starttls()
+        server.login(self._sender, self._password)
+        server.send_message(msg)
+
+        if server:
+            server.quit()
 
 
 def send_email():

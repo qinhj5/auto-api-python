@@ -82,14 +82,10 @@ class GoogleEmail:
         google_token_path = os.path.abspath(os.path.join(tmp_dir, "google_email_token.json"))
         credentials = None
         if os.path.exists(google_token_path):
-            try:
-                credentials = Credentials.from_authorized_user_file(
-                    filename=google_token_path,
-                    scopes=["https://www.googleapis.com/auth/gmail.send"]
-                )
-            except Exception as e:
-                logger.error(f"{e}\n{traceback.format_exc()}")
-                sys.exit(1)
+            credentials = Credentials.from_authorized_user_file(
+                filename=google_token_path,
+                scopes=["https://www.googleapis.com/auth/gmail.send"]
+            )
         if not credentials or not credentials.valid:
             if credentials and credentials.expired and credentials.refresh_token:
                 credentials.refresh(Request())
@@ -98,11 +94,7 @@ class GoogleEmail:
                     client_config=self._conf.get("client_config"),
                     scopes=["https://www.googleapis.com/auth/gmail.send"]
                 )
-                try:
-                    credentials = flow.run_local_server(port=0)
-                except Exception as e:
-                    logger.error(f"{e}\n{traceback.format_exc()}")
-                    sys.exit(1)
+                credentials = flow.run_local_server(port=0)
 
             with self._lock:
                 with open(google_token_path, "w", encoding="utf-8") as f:
@@ -157,11 +149,8 @@ class GoogleEmail:
             if not os.path.exists(attachment_path):
                 logger.error(f"file not found: {attachment_path}")
             else:
-                try:
-                    with open(attachment_path, "rb") as f:
-                        attachment.set_payload(f.read())
-                except Exception as e:
-                    logger.error(f"{e}\n{traceback.format_exc()}")
+                with open(attachment_path, "rb") as f:
+                    attachment.set_payload(f.read())
 
             encoders.encode_base64(attachment)
             attachment.add_header("Content-Disposition", f"attachment; filename={attachment_name}")
@@ -169,7 +158,7 @@ class GoogleEmail:
 
         raw_message = base64.urlsafe_b64encode(message.as_bytes()).decode("utf-8")
         response = self._gmail_service.users().messages().send(userId="me", body={"raw": raw_message}).execute()
-        logger.info(f"Email sent successfully! Response: {response}")
+        logger.info(f"email sent successfully! response: {response}")
 
 
 if __name__ == "__main__":

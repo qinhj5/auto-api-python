@@ -41,13 +41,10 @@ class ApiCoverage:
                     logger.error(f"file not found: {file_path}")
                     continue
 
-                try:
-                    with open(file_path, "r") as input_file:
-                        output_file.write(input_file.read().strip())
-                except Exception as e:
-                    logger.error(f"{e}\n{traceback.format_exc()}")
-                else:
-                    output_file.write("\n")
+                with open(file_path, "r") as input_file:
+                    output_file.write(input_file.read().strip())
+
+                output_file.write("\n")
 
     def _get_requests_from_logs(self) -> List[Dict[str, Union[str, bool]]]:
         """
@@ -85,46 +82,36 @@ class ApiCoverage:
             Optional[Dict[str, List[Dict[str, Union[str, int]]]]]: A dictionary containing static_url_list and
             dynamic_url_list, each of which is a list of request urls, methods, and counts.
         """
-        try:
-            response = requests.get(self._swagger_url, headers=Global.constants.HEADERS)
-        except Exception as e:
-            logger.error(f"{e}\n{traceback.format_exc()}")
-            sys.exit(1)
+        response = requests.get(self._swagger_url, headers=Global.constants.HEADERS)
 
         if response.status_code == 200:
-            try:
-                response.json()
-            except ValueError:
-                logger.error(f"parse swagger docs error: {response.text}")
-                sys.exit(1)
-            else:
-                swagger_dict = dict()
-                swagger_dict["static_url_list"] = []
-                swagger_dict["dynamic_url_list"] = []
-                for path, path_details in response.json().get("paths", dict()).items():
-                    for method, detail in path_details.items():
-                        tags = detail.get("tags")
-                        url = Global.constants.BASE_URL + path
-                        if "{" not in path:
-                            swagger_dict["static_url_list"].append(
-                                {
-                                    "url": url,
-                                    "method": method.upper(),
-                                    "count": 0,
-                                    "tag": tags[0] if isinstance(tags, list) and len(tags) else "NULL"
-                                }
-                            )
-                        else:
-                            swagger_dict["dynamic_url_list"].append(
-                                {
-                                    "url": url,
-                                    "method": method.upper(),
-                                    "count": 0,
-                                    "tag": tags[0] if isinstance(tags, list) and len(tags) else "NULL"
-                                }
-                            )
+            swagger_dict = dict()
+            swagger_dict["static_url_list"] = []
+            swagger_dict["dynamic_url_list"] = []
+            for path, path_details in response.json().get("paths", dict()).items():
+                for method, detail in path_details.items():
+                    tags = detail.get("tags")
+                    url = Global.constants.BASE_URL + path
+                    if "{" not in path:
+                        swagger_dict["static_url_list"].append(
+                            {
+                                "url": url,
+                                "method": method.upper(),
+                                "count": 0,
+                                "tag": tags[0] if isinstance(tags, list) and len(tags) else "NULL"
+                            }
+                        )
+                    else:
+                        swagger_dict["dynamic_url_list"].append(
+                            {
+                                "url": url,
+                                "method": method.upper(),
+                                "count": 0,
+                                "tag": tags[0] if isinstance(tags, list) and len(tags) else "NULL"
+                            }
+                        )
 
-                return swagger_dict
+            return swagger_dict
         else:
             logger.error("cannot request swagger url")
             sys.exit(1)
