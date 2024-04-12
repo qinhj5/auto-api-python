@@ -118,13 +118,15 @@ class EmailNotification:
                 for line in lines:
                     msg.attach(MIMEText(line, "plain", _charset="utf-8"))
 
-        server = smtplib.SMTP(self._server, 587)
-        server.starttls()
-        server.login(self._sender, self._password)
-        server.send_message(msg)
-
-        if server:
-            server.quit()
+        smtp = None
+        try:
+            smtp = smtplib.SMTP(self._server, 587)
+            smtp.starttls()
+            smtp.login(self._sender, self._password)
+            smtp.send_message(msg)
+        finally:
+            if smtp:
+                smtp.quit()
 
 
 def send_email():
