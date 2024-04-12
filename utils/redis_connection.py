@@ -126,8 +126,8 @@ class RedisConnection:
                 self._tunnel_forwarder, self._connection = RedisConnection._create_redis_connection(self._redis_conf,
                                                                                                     self._ssh_conf,
                                                                                                     self._use_tunnel)
-        except Exception as e:
-            logger.error(f"{e}\n{traceback.format_exc()}")
+        except Exception as exception:
+            logger.error(exception)
             self.close()
 
     def set(self, name: str, value: str) -> None:

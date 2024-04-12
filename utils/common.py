@@ -19,7 +19,7 @@ from utils.dirs import config_dir, data_dir, report_dir, log_request_dir, log_su
 common_lock = filelock.FileLock(os.path.abspath(os.path.join(lock_dir, f"common.lock")))
 
 
-def get_env_conf(name: str = None) -> dict:
+def get_env_conf(name: str = None) -> Union[dict, str, list]:
     """
     Get configuration information of environment.
 
@@ -27,7 +27,7 @@ def get_env_conf(name: str = None) -> dict:
         name (str): Configuration item name. Defaults to None.
 
     Returns:
-        dict: Configuration item dictionary if name is provided, otherwise the entire configuration dictionary.
+        Union[dict, str, list]: Configuration item if name is provided, otherwise the entire configuration.
     """
     conf = {}
     conf_path = os.path.abspath(os.path.join(config_dir, f"""conf_{os.environ.get("ENV", "test")}.yml"""))
@@ -45,7 +45,7 @@ def get_env_conf(name: str = None) -> dict:
     return conf
 
 
-def get_ext_conf(name: str = None) -> dict:
+def get_ext_conf(name: str = None) -> Union[dict, str, list]:
     """
     Get configuration information of extension.
 
@@ -53,7 +53,7 @@ def get_ext_conf(name: str = None) -> dict:
         name (str): Configuration item name. Defaults to None.
 
     Returns:
-        dict: Configuration item dictionary if name is provided, otherwise the entire configuration dictionary.
+        Union[dict, str, list]: Configuration item if name is provided, otherwise the entire configuration.
     """
     conf = {}
     conf_path = os.path.abspath(os.path.join(config_dir, f"conf_ext.yml"))

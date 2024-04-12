@@ -134,8 +134,8 @@ class MysqlConnection:
                 self._tunnel_forwarder, self._connection = MysqlConnection._create_mysql_connection(self._mysql_conf,
                                                                                                     self._ssh_conf,
                                                                                                     self._use_tunnel)
-        except Exception as e:
-            logger.error(f"{e}\n{traceback.format_exc()}")
+        except Exception as exception:
+            logger.error(exception)
             self.close()
         else:
             with self._connection.cursor(cursors.DictCursor) as cursor:

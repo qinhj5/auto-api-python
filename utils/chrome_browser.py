@@ -338,9 +338,8 @@ class ChromeBrowser:
         for item in self._local_storage_items:
             try:
                 item["key"].decode("utf-8")
-            except Exception as e:
-                logger.warning(e)
-                logger.warning(f"""skip key: {item["key"]}""")
+            except Exception as exception:
+                logger.warning(f"""skip key: {item["key"]}, error: {exception}""")
             else:
                 if host in item["key"].decode("utf-8") and name in item["key"].decode("utf-8"):
                     item_values.append(item)

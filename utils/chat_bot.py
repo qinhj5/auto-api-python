@@ -114,8 +114,8 @@ class ChatBot:
                 messages=context
             )
             response_text = completion.choices[0].message.content
-        except Exception as e:
-            logger.error(f"{e}\n{traceback.format_exc()}")
+        except Exception as exception:
+            logger.error(exception)
             raise KeyboardInterrupt
         else:
             self._contexts.extend([{"role": "user", "content": prompt},

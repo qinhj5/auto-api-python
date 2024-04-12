@@ -132,8 +132,8 @@ class ClickhouseConnection:
                                                                                 self._clickhouse_conf,
                                                                                 self._ssh_conf,
                                                                                 self._use_tunnel)
-        except Exception as e:
-            logger.error(f"{e}\n{traceback.format_exc()}")
+        except Exception as exception:
+            logger.error(exception)
             self.close()
 
     def execute(self, sql: str, params: dict = None) -> List[Dict[str, Any]]:

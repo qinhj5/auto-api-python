@@ -124,8 +124,8 @@ class DriverShell:
                 self.close()
                 self._tunnel_forwarder, self._driver_client = DriverShell._create_driver_client(self._ssh_conf,
                                                                                                 self._ip)
-        except Exception as e:
-            logger.error(f"{e}\n{traceback.format_exc()}")
+        except Exception as exception:
+            logger.error(exception)
             self.close()
         else:
             stdin, stdout, stderr = self._driver_client.exec_command(command)
