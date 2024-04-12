@@ -56,23 +56,9 @@ def ck():
     ck.close()
 
 
-@pytest.fixture(scope="function", autouse=True)
-def case_info(request):
-    set_allure_and_console_output(name="start time", body=get_current_datetime())
-
-    func = request.function
-    file_path = func.__code__.co_filename
-    func_name = func.__name__
-    source_code, start_line = inspect.getsourcelines(func)
-    line_range = {"start_line": start_line, "end_line": start_line + len(source_code) - 1}
-
-    set_allure_and_console_output(name="file path", body=f"{file_path}")
-    set_allure_and_console_output(name="function name", body=f"{func_name}")
-    set_allure_and_console_output(name="last modified by", body=get_code_modifiers(file_path, line_range))
-
-    yield
-
-    set_allure_and_console_output(name="end time", body=get_current_datetime())
+def pytest_sessionstart():
+    global session_start_time
+    session_start_time = time.time()
 
 
 def pytest_runtest_makereport(item, call):
@@ -123,9 +109,50 @@ def pytest_runtest_makereport(item, call):
         workbook.save(xlsx_path)
 
 
-def pytest_sessionstart():
-    global session_start_time
-    session_start_time = time.time()
+@pytest.fixture(scope="function", autouse=True)
+def testcase_information(request):
+    set_allure_and_console_output(name="start time", body=get_current_datetime())
+
+    func = request.function
+    file_path = func.__code__.co_filename
+    func_name = func.__name__
+    source_code, start_line = inspect.getsourcelines(func)
+    line_range = {"start_line": start_line, "end_line": start_line + len(source_code) - 1}
+
+    set_allure_and_console_output(name="file path", body=f"{file_path}")
+    set_allure_and_console_output(name="function name", body=f"{func_name}")
+    set_allure_and_console_output(name="last modified by", body=get_code_modifiers(file_path, line_range))
+
+    yield
+
+    set_allure_and_console_output(name="end time", body=get_current_datetime())
+
+
+@pytest.fixture(scope="session", autouse=True)
+def request_logging(request):
+    if request.config.pluginmanager.get_plugin("xdist"):
+        if hasattr(request.config, "workerinput"):
+            process_name = request.config.workerinput["workerid"]
+        elif hasattr(request.config, "slaveinput"):
+            process_name = request.config.slaveinput["slaveid"]
+        else:
+            process_name = "main"
+    else:
+        process_name = "main"
+
+    if process_name == "main":
+        log_name = "request.log"
+    else:
+        log_name = f"request_{process_name}.log"
+    log_path = os.path.abspath(os.path.join(log_request_dir, log_name))
+
+    request_file_handler = logging.FileHandler(log_path, "w", encoding="utf-8")
+    request_file_handler.setLevel(logging.DEBUG)
+
+    request_logger = logging.getLogger("urllib3")
+    request_logger.setLevel(logging.DEBUG)
+    request_logger.propagate = False
+    request_logger.addHandler(request_file_handler)
 
 
 def pytest_terminal_summary(terminalreporter, config):
@@ -167,30 +194,3 @@ def pytest_terminal_summary(terminalreporter, config):
             formatted_duration = "{:02d}:{:02d}:{:02d}".format(hours, minutes, seconds)
 
             f.writelines("Elapsed time: {}".format(formatted_duration))
-
-
-@pytest.fixture(scope="session", autouse=True)
-def configure_logging(request):
-    if request.config.pluginmanager.get_plugin("xdist"):
-        if hasattr(request.config, "workerinput"):
-            process_name = request.config.workerinput["workerid"]
-        elif hasattr(request.config, "slaveinput"):
-            process_name = request.config.slaveinput["slaveid"]
-        else:
-            process_name = "main"
-    else:
-        process_name = "main"
-
-    if process_name == "main":
-        log_name = "request.log"
-    else:
-        log_name = f"request_{process_name}.log"
-    log_path = os.path.abspath(os.path.join(log_request_dir, log_name))
-
-    request_file_handler = logging.FileHandler(log_path, "w", encoding="utf-8")
-    request_file_handler.setLevel(logging.DEBUG)
-
-    request_logger = logging.getLogger("urllib3")
-    request_logger.setLevel(logging.DEBUG)
-    request_logger.propagate = False
-    request_logger.addHandler(request_file_handler)
