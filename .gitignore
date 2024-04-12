@@ -7,6 +7,7 @@ report/
 log/
 tmp/
 lock/
+template/
 *.pyc
 *.lock
 !.gitkeep

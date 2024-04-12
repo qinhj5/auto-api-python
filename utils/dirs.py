@@ -15,6 +15,7 @@ os.makedirs(log_summary_dir, exist_ok=True)
 tmp_dir = os.path.abspath(os.path.join(project_dir, "tmp"))
 data_dir = os.path.abspath(os.path.join(project_dir, "data"))
 config_dir = os.path.abspath(os.path.join(project_dir, "config"))
+template_dir = os.path.abspath(os.path.join(project_dir, "template"))
 
 report_dir = os.path.abspath(os.path.join(project_dir, "report"))
 report_raw_dir = os.path.abspath(os.path.join(report_dir, "raw"))
