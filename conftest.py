@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 import os
 import re
+import json
 import time
 import pytest
+import filelock
 import inspect
 import logging
-import filelock
 import traceback
 from utils.tunnel_shell import TunnelShell
 from utils.driver_shell import DriverShell
@@ -14,13 +15,7 @@ from utils.mysql_connection import MysqlConnection
 from utils.redis_connection import RedisConnection
 from utils.clickhouse_connection import ClickhouseConnection
 from utils.dirs import log_request_dir, log_summary_dir, lock_dir, report_sheet_dir
-from utils.common import (
-    dumps_json,
-    get_code_modifiers,
-    set_column_max_width,
-    get_current_datetime,
-    set_allure_and_console_output,
-)
+from utils.common import get_code_modifiers, set_column_max_width, get_current_datetime, set_allure_and_console_output
 
 session_start_time = time.time()
 conftest_lock = filelock.FileLock(os.path.abspath(os.path.join(lock_dir, f"conftest.lock")))
@@ -105,7 +100,7 @@ def pytest_runtest_makereport(item, call):
             break
 
     traceback_error = ("\n".join(error_list[error_idx:])).strip()
-    code_modifiers = dumps_json(get_code_modifiers(file_path=file_path, line_number=line_number))
+    code_modifiers = json.dumps(get_code_modifiers(file_path=file_path, line_number=line_number))
 
     with conftest_lock:
         xlsx_path = os.path.abspath(os.path.join(report_sheet_dir, "failed_cases.xlsx"))

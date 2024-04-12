@@ -2,11 +2,10 @@
 import os
 import csv
 import json
-import time
 import yaml
-import shutil
-import random
 import allure
+import random
+import shutil
 import filelock
 import datetime
 import subprocess
@@ -76,76 +75,9 @@ def get_current_datetime() -> str:
     Get the string representation of the current time.
 
     Returns:
-        str: The string representation of the current time, formatted as "%Y-%m-%d %H:%M:%S".
+        str: The string representation of the current time, formatted as "%Y%m%d_%H%M%S".
     """
     return datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-
-
-def get_current_timestamp() -> int:
-    """
-    Get the timestamp of the current time (milliseconds).
-
-    Returns:
-        int: The timestamp of the current time (milliseconds).
-    """
-    return int(time.time() * 1000)
-
-
-def is_json_object(obj: Any) -> bool:
-    """
-    Check if an object is a json object.
-
-    Args:
-        obj (Any): Object.
-
-    Returns:
-        bool: True if the object is a list or dictionary; False otherwise.
-    """
-    return isinstance(obj, list) or isinstance(obj, dict)
-
-
-def is_json_string(string: str) -> bool:
-    """
-    Check if a string is a json string.
-
-    Args:
-        string (str): String.
-
-    Returns:
-        bool: True if the string is a valid json string; False otherwise.
-    """
-    try:
-        json.loads(string)
-    except ValueError:
-        return False
-    else:
-        return True
-
-
-def loads_json(string: str) -> Any:
-    """
-    Parse a json string into an object.
-
-    Args:
-        string (str): json string.
-
-    Returns:
-        Any: Parsed object.
-    """
-    return json.loads(string)
-
-
-def dumps_json(data: Any) -> str:
-    """
-    Get the formatted json string.
-
-    Args:
-        data (Any): Dictionary data.
-
-    Returns:
-        str: The formatted json string.
-    """
-    return json.dumps(data)
 
 
 def load_json(json_path: str) -> Any:
@@ -195,9 +127,9 @@ def set_console_detail(name: str, body: Any) -> None:
     """
     start_str = name.center(64, "-")
     end_str = "-" * 64
-    if is_json_object(body):
-        body = dumps_json(body)
-    else:
+    try:
+        body = json.dumps(body)
+    except TypeError:
         body = str(body)
     print(f"\n{start_str}\n{body}\n{end_str}")
 
@@ -214,10 +146,10 @@ def set_allure_detail(name: str, body: Any) -> None:
         None
     """
     attachment_type = allure.attachment_type.TEXT
-    if is_json_object(body):
-        body = dumps_json(body)
+    try:
+        body = json.dumps(body)
         attachment_type = allure.attachment_type.JSON
-    else:
+    except TypeError:
         body = str(body)
 
     allure.attach(body=body, name=name, attachment_type=attachment_type)

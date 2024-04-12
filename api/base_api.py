@@ -3,7 +3,8 @@ import curlify
 import requests
 from http import HTTPStatus
 from typing import Any, Dict
-from utils.common import set_allure_and_console_output, is_json_string, loads_json
+from json import loads, JSONDecodeError
+from utils.common import set_allure_and_console_output
 
 
 class BaseAPI:
@@ -71,10 +72,10 @@ class BaseAPI:
             set_allure_and_console_output(name="status code", body=status)
 
             if len(r.text) < 1024 * 256:
-                if is_json_string(r.text):
-                    response_body = loads_json(r.text)
+                try:
+                    response_body = loads(r.text)
                     response_body.update({"status_code": r.status_code})
-                else:
+                except JSONDecodeError:
                     response_body = {"status_code": r.status_code, "text": r.text}
             else:
                 response_body = {"status_code": r.status_code, "text": "response is too long to display"}
