@@ -5,6 +5,7 @@ from http import HTTPStatus
 from typing import Any, Dict
 from json import loads, JSONDecodeError
 from utils.common import set_allure_detail
+from utils.enums import LogLevel
 
 
 class BaseAPI:
@@ -50,9 +51,9 @@ class BaseAPI:
             total_headers.update(headers)
 
         url = f"{self._base_url}{uri}"
-        set_allure_detail(name="url", body=url)
-        set_allure_detail(name="headers", body=total_headers)
-        set_allure_detail(name="request body", body=params or data or json)
+        set_allure_detail(name="url", body=url, level=LogLevel.INFO)
+        set_allure_detail(name="headers", body=total_headers, level=LogLevel.INFO)
+        set_allure_detail(name="request body", body=params or data or json, level=LogLevel.INFO)
 
         request = requests.Request(
             url=url,
@@ -66,10 +67,10 @@ class BaseAPI:
         prepared_request = requests.Session().prepare_request(request)
 
         with requests.Session().send(prepared_request, timeout=600) as r:
-            set_allure_detail(name="curl", body=curlify.to_curl(r.request, compressed=True))
+            set_allure_detail(name="curl", body=curlify.to_curl(r.request, compressed=True), level=LogLevel.INFO)
 
             status = f"name: {HTTPStatus(r.status_code).name}, code: {r.status_code}"
-            set_allure_detail(name="status code", body=status)
+            set_allure_detail(name="status code", body=status, level=LogLevel.INFO)
 
             if len(r.text) < 1024 * 256:
                 try:
@@ -79,6 +80,7 @@ class BaseAPI:
                     response_body = {"status_code": r.status_code, "text": r.text}
             else:
                 response_body = {"status_code": r.status_code, "text": "response is too long to display"}
-            set_allure_detail(name="response body", body=response_body)
+
+            set_allure_detail(name="response body", body=response_body, level=LogLevel.INFO)
 
             return response_body

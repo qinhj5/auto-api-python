@@ -10,6 +10,7 @@ import filelock
 import datetime
 import subprocess
 from utils.logger import logger
+from utils.enums import LogLevel
 from typing import Any, List, Union
 from openpyxl.styles import Alignment
 from openpyxl.worksheet.worksheet import Worksheet
@@ -114,13 +115,14 @@ def dump_json(json_path: str, data: Any) -> None:
             json.dump(data, f, indent=4)
 
 
-def set_allure_detail(body: Any, name: str = "assertion error") -> str:
+def set_allure_detail(body: Any, name: str = "assertion error", level: LogLevel = LogLevel.ERROR) -> str:
     """
     Set detailed information for Allure report output.
 
     Args:
         body (Any): Content.
         name (str): Name. Defaults to "assertion error".
+        level (LogLevel): Log level for the attachment. Defaults to LogLevel.ERROR.
 
     Returns:
         None
@@ -133,7 +135,14 @@ def set_allure_detail(body: Any, name: str = "assertion error") -> str:
 
     allure.attach(body=body, name=name, attachment_type=attachment_type)
 
-    logger.error(f"{name}: {body}") if name == "assertion error" else logger.info(f"{name}: {body}")
+    if level == LogLevel.ERROR:
+        logger.error(f"{name}: {body}")
+    elif level == LogLevel.WARNING:
+        logger.warning(f"{name}: {body}")
+    elif level == LogLevel.INFO:
+        logger.info(f"{name}: {body}")
+    else:
+        logger.debug(f"{name}: {body}")
 
     return body
 

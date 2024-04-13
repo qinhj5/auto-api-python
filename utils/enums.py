@@ -2,6 +2,8 @@
 from enum import Enum
 
 
-class Sort(Enum):
-    ASC = "asc"
-    DESC = "desc"
+class LogLevel(Enum):
+    DEBUG = 0
+    INFO = 1
+    WARNING = 2
+    ERROR = 3

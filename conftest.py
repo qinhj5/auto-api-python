@@ -4,10 +4,11 @@ import re
 import json
 import time
 import pytest
-import filelock
 import inspect
 import logging
+import filelock
 import traceback
+from utils.enums import LogLevel
 from utils.tunnel_shell import TunnelShell
 from utils.driver_shell import DriverShell
 from openpyxl import Workbook, load_workbook
@@ -111,7 +112,7 @@ def pytest_runtest_makereport(item, call):
 
 @pytest.fixture(scope="function", autouse=True)
 def testcase_information(request):
-    set_allure_detail(name="start time", body=get_current_datetime())
+    set_allure_detail(name="start time", body=get_current_datetime(), level=LogLevel.INFO)
 
     func = request.function
     file_path = func.__code__.co_filename
@@ -119,13 +120,13 @@ def testcase_information(request):
     source_code, start_line = inspect.getsourcelines(func)
     line_range = {"start_line": start_line, "end_line": start_line + len(source_code) - 1}
 
-    set_allure_detail(name="file path", body=f"{file_path}")
-    set_allure_detail(name="function name", body=f"{func_name}")
-    set_allure_detail(name="last modified by", body=get_code_modifiers(file_path, line_range))
+    set_allure_detail(name="file path", body=f"{file_path}", level=LogLevel.INFO)
+    set_allure_detail(name="function name", body=f"{func_name}", level=LogLevel.INFO)
+    set_allure_detail(name="last modified by", body=get_code_modifiers(file_path, line_range), level=LogLevel.INFO)
 
     yield
 
-    set_allure_detail(name="end time", body=get_current_datetime())
+    set_allure_detail(name="end time", body=get_current_datetime(), level=LogLevel.INFO)
 
 
 @pytest.fixture(scope="session", autouse=True)
