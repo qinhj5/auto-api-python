@@ -37,7 +37,7 @@ class XmindParser:
 
     def get_leaf_summary(self) -> None:
         """
-        Print a summary of the leaf nodes in the XMind file.
+        Get a summary of the leaf nodes in the XMind file.
 
         Returns:
             None

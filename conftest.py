@@ -15,7 +15,7 @@ from utils.mysql_connection import MysqlConnection
 from utils.redis_connection import RedisConnection
 from utils.clickhouse_connection import ClickhouseConnection
 from utils.dirs import log_request_dir, log_summary_dir, lock_dir, report_sheet_dir
-from utils.common import get_code_modifiers, set_column_max_width, get_current_datetime, set_allure_and_console_output
+from utils.common import get_code_modifiers, set_column_max_width, get_current_datetime, set_allure_detail
 
 session_start_time = time.time()
 conftest_lock = filelock.FileLock(os.path.abspath(os.path.join(lock_dir, f"conftest.lock")))
@@ -111,7 +111,7 @@ def pytest_runtest_makereport(item, call):
 
 @pytest.fixture(scope="function", autouse=True)
 def testcase_information(request):
-    set_allure_and_console_output(name="start time", body=get_current_datetime())
+    set_allure_detail(name="start time", body=get_current_datetime())
 
     func = request.function
     file_path = func.__code__.co_filename
@@ -119,13 +119,13 @@ def testcase_information(request):
     source_code, start_line = inspect.getsourcelines(func)
     line_range = {"start_line": start_line, "end_line": start_line + len(source_code) - 1}
 
-    set_allure_and_console_output(name="file path", body=f"{file_path}")
-    set_allure_and_console_output(name="function name", body=f"{func_name}")
-    set_allure_and_console_output(name="last modified by", body=get_code_modifiers(file_path, line_range))
+    set_allure_detail(name="file path", body=f"{file_path}")
+    set_allure_detail(name="function name", body=f"{func_name}")
+    set_allure_detail(name="last modified by", body=get_code_modifiers(file_path, line_range))
 
     yield
 
-    set_allure_and_console_output(name="end time", body=get_current_datetime())
+    set_allure_detail(name="end time", body=get_current_datetime())
 
 
 @pytest.fixture(scope="session", autouse=True)

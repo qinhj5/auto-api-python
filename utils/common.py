@@ -114,74 +114,28 @@ def dump_json(json_path: str, data: Any) -> None:
             json.dump(data, f, indent=4)
 
 
-def set_console_detail(name: str, body: Any) -> None:
-    """
-    Set detailed information for console output.
-
-    Args:
-        name (str): Name.
-        body (Any): Content.
-
-    Returns:
-        None
-    """
-    start_str = name.center(64, "-")
-    end_str = "-" * 64
-    try:
-        body = json.dumps(body)
-    except TypeError:
-        body = str(body)
-    print(f"\n{start_str}\n{body}\n{end_str}")
-
-
-def set_allure_detail(name: str, body: Any) -> None:
+def set_allure_detail(body: Any, name: str = "assertion error") -> str:
     """
     Set detailed information for Allure report output.
 
     Args:
-        name (str): Name.
         body (Any): Content.
+        name (str): Name. Defaults to "assertion error".
 
     Returns:
         None
     """
-    attachment_type = allure.attachment_type.TEXT
-    try:
+    if isinstance(body, str):
+        attachment_type = allure.attachment_type.TEXT
+    else:
         body = json.dumps(body)
         attachment_type = allure.attachment_type.JSON
-    except TypeError:
-        body = str(body)
 
     allure.attach(body=body, name=name, attachment_type=attachment_type)
 
+    logger.error(f"{name}: {body}") if name == "assertion error" else logger.info(f"{name}: {body}")
 
-def set_allure_and_console_output(name: str, body: Any) -> None:
-    """
-    Set detailed information for both Allure report and console output.
-
-    Args:
-        name (str): Name.
-        body (Any): Content.
-
-    Returns:
-        None
-    """
-    set_console_detail(name, body)
-    set_allure_detail(name, body)
-
-
-def set_assertion_error(detail: str) -> str:
-    """
-    Set detailed information for both Allure report and console output in case of an assertion error.
-
-    Args:
-        detail (str): Error detail.
-
-    Returns:
-        str: Error detail.
-    """
-    set_allure_and_console_output(name="assertion error", body=detail)
-    return detail
+    return body
 
 
 def get_code_modifiers(file_path: str, line_range: dict = None, line_number: int = None) -> List[str]:

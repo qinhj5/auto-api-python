@@ -21,7 +21,7 @@ def log_locker(func: Callable) -> Callable:
     def wrapper(*args, **kwargs):
         frame = inspect.currentframe().f_back
         file_path, line_number, _, _ = inspect.getframeinfo(frame)[:4]
-        file_name = file_path.split("/")[-1]
+        file_name = os.path.basename(file_path)
         extra = {"file": file_name, "line": line_number}
         with filelock.FileLock(LOCK_PATH):
             return func(*args, **kwargs, extra=extra)

@@ -551,7 +551,7 @@ class SwaggerParser:
         header_code += "import allure\n"
         header_code += "import pytest\n"
         header_code += "from utils.logger import logger\n"
-        header_code += "from utils.common import set_assertion_error\n\n\n"
+        header_code += "from utils.common import set_allure_detail\n\n\n"
 
         method = api["method"]
         # snake_name = SwaggerParser._pascal_to_snake(api["uri"])
@@ -593,7 +593,7 @@ class SwaggerParser:
         testcases_code += "        logger.info(f\"%s status code: {actual_code}\")\n\n" % api_func_name
         testcases_code += "        expected_code = 200\n"
         testcases_code += "        assert actual_code == expected_code, \
-                            set_assertion_error(f\"actual: {actual_code}, expected: {expected_code}\")\n"
+                            set_allure_detail(f\"actual: {actual_code}, expected: {expected_code}\")\n"
 
         testcases_code = header_code + testcases_code
 

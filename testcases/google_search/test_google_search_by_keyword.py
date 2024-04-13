@@ -2,7 +2,7 @@
 import allure
 import pytest
 from utils.logger import logger
-from utils.common import get_csv_data, set_assertion_error
+from utils.common import get_csv_data, set_allure_detail
 
 
 class TestGoogleSearchByKeyword:
@@ -15,11 +15,11 @@ class TestGoogleSearchByKeyword:
         logger.info(f"get_google_search_by_keyword status code: {actual_code}")
 
         expected_code = 200
-        assert actual_code == expected_code, set_assertion_error(
+        assert actual_code == expected_code, set_allure_detail(
             f"actual: {actual_code}, expected: {expected_code}"
         )
 
-        assert keyword in res["text"], set_assertion_error(
+        assert keyword in res["text"], set_allure_detail(
             f"cannot find {keyword} in html content"
         )
 
@@ -33,10 +33,10 @@ class TestGoogleSearchByKeyword:
             logger.info(f"get_google_search_by_keyword status code: {actual_code}")
 
             expected_code = 200
-            assert actual_code == expected_code, set_assertion_error(
+            assert actual_code == expected_code, set_allure_detail(
                 f"actual: {actual_code}, expected: {expected_code}"
             )
 
-            assert row[0] in res["text"], set_assertion_error(
+            assert row[0] in res["text"], set_allure_detail(
                 f"cannot find {row[0]} in html content"
             )
