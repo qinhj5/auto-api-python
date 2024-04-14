@@ -3,9 +3,9 @@ import curlify
 import requests
 from http import HTTPStatus
 from typing import Any, Dict
+from utils.enums import LogLevel
 from json import loads, JSONDecodeError
 from utils.common import set_allure_detail
-from utils.enums import LogLevel
 
 
 class BaseAPI:
