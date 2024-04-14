@@ -14,9 +14,9 @@ class Constants:
 
 
 class Global:
-    constants = Constants()
-    tunnel = TunnelShell()
-    driver = DriverShell()
-    db = MysqlConnection()
-    sr = RedisConnection()
-    ck = ClickhouseConnection()
+    CONSTANTS = Constants()
+    TUNNEL = TunnelShell()
+    DRIVER = DriverShell()
+    DB = MysqlConnection()
+    SR = RedisConnection()
+    CK = ClickhouseConnection()

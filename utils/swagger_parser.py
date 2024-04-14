@@ -151,7 +151,7 @@ class SwaggerParser:
         Returns:
             dict: Path data of swagger.
         """
-        response = requests.get(self._swagger_url, headers=Global.constants.HEADERS)
+        response = requests.get(self._swagger_url, headers=Global.CONSTANTS.HEADERS)
 
         if response.status_code == 200:
             return response.json().get("paths", dict())
@@ -509,8 +509,8 @@ class SwaggerParser:
         conf_code += f"from template.api.{module}.{module}_api import {api_cls}\n\n\n"
         conf_code += """@pytest.fixture(scope="package")\n"""
         conf_code += f"def {module}_api():\n"
-        conf_code += f"    {module}_api = {api_cls}(base_url=Global.constants.BASE_URL, " \
-                     "headers=Global.constants.HEADERS)\n"
+        conf_code += f"    {module}_api = {api_cls}(base_url=Global.CONSTANTS.BASE_URL, " \
+                     "headers=Global.CONSTANTS.HEADERS)\n"
         conf_code += f"    return {module}_api\n"
         return conf_code
 

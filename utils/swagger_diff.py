@@ -35,7 +35,7 @@ class SwaggerDiff:
         Returns:
             dict: Total data of swagger.
         """
-        response = requests.get(self._swagger_url, headers=Global.constants.HEADERS)
+        response = requests.get(self._swagger_url, headers=Global.CONSTANTS.HEADERS)
 
         if response.status_code == 200:
             return response.json()

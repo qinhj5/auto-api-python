@@ -82,7 +82,7 @@ class ApiCoverage:
             Optional[Dict[str, List[Dict[str, Union[str, int]]]]]: A dictionary containing static_url_list and
             dynamic_url_list, each of which is a list of request urls, methods, and counts.
         """
-        response = requests.get(self._swagger_url, headers=Global.constants.HEADERS)
+        response = requests.get(self._swagger_url, headers=Global.CONSTANTS.HEADERS)
 
         if response.status_code == 200:
             swagger_dict = dict()
@@ -91,7 +91,7 @@ class ApiCoverage:
             for path, path_details in response.json().get("paths", dict()).items():
                 for method, detail in path_details.items():
                     tags = detail.get("tags")
-                    url = Global.constants.BASE_URL + path
+                    url = Global.CONSTANTS.BASE_URL + path
                     if "{" not in path:
                         swagger_dict["static_url_list"].append(
                             {

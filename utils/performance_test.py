@@ -20,7 +20,7 @@ class WebsiteTask(TaskSet):
         uri = LOCUST_CONF.get("uri")
         method = LOCUST_CONF.get("method")
         response = self.client.request(method=method, url=uri)
-        url = Global.constants.BASE_URL + uri
+        url = Global.CONSTANTS.BASE_URL + uri
         if response.status_code != 200:
             WebsiteTask._count_failure += 1
             logger.warning(f"failure ({method} {url}) [{str(WebsiteTask._count_failure).center(7)}]")
@@ -34,7 +34,7 @@ class WebsiteUser(HttpUser):
     wait_time = between(LOCUST_CONF.get("min_wait"), LOCUST_CONF.get("max_wait"))
 
     def on_start(self):
-        self.client.headers.update(Global.constants.HEADERS)
+        self.client.headers.update(Global.CONSTANTS.HEADERS)
 
 
 def main():
@@ -42,7 +42,7 @@ def main():
     locust_command = [
         os.path.abspath(os.path.join(venv_bin_dir, "locust")),
         f"--locustfile={__file__}",
-        f"--host={Global.constants.BASE_URL}",
+        f"--host={Global.CONSTANTS.BASE_URL}",
         f"""--csv={os.path.abspath(os.path.join(report_locust_dir, "locust_report"))}""",
         f"""--users={LOCUST_CONF.get("users")}""",
         f"""--spawn-rate={LOCUST_CONF.get("spawn_rate")}""",
