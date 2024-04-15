@@ -8,19 +8,24 @@ from utils.common import get_env_conf
 
 
 class ForwarderSetting:
-    def __init__(self, server_conf_name: str = "forwarder_servers", ssh_conf_name: str = "ssh") -> None:
+    def __init__(self,
+                 server_conf_name: str = "servers",
+                 ssh_conf_name: str = "ssh",
+                 use_loopback: bool = True) -> None:
         """
         Initialize an instance of the ForwarderSetting class.
 
         Args:
-            server_conf_name (str): The name of the server configuration. Defaults to "forwarder_servers".
+            server_conf_name (str): The name of the server configuration. Defaults to "servers".
             ssh_conf_name (str): The name of the ssh configuration. Defaults to "ssh".
+            use_loopback (bool): Flag indicating whether to use the loopback interface for forwarding. Defaults to True.
 
         Returns:
             None
         """
         self._servers_list = get_env_conf(name=server_conf_name)
         self._ssh_conf = get_env_conf(name=ssh_conf_name)
+        self._use_loopback = use_loopback
 
     def _build_command(self) -> list:
         """
@@ -31,7 +36,12 @@ class ForwarderSetting:
         """
         forwards = []
         for server in self._servers_list:
-            forwards += ["-L", f"{server}:{server}"]
+            ip = server.get("ip")
+            port = server.get("port")
+            if self._use_loopback:
+                forwards += ["-L", f"{ip}:{port}:{ip}:{port}"]
+            else:
+                forwards += ["-L", f"{port}:{ip}:{port}"]
 
         command = ["ssh"] + forwards + \
                   ["-N", "-f", f"""{self._ssh_conf.get("ssh_user")}@{self._ssh_conf.get("ssh_host")}"""]
@@ -76,9 +86,9 @@ class ForwarderSetting:
         if pids:
             for pid in pids:
                 subprocess.call(f"kill {pid}", shell=True)
-            logger.info(f"killed: {command}")
+            logger.info(f"""killed: {" ".join(command)}""")
         else:
-            logger.warning(f"no result for {command}")
+            logger.warning(f"""no result for {" ".join(command)}""")
 
     def _connect_ssh_tunnel(self) -> None:
         """
@@ -92,9 +102,9 @@ class ForwarderSetting:
         pids = ForwarderSetting._get_command_pids(command)
         if len(pids) == 0:
             subprocess.call(command)
-            logger.info(f"executed: {command}")
+            logger.info(f"""executed: {" ".join(command)}""")
         else:
-            logger.warning(f"existed for {command}")
+            logger.warning(f"""existed for {" ".join(command)}""")
 
     def _remove_local_interfaces(self) -> None:
         """
@@ -106,16 +116,16 @@ class ForwarderSetting:
         password = getpass.getpass("please enter sudo password (possible plaintext display): ")
         for server in self._servers_list:
             if sys.platform == "darwin":
-                command = ["sudo", "ifconfig", "lo0", "-alias", server.split(":")[0]]
+                command = ["sudo", "ifconfig", "lo0", "-alias", server.get("ip")]
             else:
-                command = ["sudo", "ip", "addr", "del", server.split(":")[0] + "/32", "dev", "lo"]
+                command = ["sudo", "ip", "addr", "del", server.get("ip") + "/32", "dev", "lo"]
 
             proc = subprocess.Popen(["sudo", "-S"] + command,
                                     stdin=subprocess.PIPE,
                                     stderr=subprocess.PIPE,
                                     universal_newlines=True)
             proc.communicate(password + "\n")
-            logger.info(f"executed: {command}")
+            logger.info(f"""executed: {" ".join(command)}""")
 
     def _add_local_interfaces(self) -> None:
         """
@@ -127,16 +137,16 @@ class ForwarderSetting:
         password = getpass.getpass("please enter sudo password (possible plaintext display): ")
         for server in self._servers_list:
             if sys.platform == "darwin":
-                command = ["sudo", "ifconfig", "lo0", "alias", server.split(":")[0]]
+                command = ["sudo", "ifconfig", "lo0", "alias", server.get("ip")]
             else:
-                command = ["sudo", "ip", "addr", "add", server.split(":")[0] + "/32", "dev", "lo"]
+                command = ["sudo", "ip", "addr", "add", server.get("ip") + "/32", "dev", "lo"]
 
             proc = subprocess.Popen(["sudo", "-S"] + command,
                                     stdin=subprocess.PIPE,
                                     stderr=subprocess.PIPE,
                                     universal_newlines=True)
             proc.communicate(password + "\n")
-            logger.info(f"executed: {command}")
+            logger.info(f"""executed: {" ".join(command)}""")
 
     def deactivate_forwarder(self) -> None:
         """
@@ -145,7 +155,8 @@ class ForwarderSetting:
         Returns:
             None
         """
-        self._remove_local_interfaces()
+        if self._use_loopback:
+            self._remove_local_interfaces()
         self._disconnect_ssh_tunnel()
 
     def activate_forwarder(self) -> None:
@@ -155,7 +166,8 @@ class ForwarderSetting:
         Returns:
             None
         """
-        self._add_local_interfaces()
+        if self._use_loopback:
+            self._add_local_interfaces()
         self._connect_ssh_tunnel()
 
 

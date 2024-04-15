@@ -4,65 +4,90 @@ import string
 import traceback
 from typing import List
 from utils.logger import logger
-from confluent_kafka import Consumer
+from confluent_kafka import Consumer, Producer
 from utils.common import get_env_conf, generate_random_string
 
 
 class KafkaClient:
-    def __init__(self,
-                 consumer_conf_name: str = "kafka_consumer",
-                 servers_conf_name: str = "forwarder_servers") -> None:
+    def __init__(self, kafka_conf_name: str = "kafka", servers_conf_name: str = "servers") -> None:
         """
         Initialize an instance of the KafkaClient class.
 
         Args:
-            consumer_conf_name (str): The name of the consumer configuration. Defaults to "kafka_consumer".
-            servers_conf_name (str): The name of the server configuration. Defaults to "forwarder_servers".
+            kafka_conf_name (str): The name of the kafka configuration. Defaults to "kafka".
+            servers_conf_name (str): The name of the server configuration. Defaults to "servers".
 
         Returns:
             None
         """
-        self._consumer_conf = get_env_conf(name=consumer_conf_name)
+        self._kafka_conf = get_env_conf(name=kafka_conf_name)
         self._servers_list = get_env_conf(name=servers_conf_name)
         self._topic = None
+        self._group_id = None
+        self._init()
 
-    def _update_kafka_config(self) -> None:
+    def _init(self) -> None:
         """
-        Updates the Kafka configuration by generating a new consumer group ID and getting the topic name.
+        Initialize the parameters and update kafka conf.
 
         Returns:
             None
         """
-        group_id = self._consumer_conf.get("group.id")
-        new_group_id = group_id + "_" + generate_random_string(num=6, charset=string.ascii_lowercase)
-        self._consumer_conf.update({"group.id": new_group_id})
-        logger.info(f"using group: {new_group_id}")
-    
-        self._topic = self._consumer_conf.pop("topic.name")
-        logger.info(f"using topic: {self._topic}")
+        self._topic = self._kafka_conf.pop("topic")
+        logger.info(f"topic: {self._topic}")
 
-        self._consumer_conf.update({"bootstrap.servers": ",".join(self._servers_list)})
-        logger.info(f"servers: {self._servers_list}")
+        self._group_id = self._kafka_conf.pop("group.id")
 
-        self._consumer_conf.update({"auto.offset.reset": "earliest"})
+        bootstrap_servers = ",".join([f"""{i.get("ip")}:{i.get("port")}""" for i in self._servers_list])
+        self._kafka_conf.update({"bootstrap.servers": bootstrap_servers})
+        logger.info(f"servers: {bootstrap_servers}")
 
-    def get_historical_kafka_message(self, max_messages: int = 5, timeout: int = 3) -> List[str]:
+    def _get_consumer_conf(self) -> dict:
         """
-        Get historical Kafka messages from the specified topic and consumer group.
+        Get the consumer configuration.
+
+        Returns:
+            dict: The consumer configuration.
+        """
+        consumer_conf = self._kafka_conf.copy()
+
+        new_group = self._group_id + "_" + generate_random_string(num=6, charset=string.ascii_lowercase)
+        consumer_conf.update({"group.id": new_group})
+        logger.info(f"consumer group: {new_group}")
+
+        consumer_conf.update({"auto.offset.reset": "earliest"})
+
+        return consumer_conf
+
+    def publish_kafka_message(self, message: str) -> None:
+        """
+        Publish a message to Kafka.
+
+        Args:
+            message (str): The message to be sent.
+
+        Returns:
+            None
+        """
+        producer = Producer(self._kafka_conf)
+        producer.produce(self._topic, value=message.encode("utf-8"))
+        producer.flush()
+
+    def receive_historical_kafka_message(self, max_messages: int = 5, timeout: int = 10) -> List[str]:
+        """
+        Receive historical Kafka messages from the specified topic and consumer group.
 
         Args:
             max_messages (int): The maximum number of messages to retrieve. Defaults to 5.
-            timeout (int): The maximum time, in seconds, to wait for messages. Defaults to 3.
+            timeout (int): The maximum time, in seconds, to wait for messages. Defaults to 10.
 
         Returns:
             List[str]: The list of historical Kafka messages.
         """
-        self._update_kafka_config()
-        self._consumer_conf.update({"auto.offset.reset": "earliest"})
-        consumer = Consumer(self._consumer_conf)
+        consumer = Consumer(self._get_consumer_conf())
         consumer.subscribe([self._topic])
 
-        logger.info("receiving historical kafka messages...")
+        logger.info(f"receiving historical kafka messages, timeout: {timeout}s")
         messages = []
         start_time = time.time()
         while time.time() - start_time < timeout:
@@ -80,19 +105,18 @@ class KafkaClient:
             messages = messages[-max_messages:]
 
         consumer.close()
-        logger.info("kafka client closed")
+        logger.info(f"received {len(messages)} messages, kafka client closed")
 
         return messages
 
-    def get_realtime_kafka_message(self) -> None:
+    def receive_realtime_kafka_message(self) -> None:
         """
         Receive realtime Kafka messages from the specified topic and consumer group.
 
         Returns:
             None
         """
-        self._update_kafka_config()
-        consumer = Consumer(self._consumer_conf)
+        consumer = Consumer(self._get_consumer_conf())
         consumer.subscribe([self._topic])
 
         logger.info("receiving realtime kafka messages...")
@@ -116,6 +140,6 @@ class KafkaClient:
 
 if __name__ == "__main__":
     try:
-        KafkaClient().get_realtime_kafka_message()
+        KafkaClient().receive_realtime_kafka_message()
     except Exception as e:
         logger.error(f"{e}\n{traceback.format_exc()}")
