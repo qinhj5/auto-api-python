@@ -80,6 +80,7 @@ auto-api-python/
 │   └── xmind_parser.py
 ├── .dockerignore
 ├── .gitignore
+├── .pre-commit-config.yaml
 ├── allure.sh
 ├── conftest.py
 ├── Dockerfile
