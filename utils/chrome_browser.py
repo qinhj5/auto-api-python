@@ -1,28 +1,29 @@
 # -*- coding: utf-8 -*-
-import os
-import sys
 import base64
+import datetime
+import os
 import shutil
 import sqlite3
-import datetime
+import sys
 import traceback
+from typing import Any, Dict, List, Optional, Tuple
+
+from utils.common import get_env_conf, load_json
 from utils.dirs import tmp_dir
 from utils.logger import logger
-from utils.common import get_env_conf, load_json
-from typing import Tuple, List, Dict, Any, Optional
 
 
 class ChromeBrowser:
     def __init__(self, conf_name: str = "chrome_browser") -> None:
         """
-       Initialize an instance of the ChromeBrowser class.
+        Initialize an instance of the ChromeBrowser class.
 
-       Args:
-           conf_name (str): The name of the configuration. Defaults to "chrome_browser".
+        Args:
+            conf_name (str): The name of the configuration. Defaults to "chrome_browser".
 
-       Returns:
-           None
-       """
+        Returns:
+            None
+        """
         self._conf = get_env_conf(name=conf_name)
         self._host = self._conf.get("host")
         self._data_dir = self._conf.get("data_dir")
@@ -67,12 +68,16 @@ class ChromeBrowser:
             logger.error(f"local state path ({local_state_path}) does not exist")
             sys.exit(1)
         else:
-            self._local_state_path = os.path.abspath(os.path.join(tmp_dir, "Local State"))
+            self._local_state_path = os.path.abspath(
+                os.path.join(tmp_dir, "Local State")
+            )
             if os.path.exists(self._local_state_path):
                 os.remove(self._local_state_path)
             shutil.copy2(local_state_path, self._local_state_path)
 
-        leveldb_path = os.path.abspath(os.path.join(self._data_dir, "Default/Local Storage/leveldb"))
+        leveldb_path = os.path.abspath(
+            os.path.join(self._data_dir, "Default/Local Storage/leveldb")
+        )
         if not os.path.exists(leveldb_path):
             logger.error(f"leveldb path ({leveldb_path}) does not exist")
             sys.exit(1)
@@ -112,13 +117,14 @@ class ChromeBrowser:
         """
         if self._platform == "darwin":
             import keyring  # pip install keyring==24.3.1
+
             password = keyring.get_password("Chrome Safe Storage", "Chrome")
 
             if isinstance(password, str):
                 password = password.encode("utf8")
 
-            from cryptography.hazmat.primitives.hashes import SHA1
             from cryptography.hazmat.backends import default_backend
+            from cryptography.hazmat.primitives.hashes import SHA1
             from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
             kdf = PBKDF2HMAC(
@@ -131,12 +137,15 @@ class ChromeBrowser:
 
             return kdf.derive(password)
         elif self._platform == "win32":
-            base64_encrypted_key = load_json(self._local_state_path).get("os_crypt").get("encrypted_key")
+            base64_encrypted_key = (
+                load_json(self._local_state_path).get("os_crypt").get("encrypted_key")
+            )
 
             encrypted_key_with_header = base64.b64decode(base64_encrypted_key)
             encrypted_key = encrypted_key_with_header[5:]
 
             import win32crypt  # pip install pywin32==306
+
             return win32crypt.CryptUnprotectData(encrypted_key, None, None, None, 0)[1]
         else:
             logger.error("only support macOS and Windows")
@@ -177,10 +186,14 @@ class ChromeBrowser:
 
             from cryptography.hazmat.backends import default_backend
             from cryptography.hazmat.primitives.ciphers import Cipher
-            from cryptography.hazmat.primitives.ciphers.modes import CBC
             from cryptography.hazmat.primitives.ciphers.algorithms import AES
+            from cryptography.hazmat.primitives.ciphers.modes import CBC
 
-            cipher = Cipher(algorithm=AES(encryption_key), mode=CBC(init_vector), backend=default_backend())
+            cipher = Cipher(
+                algorithm=AES(encryption_key),
+                mode=CBC(init_vector),
+                backend=default_backend(),
+            )
             de_cryptor = cipher.decryptor()
             decrypted = de_cryptor.update(encrypted_value) + de_cryptor.finalize()
 
@@ -207,7 +220,7 @@ class ChromeBrowser:
         Returns:
             bool: True if the expiration time has passed, False otherwise.
         """
-        expiration_timestamp = microseconds / 10 ** 6 - 11644473600
+        expiration_timestamp = microseconds / 10**6 - 11644473600
         expiration_datetime = datetime.datetime.fromtimestamp(expiration_timestamp)
 
         return expiration_datetime < datetime.datetime.now()
@@ -223,22 +236,30 @@ class ChromeBrowser:
         conn.row_factory = ChromeBrowser._dict_factory
         cursor = conn.cursor()
 
-        cursor.execute("SELECT host_key, \
+        cursor.execute(
+            "SELECT host_key, \
                                     name, \
                                     encrypted_value, \
                                     expires_utc, \
                                     has_expires, \
-                                    last_update_utc FROM cookies;")
+                                    last_update_utc FROM cookies;"
+        )
         raw_cookies = cursor.fetchall()
 
         for cookie in raw_cookies:
-            last_update_time = datetime.datetime.fromtimestamp(cookie["last_update_utc"] / 10 ** 6 - 11644473600)
+            last_update_time = datetime.datetime.fromtimestamp(
+                cookie["last_update_utc"] / 10**6 - 11644473600
+            )
             self._cookies.append(
-                {"name": cookie["name"],
-                 "value": self._decrypt_cookie_value(cookie["encrypted_value"]),
-                 "host": cookie["host_key"],
-                 "is_expired": ChromeBrowser._is_expired(cookie["expires_utc"]) if cookie["has_expires"] else False,
-                 "update_time": last_update_time.strftime("%Y-%m-%d %H:%M:%S")}
+                {
+                    "name": cookie["name"],
+                    "value": self._decrypt_cookie_value(cookie["encrypted_value"]),
+                    "host": cookie["host_key"],
+                    "is_expired": ChromeBrowser._is_expired(cookie["expires_utc"])
+                    if cookie["has_expires"]
+                    else False,
+                    "update_time": last_update_time.strftime("%Y-%m-%d %H:%M:%S"),
+                }
             )
 
         conn.close()
@@ -252,12 +273,14 @@ class ChromeBrowser:
         """
         if self._platform == "darwin":
             import leveldb  # pip install leveldb==0.201
+
             db = leveldb.LevelDB(self._leveldb_path)
 
             for k in db.RangeIter(include_value=False):
                 self._local_storage_items.append({"key": k, "value": db.Get(k)})
         elif self._platform == "win32":
             import plyvel  # pip install plyvel-win32==1.3.0
+
             db = plyvel.DB(self._leveldb_path, create_if_missing=False)
 
             with db.iterator(include_value=False) as it:
@@ -307,14 +330,20 @@ class ChromeBrowser:
         if not host:
             host = self._host
 
-        cookie_values = [cookie for cookie in self._cookies if cookie["host"] == host and cookie["name"] == name]
+        cookie_values = [
+            cookie
+            for cookie in self._cookies
+            if cookie["host"] == host and cookie["name"] == name
+        ]
 
         if len(cookie_values) == 0:
             logger.error(f"no such cookie ({name}) for host ({host})")
             sys.exit(1)
 
         if all(not cookie["is_expired"] for cookie in cookie_values):
-            cookie_strings = [f"""{cookie["name"]}={cookie["value"]}""" for cookie in cookie_values]
+            cookie_strings = [
+                f"""{cookie["name"]}={cookie["value"]}""" for cookie in cookie_values
+            ]
             return ";".join(cookie_strings)
         else:
             logger.error("cookie value expired")
@@ -341,7 +370,9 @@ class ChromeBrowser:
             except Exception as exception:
                 logger.warning(f"""skip key: {item["key"]}, error: {exception}""")
             else:
-                if host in item["key"].decode("utf-8") and name in item["key"].decode("utf-8"):
+                if host in item["key"].decode("utf-8") and name in item["key"].decode(
+                    "utf-8"
+                ):
                     item_values.append(item)
 
         if len(item_values) == 0:
@@ -367,8 +398,10 @@ class ChromeBrowser:
         """
         sub_byte_array = byte_array[1:]
         raw_unicode_string = "".join(
-            [r"\u{:02x}{:02x}".format(sub_byte_array[i + 1], sub_byte_array[i])
-             for i in range(0, len(sub_byte_array), 2)]
+            [
+                r"\u{:02x}{:02x}".format(sub_byte_array[i + 1], sub_byte_array[i])
+                for i in range(0, len(sub_byte_array), 2)
+            ]
         )
         unicode_string = raw_unicode_string.encode().decode("unicode_escape")
         return unicode_string

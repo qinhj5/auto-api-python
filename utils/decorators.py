@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
-import os
 import inspect
-import filelock
+import os
 from typing import Callable
+
+import filelock
 from utils.dirs import lock_dir
 
 LOCK_PATH = os.path.abspath(os.path.join(lock_dir, "log.lock"))
@@ -18,6 +19,7 @@ def log_locker(func: Callable) -> Callable:
     Returns:
         Callable: The wrapper function that locks access to the decorated function.
     """
+
     def wrapper(*args, **kwargs):
         frame = inspect.currentframe().f_back
         file_path, line_number, _, _ = inspect.getframeinfo(frame)[:4]

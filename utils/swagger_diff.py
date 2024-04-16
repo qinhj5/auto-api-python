@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 import os
 import sys
-import requests
 import traceback
 from datetime import datetime
+
+import requests
 from config.conf import Global
+from utils.common import dump_json, get_current_datetime, load_json
 from utils.dirs import tmp_dir
 from utils.logger import logger
-from utils.common import get_current_datetime, load_json, dump_json
 
 
 class SwaggerDiff:
@@ -23,8 +24,12 @@ class SwaggerDiff:
         """
         self._swagger_url = swagger_url
         self._swagger_diff_dir = os.path.abspath(os.path.join(tmp_dir, "swagger_diff"))
-        self._history_swagger_dir = os.path.abspath(os.path.join(tmp_dir, "history_swagger"))
-        self._new_json_path = os.path.abspath(os.path.join(self._history_swagger_dir, f"{get_current_datetime()}.json"))
+        self._history_swagger_dir = os.path.abspath(
+            os.path.join(tmp_dir, "history_swagger")
+        )
+        self._new_json_path = os.path.abspath(
+            os.path.join(self._history_swagger_dir, f"{get_current_datetime()}.json")
+        )
         self._old_json_path = self._find_old_swagger_json_path()
         self._current_swagger_json = self._get_swagger_json()
 
@@ -62,7 +67,11 @@ class SwaggerDiff:
             return ""
 
         sorted(json_list, key=lambda x: x["timestamp"])
-        return os.path.abspath(os.path.join(self._history_swagger_dir, f"""{json_list[-1]["datetime"]}.json"""))
+        return os.path.abspath(
+            os.path.join(
+                self._history_swagger_dir, f"""{json_list[-1]["datetime"]}.json"""
+            )
+        )
 
     def _load_old_swagger_json(self) -> dict:
         """
@@ -95,8 +104,11 @@ class SwaggerDiff:
 
         removed_dicts = {key: old_dict[key] for key in keys_only_in_old_dict}
         added_dicts = {key: new_dict[key] for key in keys_only_in_new_dict}
-        changed_dicts = {key: {"old": old_dict[key], "new": new_dict[key]} for key in common_keys if
-                         old_dict[key] != new_dict[key]}
+        changed_dicts = {
+            key: {"old": old_dict[key], "new": new_dict[key]}
+            for key in common_keys
+            if old_dict[key] != new_dict[key]
+        }
 
         return removed_dicts, added_dicts, changed_dicts
 
@@ -114,7 +126,9 @@ class SwaggerDiff:
             sys.exit(1)
 
         new_swagger_json = self._current_swagger_json
-        return SwaggerDiff._compare_dicts(old_swagger_json.get("paths"), new_swagger_json.get("paths"))
+        return SwaggerDiff._compare_dicts(
+            old_swagger_json.get("paths"), new_swagger_json.get("paths")
+        )
 
     def swagger_scanning(self) -> None:
         """
@@ -128,14 +142,17 @@ class SwaggerDiff:
         if (not removed_dicts) & (not added_dicts) & (not changed_dicts):
             logger.info("current swagger remain unchanged")
         else:
-            result = {"old": self._old_json_path,
-                      "new": self._new_json_path,
-                      "removed": removed_dicts,
-                      "added": added_dicts,
-                      "changed": changed_dicts}
+            result = {
+                "old": self._old_json_path,
+                "new": self._new_json_path,
+                "removed": removed_dicts,
+                "added": added_dicts,
+                "changed": changed_dicts,
+            }
             os.makedirs(self._swagger_diff_dir, exist_ok=True)
-            swagger_diff_path = os.path.abspath(os.path.join(self._swagger_diff_dir,
-                                                             f"{get_current_datetime()}.json"))
+            swagger_diff_path = os.path.abspath(
+                os.path.join(self._swagger_diff_dir, f"{get_current_datetime()}.json")
+            )
             logger.info(f"swagger changed")
             dump_json(swagger_diff_path, result)
 

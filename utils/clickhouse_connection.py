@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
 import os
-import filelock
 import traceback
-from utils.logger import logger
-from utils.dirs import lock_dir
 from types import TracebackType
+from typing import Any, Dict, List, Tuple, Union
+
+import filelock
 from clickhouse_driver import Client
-from utils.common import get_env_conf
 from sshtunnel import SSHTunnelForwarder
-from typing import Union, Tuple, Any, List, Dict
+from utils.common import get_env_conf
+from utils.dirs import lock_dir
+from utils.logger import logger
 
 
 class ClickhouseConnection:
@@ -25,10 +26,12 @@ class ClickhouseConnection:
             cls._instance = super().__new__(cls)
         return cls._instance
 
-    def __init__(self,
-                 clickhouse_conf_name: str = "clickhouse",
-                 ssh_conf_name: str = "ssh",
-                 use_tunnel: bool = True) -> None:
+    def __init__(
+        self,
+        clickhouse_conf_name: str = "clickhouse",
+        ssh_conf_name: str = "ssh",
+        use_tunnel: bool = True,
+    ) -> None:
         """
         Initialize an instance of the ClickhouseConnection class.
 
@@ -40,14 +43,16 @@ class ClickhouseConnection:
         Returns:
             None
         """
-        self._lock = filelock.FileLock(os.path.abspath(os.path.join(lock_dir, f"{clickhouse_conf_name}.lock")))
+        self._lock = filelock.FileLock(
+            os.path.abspath(os.path.join(lock_dir, f"{clickhouse_conf_name}.lock"))
+        )
         self._clickhouse_conf = get_env_conf(name=clickhouse_conf_name)
         self._ssh_conf = get_env_conf(name=ssh_conf_name)
         self._connection = None
         self._use_tunnel = use_tunnel
         self._tunnel_forwarder = None
 
-    def __enter__(self) -> 'ClickhouseConnection':
+    def __enter__(self) -> "ClickhouseConnection":
         """
         Context manager method for entering the context.
 
@@ -56,7 +61,9 @@ class ClickhouseConnection:
         """
         return self
 
-    def __exit__(self, exc_type: type, exc_val: BaseException, exc_tb: TracebackType) -> None:
+    def __exit__(
+        self, exc_type: type, exc_val: BaseException, exc_tb: TracebackType
+    ) -> None:
         """
         Context manager method for exiting the context.
 
@@ -74,10 +81,9 @@ class ClickhouseConnection:
         self.close()
 
     @staticmethod
-    def _create_clickhouse_connection(clickhouse_conf: dict,
-                                      ssh_conf: dict,
-                                      use_tunnel: bool) -> Union[Tuple[None, Client],
-                                                                 Tuple[SSHTunnelForwarder, Client]]:
+    def _create_clickhouse_connection(
+        clickhouse_conf: dict, ssh_conf: dict, use_tunnel: bool
+    ) -> Union[Tuple[None, Client], Tuple[SSHTunnelForwarder, Client]]:
         """
         Create a ClickHouse connection.
 
@@ -96,7 +102,7 @@ class ClickhouseConnection:
                 ssh_username=ssh_conf["ssh_user"],
                 ssh_pkey=ssh_conf.get("ssh_key"),
                 ssh_password=ssh_conf.get("ssh_password"),
-                remote_bind_address=(clickhouse_conf["host"], clickhouse_conf["port"])
+                remote_bind_address=(clickhouse_conf["host"], clickhouse_conf["port"]),
             )
             tunnel_forwarder.start()
 
@@ -105,7 +111,7 @@ class ClickhouseConnection:
                 port=tunnel_forwarder.local_bind_port,
                 user=clickhouse_conf["user"],
                 password=clickhouse_conf["password"],
-                database=clickhouse_conf["database"]
+                database=clickhouse_conf["database"],
             )
             return tunnel_forwarder, connection
         else:
@@ -128,10 +134,12 @@ class ClickhouseConnection:
         try:
             if self._connection is None or not self._connection.ping():
                 self.close()
-                self._tunnel_forwarder, self._connection = ClickhouseConnection._create_clickhouse_connection(
-                                                                                self._clickhouse_conf,
-                                                                                self._ssh_conf,
-                                                                                self._use_tunnel)
+                (
+                    self._tunnel_forwarder,
+                    self._connection,
+                ) = ClickhouseConnection._create_clickhouse_connection(
+                    self._clickhouse_conf, self._ssh_conf, self._use_tunnel
+                )
         except Exception as exception:
             logger.error(exception)
             self.close()

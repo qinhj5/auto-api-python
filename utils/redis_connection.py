@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
 import os
-import filelock
 import traceback
-from redis import StrictRedis
-from utils.logger import logger
-from utils.dirs import lock_dir
-from typing import Union, Tuple
 from types import TracebackType
-from utils.common import get_env_conf
+from typing import Tuple, Union
+
+import filelock
+from redis import StrictRedis
 from sshtunnel import SSHTunnelForwarder
+from utils.common import get_env_conf
+from utils.dirs import lock_dir
+from utils.logger import logger
 
 
 class RedisConnection:
@@ -25,7 +26,12 @@ class RedisConnection:
             cls._instance = super().__new__(cls)
         return cls._instance
 
-    def __init__(self, redis_conf_name: str = "redis", ssh_conf_name: str = "ssh", use_tunnel: bool = True) -> None:
+    def __init__(
+        self,
+        redis_conf_name: str = "redis",
+        ssh_conf_name: str = "ssh",
+        use_tunnel: bool = True,
+    ) -> None:
         """
         Initialize an instance of the RedisConnection class.
 
@@ -37,14 +43,16 @@ class RedisConnection:
         Returns:
             None
         """
-        self._lock = filelock.FileLock(os.path.abspath(os.path.join(lock_dir, f"{redis_conf_name}.lock")))
+        self._lock = filelock.FileLock(
+            os.path.abspath(os.path.join(lock_dir, f"{redis_conf_name}.lock"))
+        )
         self._redis_conf = get_env_conf(name=redis_conf_name)
         self._ssh_conf = get_env_conf(name=ssh_conf_name)
         self._connection = None
         self._use_tunnel = use_tunnel
         self._tunnel_forwarder = None
 
-    def __enter__(self) -> 'RedisConnection':
+    def __enter__(self) -> "RedisConnection":
         """
         Context manager method for entering the context.
 
@@ -53,7 +61,9 @@ class RedisConnection:
         """
         return self
 
-    def __exit__(self, exc_type: type, exc_val: BaseException, exc_tb: TracebackType) -> None:
+    def __exit__(
+        self, exc_type: type, exc_val: BaseException, exc_tb: TracebackType
+    ) -> None:
         """
         Context manager method for exiting the context.
 
@@ -71,10 +81,9 @@ class RedisConnection:
         self.close()
 
     @staticmethod
-    def _create_redis_connection(redis_conf: dict,
-                                 ssh_conf: dict,
-                                 use_tunnel: bool) -> Union[Tuple[None, StrictRedis],
-                                                            Tuple[SSHTunnelForwarder, StrictRedis]]:
+    def _create_redis_connection(
+        redis_conf: dict, ssh_conf: dict, use_tunnel: bool
+    ) -> Union[Tuple[None, StrictRedis], Tuple[SSHTunnelForwarder, StrictRedis]]:
         """
         Create a Redis connection.
 
@@ -93,7 +102,7 @@ class RedisConnection:
                 ssh_username=ssh_conf["ssh_user"],
                 ssh_pkey=ssh_conf.get("ssh_key"),
                 ssh_password=ssh_conf.get("ssh_password"),
-                remote_bind_address=(redis_conf["host"], redis_conf["port"])
+                remote_bind_address=(redis_conf["host"], redis_conf["port"]),
             )
             tunnel_forwarder.start()
 
@@ -101,7 +110,7 @@ class RedisConnection:
                 host="localhost",
                 port=tunnel_forwarder.local_bind_port,
                 password=redis_conf["password"],
-                db=redis_conf["db"]
+                db=redis_conf["db"],
             )
             return tunnel_forwarder, connection
         else:
@@ -123,9 +132,12 @@ class RedisConnection:
         try:
             if self._connection is None:
                 self.close()
-                self._tunnel_forwarder, self._connection = RedisConnection._create_redis_connection(self._redis_conf,
-                                                                                                    self._ssh_conf,
-                                                                                                    self._use_tunnel)
+                (
+                    self._tunnel_forwarder,
+                    self._connection,
+                ) = RedisConnection._create_redis_connection(
+                    self._redis_conf, self._ssh_conf, self._use_tunnel
+                )
         except Exception as exception:
             logger.error(exception)
             self.close()

@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 import os
-import traceback
 import subprocess
+import traceback
+
 from config.conf import Global
-from utils.logger import logger
+from locust import HttpUser, TaskSet, between, task
 from utils.common import get_env_conf
-from locust import HttpUser, TaskSet, task, between
-from utils.dirs import venv_bin_dir, report_locust_dir
+from utils.dirs import report_locust_dir, venv_bin_dir
+from utils.logger import logger
 
 LOCUST_CONF = get_env_conf(name="locust")
 
@@ -23,10 +24,14 @@ class WebsiteTask(TaskSet):
         url = Global.CONSTANTS.BASE_URL + uri
         if response.status_code != 200:
             WebsiteTask._count_failure += 1
-            logger.warning(f"failure ({method} {url}) [{str(WebsiteTask._count_failure).center(7)}]")
+            logger.warning(
+                f"failure ({method} {url}) [{str(WebsiteTask._count_failure).center(7)}]"
+            )
         else:
             WebsiteTask._count_success += 1
-            logger.info(f"success ({method} {url}) [{str(WebsiteTask._count_success).center(7)}]")
+            logger.info(
+                f"success ({method} {url}) [{str(WebsiteTask._count_success).center(7)}]"
+            )
 
 
 class WebsiteUser(HttpUser):
@@ -49,7 +54,7 @@ def main():
         f"""--run-time={LOCUST_CONF.get("run_time")}""",
         f"""--html={os.path.abspath(os.path.join(report_locust_dir, "locust_report.html"))}""",
         "--headless",
-        "--csv-full-history"
+        "--csv-full-history",
     ]
 
     if LOCUST_CONF.get("num_requests"):

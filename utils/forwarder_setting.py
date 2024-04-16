@@ -1,17 +1,20 @@
 # -*- coding: utf-8 -*-
-import sys
 import getpass
-import traceback
 import subprocess
-from utils.logger import logger
+import sys
+import traceback
+
 from utils.common import get_env_conf
+from utils.logger import logger
 
 
 class ForwarderSetting:
-    def __init__(self,
-                 server_conf_name: str = "servers",
-                 ssh_conf_name: str = "ssh",
-                 use_loopback: bool = True) -> None:
+    def __init__(
+        self,
+        server_conf_name: str = "servers",
+        ssh_conf_name: str = "ssh",
+        use_loopback: bool = True,
+    ) -> None:
         """
         Initialize an instance of the ForwarderSetting class.
 
@@ -43,8 +46,15 @@ class ForwarderSetting:
             else:
                 forwards += ["-L", f"{port}:{ip}:{port}"]
 
-        command = ["ssh"] + forwards + \
-                  ["-N", "-f", f"""{self._ssh_conf.get("ssh_user")}@{self._ssh_conf.get("ssh_host")}"""]
+        command = (
+            ["ssh"]
+            + forwards
+            + [
+                "-N",
+                "-f",
+                f"""{self._ssh_conf.get("ssh_user")}@{self._ssh_conf.get("ssh_host")}""",
+            ]
+        )
 
         return command
 
@@ -113,17 +123,29 @@ class ForwarderSetting:
         Returns:
             None
         """
-        password = getpass.getpass("please enter sudo password (possible plaintext display): ")
+        password = getpass.getpass(
+            "please enter sudo password (possible plaintext display): "
+        )
         for server in self._servers_list:
             if sys.platform == "darwin":
                 command = ["sudo", "ifconfig", "lo0", "-alias", server.get("ip")]
             else:
-                command = ["sudo", "ip", "addr", "del", server.get("ip") + "/32", "dev", "lo"]
+                command = [
+                    "sudo",
+                    "ip",
+                    "addr",
+                    "del",
+                    server.get("ip") + "/32",
+                    "dev",
+                    "lo",
+                ]
 
-            proc = subprocess.Popen(["sudo", "-S"] + command,
-                                    stdin=subprocess.PIPE,
-                                    stderr=subprocess.PIPE,
-                                    universal_newlines=True)
+            proc = subprocess.Popen(
+                ["sudo", "-S"] + command,
+                stdin=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                universal_newlines=True,
+            )
             proc.communicate(password + "\n")
             logger.info(f"""executed: {" ".join(command)}""")
 
@@ -134,17 +156,29 @@ class ForwarderSetting:
         Returns:
             None
         """
-        password = getpass.getpass("please enter sudo password (possible plaintext display): ")
+        password = getpass.getpass(
+            "please enter sudo password (possible plaintext display): "
+        )
         for server in self._servers_list:
             if sys.platform == "darwin":
                 command = ["sudo", "ifconfig", "lo0", "alias", server.get("ip")]
             else:
-                command = ["sudo", "ip", "addr", "add", server.get("ip") + "/32", "dev", "lo"]
+                command = [
+                    "sudo",
+                    "ip",
+                    "addr",
+                    "add",
+                    server.get("ip") + "/32",
+                    "dev",
+                    "lo",
+                ]
 
-            proc = subprocess.Popen(["sudo", "-S"] + command,
-                                    stdin=subprocess.PIPE,
-                                    stderr=subprocess.PIPE,
-                                    universal_newlines=True)
+            proc = subprocess.Popen(
+                ["sudo", "-S"] + command,
+                stdin=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                universal_newlines=True,
+            )
             proc.communicate(password + "\n")
             logger.info(f"""executed: {" ".join(command)}""")
 

@@ -1,15 +1,16 @@
 # -*- coding: utf-8 -*-
 import os
+import traceback
+from types import TracebackType
+from typing import Tuple
+
 import filelock
 import paramiko
-import traceback
-from typing import Tuple
-from utils.logger import logger
-from utils.dirs import lock_dir
-from types import TracebackType
-from utils.common import get_env_conf
+from paramiko.channel import ChannelFile, ChannelStderrFile, ChannelStdinFile
 from sshtunnel import SSHTunnelForwarder
-from paramiko.channel import ChannelStdinFile, ChannelFile, ChannelStderrFile
+from utils.common import get_env_conf
+from utils.dirs import lock_dir
+from utils.logger import logger
 
 
 class DriverShell:
@@ -26,7 +27,9 @@ class DriverShell:
             cls._instance = super().__new__(cls)
         return cls._instance
 
-    def __init__(self, ip_conf_name: str = "driver_ip", ssh_conf_name: str = "ssh") -> None:
+    def __init__(
+        self, ip_conf_name: str = "driver_ip", ssh_conf_name: str = "ssh"
+    ) -> None:
         """
         Initialize an instance of the DriverShell class.
 
@@ -37,13 +40,15 @@ class DriverShell:
         Returns:
             None
         """
-        self._lock = filelock.FileLock(os.path.abspath(os.path.join(lock_dir, f"{ip_conf_name}.lock")))
+        self._lock = filelock.FileLock(
+            os.path.abspath(os.path.join(lock_dir, f"{ip_conf_name}.lock"))
+        )
         self._ip = get_env_conf(name=ip_conf_name)
         self._ssh_conf = get_env_conf(name=ssh_conf_name)
         self._driver_client = None
         self._tunnel_forwarder = None
 
-    def __enter__(self) -> 'DriverShell':
+    def __enter__(self) -> "DriverShell":
         """
         Context manager method for entering the context.
 
@@ -52,7 +57,9 @@ class DriverShell:
         """
         return self
 
-    def __exit__(self, exc_type: type, exc_val: BaseException, exc_tb: TracebackType) -> None:
+    def __exit__(
+        self, exc_type: type, exc_val: BaseException, exc_tb: TracebackType
+    ) -> None:
         """
         Context manager method for exiting the context.
 
@@ -70,7 +77,9 @@ class DriverShell:
         self.close()
 
     @staticmethod
-    def _create_driver_client(ssh_conf: dict, ip: str) -> Tuple[SSHTunnelForwarder, paramiko.SSHClient]:
+    def _create_driver_client(
+        ssh_conf: dict, ip: str
+    ) -> Tuple[SSHTunnelForwarder, paramiko.SSHClient]:
         """
         Create a driver client connection.
 
@@ -104,12 +113,14 @@ class DriverShell:
             port=tunnel_forwarder.local_bind_port,
             username=ssh_conf["ssh_user"],
             pkey=private_key,
-            password=ssh_conf.get("ssh_password")
+            password=ssh_conf.get("ssh_password"),
         )
 
         return tunnel_forwarder, driver_client
 
-    def _execute(self, command: str) -> Tuple[ChannelStdinFile, ChannelFile, ChannelStderrFile]:
+    def _execute(
+        self, command: str
+    ) -> Tuple[ChannelStdinFile, ChannelFile, ChannelStderrFile]:
         """
         Execute a command on the driver client.
 
@@ -122,8 +133,10 @@ class DriverShell:
         try:
             if self._tunnel_forwarder is None or self._driver_client is None:
                 self.close()
-                self._tunnel_forwarder, self._driver_client = DriverShell._create_driver_client(self._ssh_conf,
-                                                                                                self._ip)
+                (
+                    self._tunnel_forwarder,
+                    self._driver_client,
+                ) = DriverShell._create_driver_client(self._ssh_conf, self._ip)
         except Exception as exception:
             logger.error(exception)
             self.close()

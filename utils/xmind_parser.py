@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import traceback
+
 from utils.logger import logger
 from xmindparser import xmind_to_dict
 
@@ -51,11 +52,15 @@ class XmindParser:
             root_topic = sheet["topic"]
 
             leaf_nodes_count = self._count_leaf_nodes(root_topic)
-            logger.info(f"""Number of leaf nodes for "{sheet_title}": {leaf_nodes_count}""")
+            logger.info(
+                f"""Number of leaf nodes for "{sheet_title}": {leaf_nodes_count}"""
+            )
 
             total_leaf_nodes_count += leaf_nodes_count
 
-        logger.info(f"Total number of leaf nodes across all canvases: {total_leaf_nodes_count}")
+        logger.info(
+            f"Total number of leaf nodes across all canvases: {total_leaf_nodes_count}"
+        )
 
 
 if __name__ == "__main__":

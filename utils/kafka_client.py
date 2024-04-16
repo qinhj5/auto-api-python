@@ -1,15 +1,18 @@
 # -*- coding: utf-8 -*-
-import time
 import string
+import time
 import traceback
 from typing import List
-from utils.logger import logger
+
 from confluent_kafka import Consumer, Producer
-from utils.common import get_env_conf, generate_random_string
+from utils.common import generate_random_string, get_env_conf
+from utils.logger import logger
 
 
 class KafkaClient:
-    def __init__(self, kafka_conf_name: str = "kafka", servers_conf_name: str = "servers") -> None:
+    def __init__(
+        self, kafka_conf_name: str = "kafka", servers_conf_name: str = "servers"
+    ) -> None:
         """
         Initialize an instance of the KafkaClient class.
 
@@ -38,7 +41,9 @@ class KafkaClient:
 
         self._group_id = self._kafka_conf.pop("group.id")
 
-        bootstrap_servers = ",".join([f"""{i.get("ip")}:{i.get("port")}""" for i in self._servers_list])
+        bootstrap_servers = ",".join(
+            [f"""{i.get("ip")}:{i.get("port")}""" for i in self._servers_list]
+        )
         self._kafka_conf.update({"bootstrap.servers": bootstrap_servers})
         logger.info(f"servers: {bootstrap_servers}")
 
@@ -51,7 +56,11 @@ class KafkaClient:
         """
         consumer_conf = self._kafka_conf.copy()
 
-        new_group = self._group_id + "_" + generate_random_string(num=6, charset=string.ascii_lowercase)
+        new_group = (
+            self._group_id
+            + "_"
+            + generate_random_string(num=6, charset=string.ascii_lowercase)
+        )
         consumer_conf.update({"group.id": new_group})
         logger.info(f"consumer group: {new_group}")
 
@@ -73,7 +82,9 @@ class KafkaClient:
         producer.produce(self._topic, value=message.encode("utf-8"))
         producer.flush()
 
-    def receive_historical_kafka_message(self, max_messages: int = 5, timeout: int = 10) -> List[str]:
+    def receive_historical_kafka_message(
+        self, max_messages: int = 5, timeout: int = 10
+    ) -> List[str]:
         """
         Receive historical Kafka messages from the specified topic and consumer group.
 
@@ -124,14 +135,16 @@ class KafkaClient:
             count = 1
             while True:
                 message = consumer.poll(1.0)
-    
+
                 if message is None:
                     continue
                 elif message.error():
                     logger.error("error occurred:", message.error())
                     raise KeyboardInterrupt
                 else:
-                    logger.info(f"""received message [{str(count).center(5)}]: \n{message.value().decode("utf-8")}""")
+                    logger.info(
+                        f"""received message [{str(count).center(5)}]: \n{message.value().decode("utf-8")}"""
+                    )
                     count += 1
         except KeyboardInterrupt:
             consumer.close()

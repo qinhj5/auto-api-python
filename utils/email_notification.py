@@ -1,15 +1,16 @@
 # -*- coding: utf-8 -*-
 import os
-import time
-import zipfile
 import smtplib
+import time
 import traceback
-from utils.logger import logger
-from email.mime.text import MIMEText
-from utils.common import get_ext_conf
-from email.mime.multipart import MIMEMultipart
+import zipfile
 from email.mime.application import MIMEApplication
-from utils.dirs import report_dir, log_dir, log_summary_dir
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+
+from utils.common import get_ext_conf
+from utils.dirs import log_dir, log_summary_dir, report_dir
+from utils.logger import logger
 
 
 class EmailNotification:
@@ -50,13 +51,15 @@ class EmailNotification:
                     continue
                 zip_instance.write(
                     os.path.abspath(os.path.join(path, filename)),
-                    os.path.abspath(os.path.join(relevant_path, filename))
+                    os.path.abspath(os.path.join(relevant_path, filename)),
                 )
 
         zip_instance.close()
 
     @staticmethod
-    def _add_attachment(msg: MIMEMultipart, target_dir: str, max_size_mb: int = 20) -> MIMEMultipart:
+    def _add_attachment(
+        msg: MIMEMultipart, target_dir: str, max_size_mb: int = 20
+    ) -> MIMEMultipart:
         """
         Add attachments from a directory to an email message.
 
@@ -107,7 +110,9 @@ class EmailNotification:
 
         for filename in os.listdir(log_summary_dir):
             if filename == "summary.log":
-                log_summary_path = os.path.abspath(os.path.join(log_summary_dir, "summary.log"))
+                log_summary_path = os.path.abspath(
+                    os.path.join(log_summary_dir, "summary.log")
+                )
                 if not os.path.exists(log_summary_path):
                     logger.error(f"file not found: {log_summary_path}")
                     break

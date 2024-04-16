@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import pytest
-from config.conf import Global
 from api.google_search.google_search_api import GoogleSearchAPI
+from config.conf import Global
 
 
 @pytest.fixture(scope="package")

@@ -1,20 +1,28 @@
 # -*- coding: utf-8 -*-
-import os
 import csv
+import datetime
 import json
-import yaml
-import allure
+import os
 import random
 import shutil
-import filelock
-import datetime
 import subprocess
-from utils.logger import logger
-from utils.enums import LogLevel
 from typing import Any, List, Union
+
+import allure
+import filelock
+import yaml
 from openpyxl.styles import Alignment
 from openpyxl.worksheet.worksheet import Worksheet
-from utils.dirs import config_dir, data_dir, report_dir, log_request_dir, log_summary_dir, lock_dir
+from utils.dirs import (
+    config_dir,
+    data_dir,
+    lock_dir,
+    log_request_dir,
+    log_summary_dir,
+    report_dir,
+)
+from utils.enums import LogLevel
+from utils.logger import logger
 
 common_lock = filelock.FileLock(os.path.abspath(os.path.join(lock_dir, f"common.lock")))
 
@@ -30,7 +38,9 @@ def get_env_conf(name: str = None) -> Union[dict, str, list]:
         Union[dict, str, list]: Configuration item if name is provided, otherwise the entire configuration.
     """
     conf = {}
-    conf_path = os.path.abspath(os.path.join(config_dir, f"""conf_{os.environ.get("ENV", "test")}.yml"""))
+    conf_path = os.path.abspath(
+        os.path.join(config_dir, f"""conf_{os.environ.get("ENV", "test")}.yml""")
+    )
 
     if not os.path.exists(conf_path):
         logger.error(f"file not found: {conf_path}")
@@ -115,7 +125,9 @@ def dump_json(json_path: str, data: Any) -> None:
             json.dump(data, f, indent=4)
 
 
-def set_allure_detail(body: Any, name: str = "assertion error", level: LogLevel = LogLevel.ERROR) -> str:
+def set_allure_detail(
+    body: Any, name: str = "assertion error", level: LogLevel = LogLevel.ERROR
+) -> str:
     """
     Set detailed information for Allure report output.
 
@@ -147,7 +159,9 @@ def set_allure_detail(body: Any, name: str = "assertion error", level: LogLevel 
     return body
 
 
-def get_code_modifiers(file_path: str, line_range: dict = None, line_number: int = None) -> List[str]:
+def get_code_modifiers(
+    file_path: str, line_range: dict = None, line_number: int = None
+) -> List[str]:
     """
     Get the email addresses of the code modifiers according line range or number.
 
@@ -176,7 +190,6 @@ def get_code_modifiers(file_path: str, line_range: dict = None, line_number: int
         modifiers.add(f"git.not.found")
 
     if is_installed:
-
         if line_number:
             start_line = line_number
             end_line = line_number
@@ -307,7 +320,7 @@ def set_column_max_width(worksheet: Worksheet) -> None:
             cell.alignment = Alignment(wrapText=True)
 
             text = str(cell.value)
-            length = len(text[:text.find("\n")])
+            length = len(text[: text.find("\n")])
 
             if length > max_length:
                 max_length = length

@@ -1,15 +1,16 @@
 # -*- coding: utf-8 -*-
 import os
 import sys
-import filelock
 import traceback
-from utils.logger import logger
 from types import TracebackType
-from utils.common import get_ext_conf
-from utils.dirs import lock_dir, tmp_dir
+
+import filelock
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
+from utils.common import get_ext_conf
+from utils.dirs import lock_dir, tmp_dir
+from utils.logger import logger
 
 
 class GoogleDrive:
@@ -36,12 +37,14 @@ class GoogleDrive:
         Returns:
             None
         """
-        self._lock = filelock.FileLock(os.path.abspath(os.path.join(lock_dir, "google_drive.lock")))
+        self._lock = filelock.FileLock(
+            os.path.abspath(os.path.join(lock_dir, "google_drive.lock"))
+        )
         self._conf = get_ext_conf(name=conf_name)
         self._drive_service = None
         self._init()
 
-    def __enter__(self) -> 'GoogleDrive':
+    def __enter__(self) -> "GoogleDrive":
         """
         Context manager method for entering the context.
 
@@ -50,7 +53,9 @@ class GoogleDrive:
         """
         return self
 
-    def __exit__(self, exc_type: type, exc_val: BaseException, exc_tb: TracebackType) -> None:
+    def __exit__(
+        self, exc_type: type, exc_val: BaseException, exc_tb: TracebackType
+    ) -> None:
         """
         Context manager method for exiting the context.
 
@@ -76,10 +81,12 @@ class GoogleDrive:
             info=self._conf.get("service_info"),
             scopes=[
                 "https://www.googleapis.com/auth/drive",
-                "https://www.googleapis.com/auth/drive.metadata"
-            ]
+                "https://www.googleapis.com/auth/drive.metadata",
+            ],
         )
-        self._drive_service = build(serviceName="drive", version="v3", credentials=credentials)
+        self._drive_service = build(
+            serviceName="drive", version="v3", credentials=credentials
+        )
 
     def _create_folder(self, folder_name: str, parent_folder_id: str = None) -> str:
         """
@@ -95,15 +102,21 @@ class GoogleDrive:
         file_metadata = {
             "name": folder_name,
             "mimeType": "application/vnd.google-apps.folder",
-            "parents": [parent_folder_id]
+            "parents": [parent_folder_id],
         }
 
-        response = self._drive_service.files().create(body=file_metadata, fields="id").execute()
+        response = (
+            self._drive_service.files()
+            .create(body=file_metadata, fields="id")
+            .execute()
+        )
         folder_id = response.get("id")
         if folder_id is not None:
             logger.info(f"created folder {folder_name}")
         else:
-            logger.warning(f"create folder ({folder_name}) failed, file will be uploaded to root, response: {response}")
+            logger.warning(
+                f"create folder ({folder_name}) failed, file will be uploaded to root, response: {response}"
+            )
         return folder_id
 
     def _get_id(self, name: str) -> str:
@@ -116,8 +129,7 @@ class GoogleDrive:
         Returns:
             str: The ID of the folder/file if found, otherwise empty string.
         """
-        response = self._drive_service.files().list(
-            q=f""" name="{name}" """).execute()
+        response = self._drive_service.files().list(q=f""" name="{name}" """).execute()
 
         files = response.get("files", [])
         if files:
@@ -159,10 +171,16 @@ class GoogleDrive:
 
         media = MediaFileUpload(file_path)
         with self._lock:
-            response = self._drive_service.files().create(body=file_metadata, media_body=media, fields="id").execute()
+            response = (
+                self._drive_service.files()
+                .create(body=file_metadata, media_body=media, fields="id")
+                .execute()
+            )
 
         if response.get("id") is not None:
-            logger.info(f"""uploaded {file_path} to folder {folder_name}, id: {response.get("id")}""")
+            logger.info(
+                f"""uploaded {file_path} to folder {folder_name}, id: {response.get("id")}"""
+            )
             return True
         else:
             logger.error(f"failed to upload, response: {response}")

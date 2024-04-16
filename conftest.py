@@ -1,25 +1,33 @@
 # -*- coding: utf-8 -*-
+import inspect
+import json
+import logging
 import os
 import re
-import json
 import time
-import pytest
-import inspect
-import logging
-import filelock
 import traceback
-from utils.enums import LogLevel
-from utils.tunnel_shell import TunnelShell
-from utils.driver_shell import DriverShell
+
+import filelock
+import pytest
 from openpyxl import Workbook, load_workbook
+from utils.clickhouse_connection import ClickhouseConnection
+from utils.common import (
+    get_code_modifiers,
+    get_current_datetime,
+    set_allure_detail,
+    set_column_max_width,
+)
+from utils.dirs import lock_dir, log_request_dir, log_summary_dir, report_sheet_dir
+from utils.driver_shell import DriverShell
+from utils.enums import LogLevel
 from utils.mysql_connection import MysqlConnection
 from utils.redis_connection import RedisConnection
-from utils.clickhouse_connection import ClickhouseConnection
-from utils.dirs import log_request_dir, log_summary_dir, lock_dir, report_sheet_dir
-from utils.common import get_code_modifiers, set_column_max_width, get_current_datetime, set_allure_detail
+from utils.tunnel_shell import TunnelShell
 
 session_start_time = time.time()
-conftest_lock = filelock.FileLock(os.path.abspath(os.path.join(lock_dir, f"conftest.lock")))
+conftest_lock = filelock.FileLock(
+    os.path.abspath(os.path.join(lock_dir, f"conftest.lock"))
+)
 
 
 @pytest.fixture(scope="session")
@@ -69,7 +77,9 @@ def pytest_runtest_makereport(item, call):
     reruns = item.parent.config.getoption("--reruns", 0)
     has_execution_count = hasattr(item, "execution_count")
 
-    if not has_execution_count or (has_execution_count and item.execution_count != (reruns + 1)):
+    if not has_execution_count or (
+        has_execution_count and item.execution_count != (reruns + 1)
+    ):
         return
 
     file_path = item.fspath.strpath
@@ -87,7 +97,9 @@ def pytest_runtest_makereport(item, call):
             break
 
     traceback_error = ("\n".join(error_list[error_idx:])).strip()
-    code_modifiers = json.dumps(get_code_modifiers(file_path=file_path, line_number=line_number))
+    code_modifiers = json.dumps(
+        get_code_modifiers(file_path=file_path, line_number=line_number)
+    )
 
     with conftest_lock:
         xlsx_path = os.path.abspath(os.path.join(report_sheet_dir, "failed_cases.xlsx"))
@@ -99,30 +111,43 @@ def pytest_runtest_makereport(item, call):
             workbook.remove(default_sheet)
 
             failure_summary_sheet = workbook.create_sheet("failure_summary")
-            failure_summary_sheet.append(["file path", "case name", "code modifiers", "traceback error"])
+            failure_summary_sheet.append(
+                ["file path", "case name", "code modifiers", "traceback error"]
+            )
         else:
             workbook = load_workbook(xlsx_path)
 
             failure_summary_sheet = workbook["failure_summary"]
 
-        failure_summary_sheet.append([file_path, case_name, code_modifiers, traceback_error])
+        failure_summary_sheet.append(
+            [file_path, case_name, code_modifiers, traceback_error]
+        )
         set_column_max_width(failure_summary_sheet)
         workbook.save(xlsx_path)
 
 
 @pytest.fixture(scope="function", autouse=True)
 def testcase_information(request):
-    set_allure_detail(name="start time", body=get_current_datetime(), level=LogLevel.INFO)
+    set_allure_detail(
+        name="start time", body=get_current_datetime(), level=LogLevel.INFO
+    )
 
     func = request.function
     file_path = func.__code__.co_filename
     func_name = func.__name__
     source_code, start_line = inspect.getsourcelines(func)
-    line_range = {"start_line": start_line, "end_line": start_line + len(source_code) - 1}
+    line_range = {
+        "start_line": start_line,
+        "end_line": start_line + len(source_code) - 1,
+    }
 
     set_allure_detail(name="file path", body=f"{file_path}", level=LogLevel.INFO)
     set_allure_detail(name="function name", body=f"{func_name}", level=LogLevel.INFO)
-    set_allure_detail(name="last modified by", body=get_code_modifiers(file_path, line_range), level=LogLevel.INFO)
+    set_allure_detail(
+        name="last modified by",
+        body=get_code_modifiers(file_path, line_range),
+        level=LogLevel.INFO,
+    )
 
     yield
 

@@ -1,20 +1,21 @@
 # -*- coding: utf-8 -*-
-import os
 import base64
-import filelock
+import os
 import traceback
 from email import encoders
-from utils.logger import logger
-from types import TracebackType
-from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
-from utils.common import get_ext_conf
-from utils.dirs import tmp_dir, lock_dir
-from googleapiclient.discovery import build
 from email.mime.multipart import MIMEMultipart
-from google.oauth2.credentials import Credentials
+from email.mime.text import MIMEText
+from types import TracebackType
+
+import filelock
 from google.auth.transport.requests import Request
+from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
+from googleapiclient.discovery import build
+from utils.common import get_ext_conf
+from utils.dirs import lock_dir, tmp_dir
+from utils.logger import logger
 
 
 class GoogleEmail:
@@ -41,12 +42,14 @@ class GoogleEmail:
         Returns:
             None
         """
-        self._lock = filelock.FileLock(os.path.abspath(os.path.join(lock_dir, "google_email.lock")))
+        self._lock = filelock.FileLock(
+            os.path.abspath(os.path.join(lock_dir, "google_email.lock"))
+        )
         self._conf = get_ext_conf(name=conf_name)
         self._gmail_service = None
         self._init()
 
-    def __enter__(self) -> 'GoogleEmail':
+    def __enter__(self) -> "GoogleEmail":
         """
         Context manager method for entering the context.
 
@@ -55,7 +58,9 @@ class GoogleEmail:
         """
         return self
 
-    def __exit__(self, exc_type: type, exc_val: BaseException, exc_tb: TracebackType) -> None:
+    def __exit__(
+        self, exc_type: type, exc_val: BaseException, exc_tb: TracebackType
+    ) -> None:
         """
         Context manager method for exiting the context.
 
@@ -78,12 +83,14 @@ class GoogleEmail:
             None
         """
         os.makedirs(tmp_dir, exist_ok=True)
-        google_token_path = os.path.abspath(os.path.join(tmp_dir, "google_email_token.json"))
+        google_token_path = os.path.abspath(
+            os.path.join(tmp_dir, "google_email_token.json")
+        )
         credentials = None
         if os.path.exists(google_token_path):
             credentials = Credentials.from_authorized_user_file(
                 filename=google_token_path,
-                scopes=["https://www.googleapis.com/auth/gmail.send"]
+                scopes=["https://www.googleapis.com/auth/gmail.send"],
             )
         if not credentials or not credentials.valid:
             if credentials and credentials.expired and credentials.refresh_token:
@@ -91,7 +98,7 @@ class GoogleEmail:
             else:
                 flow = InstalledAppFlow.from_client_config(
                     client_config=self._conf.get("client_config"),
-                    scopes=["https://www.googleapis.com/auth/gmail.send"]
+                    scopes=["https://www.googleapis.com/auth/gmail.send"],
                 )
                 credentials = flow.run_local_server(port=0)
 
@@ -101,14 +108,15 @@ class GoogleEmail:
 
         self._gmail_service = build("gmail", "v1", credentials=credentials)
 
-    def send(self,
-             subject: str,
-             body: str,
-             to_recipients: str,
-             cc_recipients: str = None,
-             bcc_recipients: str = None,
-             attachment_path: str = None
-             ) -> None:
+    def send(
+        self,
+        subject: str,
+        body: str,
+        to_recipients: str,
+        cc_recipients: str = None,
+        bcc_recipients: str = None,
+        attachment_path: str = None,
+    ) -> None:
         """
         Send an email using Gmail API.
 
@@ -152,11 +160,18 @@ class GoogleEmail:
                     attachment.set_payload(f.read())
 
             encoders.encode_base64(attachment)
-            attachment.add_header("Content-Disposition", f"attachment; filename={attachment_name}")
+            attachment.add_header(
+                "Content-Disposition", f"attachment; filename={attachment_name}"
+            )
             message.attach(attachment)
 
         raw_message = base64.urlsafe_b64encode(message.as_bytes()).decode("utf-8")
-        response = self._gmail_service.users().messages().send(userId="me", body={"raw": raw_message}).execute()
+        response = (
+            self._gmail_service.users()
+            .messages()
+            .send(userId="me", body={"raw": raw_message})
+            .execute()
+        )
         logger.info(f"email sent successfully! response: {response}")
 
 

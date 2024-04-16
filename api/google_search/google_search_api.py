@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-from typing import Dict, Any
+from typing import Any, Dict
+
 from api.base_api import BaseAPI
 
 
@@ -16,6 +17,4 @@ class GoogleSearchAPI(BaseAPI):
             Dict[str, Any]: The response content of the request as a dictionary.
         """
         params_dict = {"q": keyword}
-        return self._send_request(
-            uri="/search", method="GET", params=params_dict
-        )
+        return self._send_request(uri="/search", method="GET", params=params_dict)

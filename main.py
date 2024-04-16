@@ -1,23 +1,24 @@
 # -*- coding: utf-8 -*-
+import argparse
 import os
 import sys
-import pytest
-import argparse
 import traceback
+
+import pytest
 
 project_dir = os.path.dirname(__file__)
 sys.path.append(project_dir)
 
 
-def exe_test(cases_dir="testcases",
-             slowest_cases=100,
-             output_mode="-s",
-             process_num=3,
-             generate_report=False,
-             marker=None,
-             reruns=0
-             ):
-
+def exe_test(
+    cases_dir="testcases",
+    slowest_cases=100,
+    output_mode="-s",
+    process_num=3,
+    generate_report=False,
+    marker=None,
+    reruns=0,
+):
     testcase_dir = os.path.abspath(os.path.join(project_dir, cases_dir))
     args = [testcase_dir]
 
@@ -28,7 +29,9 @@ def exe_test(cases_dir="testcases",
     args.extend(["--durations", f"{slowest_cases}"])
 
     if process_num:
-        args.extend(["-n", f"{process_num}", "--dist", "loadfile", "--reruns", f"{reruns}"])
+        args.extend(
+            ["-n", f"{process_num}", "--dist", "loadfile", "--reruns", f"{reruns}"]
+        )
 
     if marker is not None:
         args.extend(["-m", marker])
@@ -43,9 +46,7 @@ def exe_test(cases_dir="testcases",
 
 
 def get_parse_args():
-    parser = argparse.ArgumentParser(
-        description="run testcases"
-    )
+    parser = argparse.ArgumentParser(description="run testcases")
 
     parser.add_argument(
         "--cases_dir",
@@ -115,29 +116,29 @@ def post_action():
 
 
 def main():
-    
     pre_action()
-    
+
     args = get_parse_args()
     os.environ["ENV"] = args.env
     logger.info(f"current env is {args.env}.")
 
-    exe_test(cases_dir=args.cases_dir,
-             slowest_cases=args.slowest_cases,
-             output_mode=args.output_mode,
-             process_num=args.process_num,
-             generate_report=args.generate_report,
-             marker=args.marker,
-             reruns=args.reruns,
-             )
+    exe_test(
+        cases_dir=args.cases_dir,
+        slowest_cases=args.slowest_cases,
+        output_mode=args.output_mode,
+        process_num=args.process_num,
+        generate_report=args.generate_report,
+        marker=args.marker,
+        reruns=args.reruns,
+    )
 
 
 if __name__ == "__main__":
-    from utils.logger import logger
-    from utils.email_notification import send_email
     from utils.common import clean_logs_and_reports
+    from utils.dirs import report_html_dir, report_raw_dir
+    from utils.email_notification import send_email
+    from utils.logger import logger
     from utils.message_notification import send_message
-    from utils.dirs import report_raw_dir, report_html_dir
 
     try:
         main()

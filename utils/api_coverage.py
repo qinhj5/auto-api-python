@@ -2,14 +2,15 @@
 import os
 import re
 import sys
-import requests
 import traceback
-from openpyxl import Workbook
+from typing import Dict, List, Optional, Tuple, Union
+
+import requests
 from config.conf import Global
-from utils.logger import logger
+from openpyxl import Workbook
 from utils.common import set_column_max_width
-from typing import List, Dict, Union, Optional, Tuple
 from utils.dirs import log_request_dir, report_sheet_dir
+from utils.logger import logger
 
 
 class ApiCoverage:
@@ -24,7 +25,9 @@ class ApiCoverage:
             None
         """
         self._swagger_url = swagger_url
-        self._request_log_path = os.path.abspath(os.path.join(log_request_dir, "request.log"))
+        self._request_log_path = os.path.abspath(
+            os.path.join(log_request_dir, "request.log")
+        )
 
     def _merge_request_logs(self) -> None:
         """
@@ -33,7 +36,9 @@ class ApiCoverage:
         Returns:
             None
         """
-        log_files = [file for file in os.listdir(log_request_dir) if file.startswith("request_")]
+        log_files = [
+            file for file in os.listdir(log_request_dir) if file.startswith("request_")
+        ]
         with open(self._request_log_path, "w", encoding="utf-8") as output_file:
             for log_file in log_files:
                 file_path = os.path.abspath(os.path.join(log_request_dir, log_file))
@@ -66,7 +71,7 @@ class ApiCoverage:
                 path = path if path.find("?") == -1 else path[: path.find("?")]
                 path = path if path[-1] != "/" else path[:-1]
                 request_url = {
-                    "url": items[0][:items[0].rfind(":")] + path,
+                    "url": items[0][: items[0].rfind(":")] + path,
                     "method": items[1][1:],
                     "matched": False,
                 }
@@ -74,7 +79,9 @@ class ApiCoverage:
 
         return request_list
 
-    def _get_requests_from_swagger(self) -> Optional[Dict[str, List[Dict[str, Union[str, int]]]]]:
+    def _get_requests_from_swagger(
+        self,
+    ) -> Optional[Dict[str, List[Dict[str, Union[str, int]]]]]:
         """
         Get requests from swagger documentation.
 
@@ -98,7 +105,9 @@ class ApiCoverage:
                                 "url": url,
                                 "method": method.upper(),
                                 "count": 0,
-                                "tag": tags[0] if isinstance(tags, list) and len(tags) else "NULL"
+                                "tag": tags[0]
+                                if isinstance(tags, list) and len(tags)
+                                else "NULL",
                             }
                         )
                     else:
@@ -107,7 +116,9 @@ class ApiCoverage:
                                 "url": url,
                                 "method": method.upper(),
                                 "count": 0,
-                                "tag": tags[0] if isinstance(tags, list) and len(tags) else "NULL"
+                                "tag": tags[0]
+                                if isinstance(tags, list) and len(tags)
+                                else "NULL",
                             }
                         )
 
@@ -133,7 +144,11 @@ class ApiCoverage:
         url_reg = "^" + url_reg + "$"
         return len(re.findall(url_reg, request_url)) != 0
 
-    def _process(self) -> Tuple[List[Dict[str, Union[str, bool]]], Dict[str, List[Dict[str, Union[str, int]]]]]:
+    def _process(
+        self,
+    ) -> Tuple[
+        List[Dict[str, Union[str, bool]]], Dict[str, List[Dict[str, Union[str, int]]]]
+    ]:
         """
         Process API coverage by comparing requests from logs with requests from swagger documentation.
 
@@ -148,18 +163,20 @@ class ApiCoverage:
         for request_url in request_list:
             for swagger_url in swagger_dict["static_url_list"]:
                 if (
-                        not request_url["matched"]
-                        and request_url["url"] == swagger_url["url"]
-                        and request_url["method"] == swagger_url["method"]
+                    not request_url["matched"]
+                    and request_url["url"] == swagger_url["url"]
+                    and request_url["method"] == swagger_url["method"]
                 ):
                     swagger_url["count"] = swagger_url["count"] + 1
                     request_url["matched"] = True
 
             for swagger_url in swagger_dict["dynamic_url_list"]:
                 if (
-                        not request_url["matched"]
-                        and ApiCoverage._is_similar_url(request_url["url"], swagger_url["url"])
-                        and request_url["method"] == swagger_url["method"]
+                    not request_url["matched"]
+                    and ApiCoverage._is_similar_url(
+                        request_url["url"], swagger_url["url"]
+                    )
+                    and request_url["method"] == swagger_url["method"]
                 ):
                     swagger_url["count"] = swagger_url["count"] + 1
                     request_url["matched"] = True
@@ -193,36 +210,55 @@ class ApiCoverage:
 
         request_list, swagger_dict = self._process()
 
-        total_num = len(swagger_dict["static_url_list"]) + len(swagger_dict["dynamic_url_list"])
-        covered_num = len([request_url["matched"] for request_url in request_list if request_url["matched"]])
-        coverage_summary_sheet.append([f"{covered_num} / {total_num}", f"%.2f" % (covered_num / total_num * 100)])
+        total_num = len(swagger_dict["static_url_list"]) + len(
+            swagger_dict["dynamic_url_list"]
+        )
+        covered_num = len(
+            [
+                request_url["matched"]
+                for request_url in request_list
+                if request_url["matched"]
+            ]
+        )
+        coverage_summary_sheet.append(
+            [f"{covered_num} / {total_num}", f"%.2f" % (covered_num / total_num * 100)]
+        )
 
         for swagger_url in swagger_dict["static_url_list"]:
             if swagger_url["count"]:
-                fully_covered_sheet.append([swagger_url["tag"],
-                                            swagger_url["url"],
-                                            swagger_url["method"],
-                                            swagger_url["count"]])
+                fully_covered_sheet.append(
+                    [
+                        swagger_url["tag"],
+                        swagger_url["url"],
+                        swagger_url["method"],
+                        swagger_url["count"],
+                    ]
+                )
             else:
-                never_cover_sheet.append([swagger_url["tag"],
-                                          swagger_url["url"],
-                                          swagger_url["method"]])
+                never_cover_sheet.append(
+                    [swagger_url["tag"], swagger_url["url"], swagger_url["method"]]
+                )
 
         for swagger_url in swagger_dict["dynamic_url_list"]:
             if swagger_url["count"]:
-                likely_covered_sheet.append([swagger_url["tag"],
-                                             swagger_url["url"],
-                                             swagger_url["method"],
-                                             swagger_url["count"]])
+                likely_covered_sheet.append(
+                    [
+                        swagger_url["tag"],
+                        swagger_url["url"],
+                        swagger_url["method"],
+                        swagger_url["count"],
+                    ]
+                )
             else:
-                never_cover_sheet.append([swagger_url["tag"],
-                                          swagger_url["url"],
-                                          swagger_url["method"]])
+                never_cover_sheet.append(
+                    [swagger_url["tag"], swagger_url["url"], swagger_url["method"]]
+                )
 
         for request_url in request_list:
             if not request_url["matched"]:
-                unknown_request_sheet.append([request_url["url"],
-                                              request_url["method"]])
+                unknown_request_sheet.append(
+                    [request_url["url"], request_url["method"]]
+                )
 
         for sheet_name in workbook.sheetnames:
             set_column_max_width(workbook[sheet_name])

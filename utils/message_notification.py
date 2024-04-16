@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 import traceback
+
 from twilio.rest import Client
-from utils.logger import logger
 from utils.common import get_ext_conf
+from utils.logger import logger
 
 
 class MessageNotification:
@@ -32,11 +33,9 @@ class MessageNotification:
         Returns:
             None
         """
-        message = Client(self._conf.get("account_sid"), self._conf.get("auth_token")).messages.create(
-            body=body,
-            from_=self._from,
-            to=self._to
-        )
+        message = Client(
+            self._conf.get("account_sid"), self._conf.get("auth_token")
+        ).messages.create(body=body, from_=self._from, to=self._to)
 
         logger.info(f"message sid: {message.sid}")
 

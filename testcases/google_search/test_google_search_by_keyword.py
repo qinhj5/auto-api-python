@@ -1,15 +1,17 @@
 # -*- coding: utf-8 -*-
 import allure
 import pytest
-from utils.logger import logger
 from utils.common import get_csv_data, set_allure_detail
+from utils.logger import logger
 
 
 class TestGoogleSearchByKeyword:
     @allure.severity("normal")
     @pytest.mark.normal
     @pytest.mark.parametrize("keyword", ["pytest", "requests"])
-    def test_get_google_search_by_keyword_using_parameter(self, google_search_api, keyword):
+    def test_get_google_search_by_keyword_using_parameter(
+        self, google_search_api, keyword
+    ):
         res = google_search_api.get_google_search_by_keyword(keyword=keyword)
         actual_code = res["status_code"]
         logger.info(f"get_google_search_by_keyword status code: {actual_code}")

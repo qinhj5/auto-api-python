@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
 import os
 import sys
-import gspread
 import traceback
+from types import TracebackType
 from typing import List
+
 import filelock as filelock
+import gspread
+from utils.common import get_ext_conf
 from utils.dirs import lock_dir
 from utils.logger import logger
-from types import TracebackType
-from utils.common import get_ext_conf
 
 
 class GoogleSheet:
@@ -35,14 +36,16 @@ class GoogleSheet:
         Returns:
             None
         """
-        self._lock = filelock.FileLock(os.path.abspath(os.path.join(lock_dir, "google_sheet.lock")))
+        self._lock = filelock.FileLock(
+            os.path.abspath(os.path.join(lock_dir, "google_sheet.lock"))
+        )
         self._conf = get_ext_conf(name=conf_name)
         self._gspread_client = None
         self._sheet_page = None
         self._active_sheet = None
         self._init()
 
-    def __enter__(self) -> 'GoogleSheet':
+    def __enter__(self) -> "GoogleSheet":
         """
         Context manager method for entering the context.
 
@@ -51,7 +54,9 @@ class GoogleSheet:
         """
         return self
 
-    def __exit__(self, exc_type: type, exc_val: BaseException, exc_tb: TracebackType) -> None:
+    def __exit__(
+        self, exc_type: type, exc_val: BaseException, exc_tb: TracebackType
+    ) -> None:
         """
         Context manager method for exiting the context.
 
@@ -77,11 +82,15 @@ class GoogleSheet:
             info=self._conf.get("service_info"),
             scopes=[
                 "https://www.googleapis.com/auth/drive",
-                "https://www.googleapis.com/auth/spreadsheets"
-            ]
+                "https://www.googleapis.com/auth/spreadsheets",
+            ],
         )
-        self._sheet_page = self._gspread_client.open(self._conf.get("google_sheet").get("file_name"))
-        self._active_sheet = self._sheet_page.worksheet(self._conf.get("google_sheet").get("sheet_name"))
+        self._sheet_page = self._gspread_client.open(
+            self._conf.get("google_sheet").get("file_name")
+        )
+        self._active_sheet = self._sheet_page.worksheet(
+            self._conf.get("google_sheet").get("sheet_name")
+        )
 
     def clear_active_sheet(self) -> None:
         """

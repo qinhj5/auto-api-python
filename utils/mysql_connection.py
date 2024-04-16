@@ -1,15 +1,16 @@
 # -*- coding: utf-8 -*-
 import os
+import traceback
+from types import TracebackType
+from typing import Dict, List, Tuple, Union
+
 import filelock
 import pymysql
-import traceback
-from utils.logger import logger
-from utils.dirs import lock_dir
-from types import TracebackType
-from utils.common import get_env_conf
-from pymysql import cursors, Connection
+from pymysql import Connection, cursors
 from sshtunnel import SSHTunnelForwarder
-from typing import Tuple, List, Dict, Union
+from utils.common import get_env_conf
+from utils.dirs import lock_dir
+from utils.logger import logger
 
 pymysql.install_as_MySQLdb()
 
@@ -28,7 +29,12 @@ class MysqlConnection:
             cls._instance = super().__new__(cls)
         return cls._instance
 
-    def __init__(self, mysql_conf_name: str = "mysql", ssh_conf_name: str = "ssh", use_tunnel: bool = True) -> None:
+    def __init__(
+        self,
+        mysql_conf_name: str = "mysql",
+        ssh_conf_name: str = "ssh",
+        use_tunnel: bool = True,
+    ) -> None:
         """
         Initialize an instance of the MysqlConnection class.
 
@@ -40,14 +46,16 @@ class MysqlConnection:
         Returns:
             None
         """
-        self._lock = filelock.FileLock(os.path.abspath(os.path.join(lock_dir, f"{mysql_conf_name}.lock")))
+        self._lock = filelock.FileLock(
+            os.path.abspath(os.path.join(lock_dir, f"{mysql_conf_name}.lock"))
+        )
         self._mysql_conf = get_env_conf(name=mysql_conf_name)
         self._ssh_conf = get_env_conf(name=ssh_conf_name)
         self._connection = None
         self._use_tunnel = use_tunnel
         self._tunnel_forwarder = None
 
-    def __enter__(self) -> 'MysqlConnection':
+    def __enter__(self) -> "MysqlConnection":
         """
         Context manager method for entering the context.
 
@@ -56,7 +64,9 @@ class MysqlConnection:
         """
         return self
 
-    def __exit__(self, exc_type: type, exc_val: BaseException, exc_tb: TracebackType) -> None:
+    def __exit__(
+        self, exc_type: type, exc_val: BaseException, exc_tb: TracebackType
+    ) -> None:
         """
         Context manager method for exiting the context.
 
@@ -74,10 +84,9 @@ class MysqlConnection:
         self.close()
 
     @staticmethod
-    def _create_mysql_connection(mysql_conf: dict,
-                                 ssh_conf: dict,
-                                 use_tunnel: bool) -> Union[Tuple[None, Connection],
-                                                            Tuple[SSHTunnelForwarder, Connection]]:
+    def _create_mysql_connection(
+        mysql_conf: dict, ssh_conf: dict, use_tunnel: bool
+    ) -> Union[Tuple[None, Connection], Tuple[SSHTunnelForwarder, Connection]]:
         """
         Create a MySQL connection.
 
@@ -96,7 +105,7 @@ class MysqlConnection:
                 ssh_username=ssh_conf["ssh_user"],
                 ssh_pkey=ssh_conf.get("ssh_key"),
                 ssh_password=ssh_conf.get("ssh_password"),
-                remote_bind_address=(mysql_conf["host"], mysql_conf["port"])
+                remote_bind_address=(mysql_conf["host"], mysql_conf["port"]),
             )
             tunnel_forwarder.start()
 
@@ -105,7 +114,7 @@ class MysqlConnection:
                 port=tunnel_forwarder.local_bind_port,
                 user=mysql_conf["user"],
                 password=mysql_conf["password"],
-                database=mysql_conf["database"]
+                database=mysql_conf["database"],
             )
             return tunnel_forwarder, connection
         else:
@@ -131,9 +140,12 @@ class MysqlConnection:
         try:
             if self._connection is None:
                 self.close()
-                self._tunnel_forwarder, self._connection = MysqlConnection._create_mysql_connection(self._mysql_conf,
-                                                                                                    self._ssh_conf,
-                                                                                                    self._use_tunnel)
+                (
+                    self._tunnel_forwarder,
+                    self._connection,
+                ) = MysqlConnection._create_mysql_connection(
+                    self._mysql_conf, self._ssh_conf, self._use_tunnel
+                )
         except Exception as exception:
             logger.error(exception)
             self.close()

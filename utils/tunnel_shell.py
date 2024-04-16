@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
 import os
+import traceback
+from types import TracebackType
+from typing import Tuple
+
 import filelock
 import paramiko
-import traceback
-from typing import Tuple
-from utils.logger import logger
-from utils.dirs import lock_dir
-from types import TracebackType
+from paramiko.channel import ChannelFile, ChannelStderrFile, ChannelStdinFile
 from utils.common import get_env_conf
-from paramiko.channel import ChannelStdinFile, ChannelFile, ChannelStderrFile
+from utils.dirs import lock_dir
+from utils.logger import logger
 
 
 class TunnelShell:
@@ -35,11 +36,13 @@ class TunnelShell:
         Returns:
             None
         """
-        self._lock = filelock.FileLock(os.path.abspath(os.path.join(lock_dir, f"{conf_name}.lock")))
+        self._lock = filelock.FileLock(
+            os.path.abspath(os.path.join(lock_dir, f"{conf_name}.lock"))
+        )
         self._conf = get_env_conf(name=conf_name)
         self._tunnel_client = None
 
-    def __enter__(self) -> 'TunnelShell':
+    def __enter__(self) -> "TunnelShell":
         """
         Context manager method for entering the context.
 
@@ -48,7 +51,9 @@ class TunnelShell:
         """
         return self
 
-    def __exit__(self, exc_type: type, exc_val: BaseException, exc_tb: TracebackType) -> None:
+    def __exit__(
+        self, exc_type: type, exc_val: BaseException, exc_tb: TracebackType
+    ) -> None:
         """
         Context manager method for exiting the context.
 
@@ -85,15 +90,19 @@ class TunnelShell:
         else:
             private_key = paramiko.RSAKey.from_private_key_file(ssh_conf.get("ssh_key"))
 
-        tunnel_client.connect(hostname=ssh_conf["ssh_host"],
-                              port=ssh_conf["ssh_port"],
-                              username=ssh_conf["ssh_user"],
-                              pkey=private_key,
-                              password=ssh_conf.get("ssh_password"))
+        tunnel_client.connect(
+            hostname=ssh_conf["ssh_host"],
+            port=ssh_conf["ssh_port"],
+            username=ssh_conf["ssh_user"],
+            pkey=private_key,
+            password=ssh_conf.get("ssh_password"),
+        )
 
         return tunnel_client
 
-    def _execute(self, command: str) -> Tuple[ChannelStdinFile, ChannelFile, ChannelStderrFile]:
+    def _execute(
+        self, command: str
+    ) -> Tuple[ChannelStdinFile, ChannelFile, ChannelStderrFile]:
         """
         Execute a command on the tunnel client.
 

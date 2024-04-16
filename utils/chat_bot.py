@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 import os
 import time
-import filelock
 import traceback
-from openai import OpenAI
-from utils.logger import logger
 from types import TracebackType
-from utils.dirs import tmp_dir, lock_dir
-from utils.common import get_ext_conf, dump_json, load_json
+
+import filelock
+from openai import OpenAI
+from utils.common import dump_json, get_ext_conf, load_json
+from utils.dirs import lock_dir, tmp_dir
+from utils.logger import logger
 
 
 class ChatBot:
@@ -34,15 +35,19 @@ class ChatBot:
         Returns:
             None
         """
-        self._lock = filelock.FileLock(os.path.abspath(os.path.join(lock_dir, "chat_bot.lock")))
+        self._lock = filelock.FileLock(
+            os.path.abspath(os.path.join(lock_dir, "chat_bot.lock"))
+        )
         self._conf = get_ext_conf(name=conf_name)
         self._model = self._conf.get("model")
         self._history = self._conf.get("history")
-        self._client = OpenAI(api_key=self._conf.get("api_key"), base_url=self._conf.get("base_url"))
+        self._client = OpenAI(
+            api_key=self._conf.get("api_key"), base_url=self._conf.get("base_url")
+        )
         self._contexts = []
         self._init_contexts()
 
-    def __enter__(self) -> 'ChatBot':
+    def __enter__(self) -> "ChatBot":
         """
         Context manager method for entering the context.
 
@@ -51,7 +56,9 @@ class ChatBot:
         """
         return self
 
-    def __exit__(self, exc_type: type, exc_val: BaseException, exc_tb: TracebackType) -> None:
+    def __exit__(
+        self, exc_type: type, exc_val: BaseException, exc_tb: TracebackType
+    ) -> None:
         """
         Context manager method for exiting the context.
 
@@ -76,7 +83,9 @@ class ChatBot:
             None
         """
         os.makedirs(tmp_dir, exist_ok=True)
-        dialogue_contexts_path = os.path.abspath(os.path.join(tmp_dir, "dialogue_contexts.json"))
+        dialogue_contexts_path = os.path.abspath(
+            os.path.join(tmp_dir, "dialogue_contexts.json")
+        )
         if os.path.exists(dialogue_contexts_path):
             self._contexts = load_json(dialogue_contexts_path)
         else:
@@ -90,7 +99,9 @@ class ChatBot:
         Returns:
             None
         """
-        dialogue_contexts_path = os.path.abspath(os.path.join(tmp_dir, "dialogue_contexts.json"))
+        dialogue_contexts_path = os.path.abspath(
+            os.path.join(tmp_dir, "dialogue_contexts.json")
+        )
         with self._lock:
             dump_json(dialogue_contexts_path, self._contexts)
 
@@ -105,21 +116,24 @@ class ChatBot:
             None
         """
         context = [{"role": "system", "content": "You are a helpful assistant."}]
-        context.extend(self._contexts[-self._history * 2:])
+        context.extend(self._contexts[-self._history * 2 :])
         context.append({"role": "user", "content": prompt})
 
         try:
             completion = self._client.chat.completions.create(
-                model=self._model,
-                messages=context
+                model=self._model, messages=context
             )
             response_text = completion.choices[0].message.content
         except Exception as exception:
             logger.error(exception)
             raise KeyboardInterrupt
         else:
-            self._contexts.extend([{"role": "user", "content": prompt},
-                                   {"role": "assistant", "content": response_text}])
+            self._contexts.extend(
+                [
+                    {"role": "user", "content": prompt},
+                    {"role": "assistant", "content": response_text},
+                ]
+            )
 
         print(f"Bot:\n{response_text}")
 

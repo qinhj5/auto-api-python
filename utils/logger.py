@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
-import os
 import logging
+import os
+from logging.handlers import RotatingFileHandler
+
 import colorlog
 from utils.decorators import log_locker
-from logging.handlers import RotatingFileHandler
 
 ENV = os.environ.get("ENV", "test")
 LOG_FORMAT = "%(asctime)s - PID:%(process)s - TID:%(thread)s - [%(levelname)s] - %(file)s:%(line)d - %(message)s"
@@ -16,16 +17,18 @@ CONSOLE_FORMATTER = colorlog.ColoredFormatter(
         "DEBUG": "bold_blue",
         "INFO": "bold_green",
         "WARNING": "bold_yellow",
-        "ERROR": "bold_red"
-    }
+        "ERROR": "bold_red",
+    },
 )
 CONSOLE_HANDLER.setFormatter(CONSOLE_FORMATTER)
 
-FILE_HANDLER = RotatingFileHandler(os.path.abspath(os.path.join(os.path.dirname(__file__), f"../log/{ENV}.log")),
-                                   maxBytes=1024 * 1024 * 10,
-                                   backupCount=3,
-                                   mode="a",
-                                   encoding="utf-8")
+FILE_HANDLER = RotatingFileHandler(
+    os.path.abspath(os.path.join(os.path.dirname(__file__), f"../log/{ENV}.log")),
+    maxBytes=1024 * 1024 * 10,
+    backupCount=3,
+    mode="a",
+    encoding="utf-8",
+)
 FILE_HANDLER.setLevel(logging.DEBUG)
 FILE_FORMATTER = logging.Formatter(LOG_FORMAT)
 FILE_HANDLER.setFormatter(FILE_FORMATTER)
