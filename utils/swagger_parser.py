@@ -2,6 +2,7 @@
 import os
 import re
 import sys
+import isort
 import black
 import shutil
 import keyword
@@ -465,6 +466,7 @@ class SwaggerParser:
         module_dir = os.path.abspath(os.path.join(self._api_dir, module))
 
         formatted_code = black.format_str(module_code, mode=black.FileMode())
+        formatted_code = isort.code(formatted_code, config=isort.Config(profile="black"))
         with open(os.path.abspath(os.path.join(module_dir, f"{module}_api.py")), "w", encoding="utf-8") as f:
             f.write(formatted_code)
 
@@ -528,6 +530,7 @@ class SwaggerParser:
         module_dir = os.path.abspath(os.path.join(self._testcases_dir, module))
 
         formatted_code = black.format_str(conf_code, mode=black.FileMode())
+        formatted_code = isort.code(formatted_code, config=isort.Config(profile="black"))
         with open(os.path.abspath(os.path.join(module_dir, "conftest.py")), "w", encoding="utf-8") as f:
             f.write(formatted_code)
 
@@ -614,6 +617,7 @@ class SwaggerParser:
         module_dir = os.path.abspath(os.path.join(self._testcases_dir, module))
 
         formatted_code = black.format_str(testcases_code, mode=black.FileMode())
+        formatted_code = isort.code(formatted_code, config=isort.Config(profile="black"))
         with open(os.path.abspath(os.path.join(module_dir, f"{file_name}.py")), "w", encoding="utf-8") as f:
             f.write(formatted_code)
 
