@@ -120,7 +120,7 @@ def main():
 
     args = get_parse_args()
     os.environ["ENV"] = args.env
-    logger.info(f"current env is {args.env}.")
+    logger.info(f"current env is {args.env}")
 
     exe_test(
         cases_dir=args.cases_dir,
