@@ -10,6 +10,7 @@ import traceback
 import filelock
 import pytest
 from openpyxl import Workbook, load_workbook
+
 from utils.clickhouse_connection import ClickhouseConnection
 from utils.common import (
     get_code_modifiers,

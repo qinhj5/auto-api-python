@@ -8,6 +8,7 @@ import filelock
 import pymysql
 from pymysql import Connection, cursors
 from sshtunnel import SSHTunnelForwarder
+
 from utils.common import get_env_conf
 from utils.dirs import lock_dir
 from utils.logger import logger

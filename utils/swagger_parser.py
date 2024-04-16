@@ -12,6 +12,7 @@ import black
 import isort
 import requests
 from config.conf import Global
+
 from utils.dirs import template_dir
 from utils.logger import logger
 

@@ -5,6 +5,7 @@ from typing import Any, Dict
 
 import curlify
 import requests
+
 from utils.common import set_allure_detail
 from utils.enums import LogLevel
 

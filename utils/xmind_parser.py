@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 import traceback
 
-from utils.logger import logger
 from xmindparser import xmind_to_dict
+
+from utils.logger import logger
 
 
 class XmindParser:

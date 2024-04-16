@@ -5,6 +5,7 @@ import traceback
 from typing import List
 
 from confluent_kafka import Consumer, Producer
+
 from utils.common import generate_random_string, get_env_conf
 from utils.logger import logger
 

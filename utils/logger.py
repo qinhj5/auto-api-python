@@ -4,6 +4,7 @@ import os
 from logging.handlers import RotatingFileHandler
 
 import colorlog
+
 from utils.decorators import log_locker
 
 ENV = os.environ.get("ENV", "test")

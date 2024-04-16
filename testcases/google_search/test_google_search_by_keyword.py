@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import allure
 import pytest
+
 from utils.common import get_csv_data, set_allure_detail
 from utils.logger import logger
 

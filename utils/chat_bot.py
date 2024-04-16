@@ -6,6 +6,7 @@ from types import TracebackType
 
 import filelock
 from openai import OpenAI
+
 from utils.common import dump_json, get_ext_conf, load_json
 from utils.dirs import lock_dir, tmp_dir
 from utils.logger import logger

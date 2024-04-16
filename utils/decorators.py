@@ -4,6 +4,7 @@ import os
 from typing import Callable
 
 import filelock
+
 from utils.dirs import lock_dir
 
 LOCK_PATH = os.path.abspath(os.path.join(lock_dir, "log.lock"))

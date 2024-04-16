@@ -13,6 +13,7 @@ import filelock
 import yaml
 from openpyxl.styles import Alignment
 from openpyxl.worksheet.worksheet import Worksheet
+
 from utils.dirs import (
     config_dir,
     data_dir,
