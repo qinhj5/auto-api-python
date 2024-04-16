@@ -40,7 +40,7 @@ def get_env_conf(name: str = None) -> Union[dict, str, list]:
     """
     conf = {}
     conf_path = os.path.abspath(
-        os.path.join(config_dir, f"""conf_{os.environ.get("ENV", "test")}.yml""")
+        os.path.join(config_dir, f"""conf_{os.environ.get("ENV", "test")}.yaml""")
     )
 
     if not os.path.exists(conf_path):
@@ -67,7 +67,7 @@ def get_ext_conf(name: str = None) -> Union[dict, str, list]:
         Union[dict, str, list]: Configuration item if name is provided, otherwise the entire configuration.
     """
     conf = {}
-    conf_path = os.path.abspath(os.path.join(config_dir, f"conf_ext.yml"))
+    conf_path = os.path.abspath(os.path.join(config_dir, f"conf_ext.yaml"))
 
     if not os.path.exists(conf_path):
         logger.error(f"file not found: {conf_path}")
