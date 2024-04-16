@@ -63,6 +63,7 @@ auto-api-python/
 │   ├── driver_shell.py
 │   ├── email_notification.py
 │   ├── enums.py
+│   ├── formatter.py
 │   ├── forwarder_setting.py
 │   ├── google_drive.py
 │   ├── google_email.py
