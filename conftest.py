@@ -25,7 +25,7 @@ from utils.mysql_connection import MysqlConnection
 from utils.redis_connection import RedisConnection
 from utils.tunnel_shell import TunnelShell
 
-session_start_time = time.time()
+session_start_time = 0
 conftest_lock = filelock.FileLock(
     os.path.abspath(os.path.join(lock_dir, f"conftest.lock"))
 )
