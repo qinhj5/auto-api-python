@@ -26,7 +26,7 @@ CONSOLE_HANDLER.setFormatter(CONSOLE_FORMATTER)
 FILE_HANDLER = RotatingFileHandler(
     os.path.abspath(os.path.join(os.path.dirname(__file__), f"../log/{ENV}.log")),
     maxBytes=1024 * 1024 * 10,
-    backupCount=3,
+    backupCount=0,
     mode="a",
     encoding="utf-8",
 )
