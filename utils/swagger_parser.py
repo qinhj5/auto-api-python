@@ -398,7 +398,7 @@ class SwaggerParser:
             )
         func_header = f"\n    def {func_name}(self{params_header}) -> Dict[str, Any]:\n"
 
-        func_body = '        """\n%s\n' % summary
+        func_body = "        \"\"\"\n%s\n" % summary
         if params_list:
             func_body += "\n        Args:\n"
         for item in params_list:
@@ -407,10 +407,11 @@ class SwaggerParser:
                 + item[next(iter(item.keys()))]["desc"]
             )
             func_body += f"{SwaggerParser._get_wrapped_string(desc_string, indent=12, param_process=True)}\n"
+
         func_body += (
             "\n        Returns:\n            Dict[str, Any]: "
-            'The response content of the request as a dictionary.\
-                      \n        """\n'
+            "The response content of the request as a dictionary."
+            "\n        \"\"\"\n"
         )
 
         request_list = []
@@ -431,7 +432,7 @@ class SwaggerParser:
                 for k, v in json_dict.items():
                     schema_sample = self._generate_sample_data(schema_dict.get(k))
                     if schema_sample == "":
-                        schema_sample = '""'
+                        schema_sample = "\"\""
                     func_body += f"        {v}_sample = {schema_sample}\n"
                     func_body += f"        json_dict = {v} if {v} else {v}_sample\n"
             else:
@@ -617,7 +618,7 @@ class SwaggerParser:
 
         testcases_code = ""
         testcases_code += f"class {SwaggerParser._snake_to_pascal(file_name)}:\n"
-        testcases_code += '    @allure.severity("normal")\n'
+        testcases_code += "    @allure.severity(\"normal\")\n"
         testcases_code += "    @pytest.mark.normal\n"
 
         params = api["detail"].get("parameters", [])
@@ -641,13 +642,13 @@ class SwaggerParser:
             ", ".join([f"{name}={name}" for name in name_list]) if name_list else ""
         )
         testcases_code += f"        res = {module}_api.{api_func_name}({param_str})\n"
-        testcases_code += '        actual_code = res["status_code"]\n'
+        testcases_code += "        actual_code = res[\"status_code\"]\n"
         testcases_code += (
-            '        logger.info(f"%s status code: {actual_code}")\n\n' % api_func_name
+            "        logger.info(f\"%s status code: {actual_code}\")\n\n" % api_func_name
         )
         testcases_code += "        expected_code = 200\n"
-        testcases_code += '        assert actual_code == expected_code, \
-                            set_allure_detail(f"actual: {actual_code}, expected: {expected_code}")\n'
+        testcases_code += "        assert actual_code == expected_code, \
+                            set_allure_detail(f\"actual: {actual_code}, expected: {expected_code}\")\n"
 
         testcases_code = header_code + testcases_code
 
