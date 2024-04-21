@@ -27,10 +27,10 @@ def format_python_files(target_dir: str) -> None:
             file_path = os.path.abspath(os.path.join(root, file))
             if file_path.endswith(".py"):
                 isort.file(Path(file_path), config=isort.Config(profile="black"))
-                with open(file_path, "r") as f:
+                with open(file_path, "r", encoding="utf-8") as f:
                     raw_code = f.read()
                 formatted_code = black.format_str(raw_code, mode=black.FileMode())
-                with open(file_path, "w") as f:
+                with open(file_path, "w", encoding="utf-8") as f:
                     f.write(formatted_code)
                 logger.info(f"formatted: {file_path}")
 
