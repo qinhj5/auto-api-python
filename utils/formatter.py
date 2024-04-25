@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import os
-import sys
 import traceback
 from pathlib import Path
 
@@ -55,7 +54,6 @@ def format_python_files(target_dir: str) -> None:
 
 if __name__ == "__main__":
     try:
-        sys.path.append(project_dir)
         format_python_files(target_dir=project_dir)
     except Exception as e:
         logger.error(f"{e}\n{traceback.format_exc()}")
