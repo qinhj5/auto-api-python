@@ -11,8 +11,8 @@ from typing import Tuple, Union
 import black
 import isort
 import requests
-from config.conf import Global
 
+from config.conf import Global
 from utils.dirs import template_dir
 from utils.logger import logger
 
@@ -333,12 +333,8 @@ class SwaggerParser:
             Tuple[str, bool]: The generated function code and a boolean indicating whether List is used in the function.
         """
         method = api["method"]
-        # snake_name = SwaggerParser._pascal_to_snake(api["uri"])
-        snake_name = SwaggerParser._pascal_to_snake(api["detail"]["operationId"])
-        if snake_name.startswith(method):
-            func_name = snake_name
-        else:
-            func_name = f"{method}_{snake_name}"
+        snake_name = SwaggerParser._pascal_to_snake(api["uri"])
+        api_name = f"{method}_{snake_name}"
 
         summary = api["detail"].get("summary", "Null")
         summary = SwaggerParser._get_wrapped_string(summary, indent=8)
@@ -396,9 +392,9 @@ class SwaggerParser:
                     for item in params_list
                 ]
             )
-        func_header = f"\n    def {func_name}(self{params_header}) -> Dict[str, Any]:\n"
+        func_header = f"\n    def {api_name}(self{params_header}) -> Dict[str, Any]:\n"
 
-        func_body = "        \"\"\"\n%s\n" % summary
+        func_body = """        \"\"\"\n%s\n""" % summary
         if params_list:
             func_body += "\n        Args:\n"
         for item in params_list:
@@ -411,7 +407,7 @@ class SwaggerParser:
         func_body += (
             "\n        Returns:\n            Dict[str, Any]: "
             "The response content of the request as a dictionary."
-            "\n        \"\"\"\n"
+            '\n        """\n'
         )
 
         request_list = []
@@ -432,7 +428,7 @@ class SwaggerParser:
                 for k, v in json_dict.items():
                     schema_sample = self._generate_sample_data(schema_dict.get(k))
                     if schema_sample == "":
-                        schema_sample = "\"\""
+                        schema_sample = '""'
                     func_body += f"        {v}_sample = {schema_sample}\n"
                     func_body += f"        json_dict = {v} if {v} else {v}_sample\n"
             else:
@@ -603,23 +599,16 @@ class SwaggerParser:
         header_code += "from utils.common import set_allure_detail\n\n\n"
 
         method = api["method"]
-        # snake_name = SwaggerParser._pascal_to_snake(api["uri"])
-        snake_name = SwaggerParser._pascal_to_snake(api["detail"]["operationId"])
-        if snake_name.startswith(method):
-            api_func_name = snake_name
-            test_func_name = f"test_{api_func_name}"
-        else:
-            api_func_name = f"{method}_{snake_name}"
-            test_func_name = f"test_{api_func_name}"
-
-        words = test_func_name.split("_")
-        words.pop(1)
-        file_name = "_".join(words)
+        snake_name = SwaggerParser._pascal_to_snake(api["uri"])
+        api_name = f"{method}_{snake_name}"
+        test_name = f"test_{api_name}"
 
         testcases_code = ""
-        testcases_code += f"class {SwaggerParser._snake_to_pascal(file_name)}:\n"
-        testcases_code += "    @allure.severity(\"normal\")\n"
-        testcases_code += "    @pytest.mark.normal\n"
+        testcases_code += f"class {SwaggerParser._snake_to_pascal(test_name)}:\n"
+        testcases_code += '    @allure.severity("critical")\n'
+        testcases_code += "    @pytest.mark.critical\n"
+        testcases_code += "    @pytest.mark.smoke\n"
+        testcases_code += f"    @pytest.mark.{api_name}\n"
 
         params = api["detail"].get("parameters", [])
         if params:
@@ -636,23 +625,23 @@ class SwaggerParser:
             )
 
         param_str = (", " + ", ".join(name_list)) if name_list else ""
-        testcases_code += f"    def {test_func_name}(self, {module}_api{param_str}):\n"
+        testcases_code += f"    def {test_name}(self, {module}_api{param_str}):\n"
 
         param_str = (
             ", ".join([f"{name}={name}" for name in name_list]) if name_list else ""
         )
-        testcases_code += f"        res = {module}_api.{api_func_name}({param_str})\n"
-        testcases_code += "        actual_code = res[\"status_code\"]\n"
+        testcases_code += f"        res = {module}_api.{api_name}({param_str})\n"
+        testcases_code += '        actual_code = res["status_code"]\n'
         testcases_code += (
-            "        logger.info(f\"%s status code: {actual_code}\")\n\n" % api_func_name
+            '        logger.info(f"%s status code: {actual_code}")\n\n' % api_name
         )
         testcases_code += "        expected_code = 200\n"
-        testcases_code += "        assert actual_code == expected_code, \
-                            set_allure_detail(f\"actual: {actual_code}, expected: {expected_code}\")\n"
+        testcases_code += '        assert actual_code == expected_code, \
+                                set_allure_detail(f"actual: {actual_code}, expected: {expected_code}")\n'
 
         testcases_code = header_code + testcases_code
 
-        return testcases_code, file_name
+        return testcases_code, test_name
 
     def _write_testcases_file(
         self, module: str, file_name: str, testcases_code: str

@@ -5,7 +5,6 @@ from api.base_api import BaseAPI
 
 
 class GoogleSearchAPI(BaseAPI):
-    # searchUsingGet
     def get_search(self, keyword: str = None) -> Dict[str, Any]:
         """
         Get Google search results by keyword

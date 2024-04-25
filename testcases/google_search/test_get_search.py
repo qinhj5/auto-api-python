@@ -10,7 +10,7 @@ class TestGetSearch:
     @allure.severity("critical")
     @pytest.mark.critical
     @pytest.mark.smoke
-    @pytest.mark.searchUsingGet
+    @pytest.mark.get_search
     def test_get_search(self, google_search_api):
         res = google_search_api.get_search()
         actual_code = res["status_code"]
