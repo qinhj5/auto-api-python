@@ -6,9 +6,9 @@ import traceback
 from typing import Dict, List, Optional, Tuple, Union
 
 import requests
-from config.conf import Global
 from openpyxl import Workbook
 
+from config.conf import Global
 from utils.common import set_column_max_width
 from utils.dirs import log_request_dir, report_sheet_dir
 from utils.logger import logger

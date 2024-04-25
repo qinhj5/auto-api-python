@@ -3,9 +3,9 @@ import os
 import subprocess
 import traceback
 
-from config.conf import Global
 from locust import HttpUser, TaskSet, between, task
 
+from config.conf import Global
 from utils.common import get_env_conf
 from utils.dirs import report_locust_dir, venv_bin_dir
 from utils.logger import logger

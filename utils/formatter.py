@@ -35,7 +35,19 @@ def format_python_files(target_dir: str) -> None:
                 isort.file(
                     Path(file_path),
                     config=isort.Config(
-                        known_third_party=["api", "config"], profile="black"
+                        known_first_party=[
+                            "api",
+                            "page",
+                            "config",
+                            "data",
+                            "config",
+                            "log",
+                            "report",
+                            "testcases",
+                            "utils",
+                            "screenshot",
+                        ],
+                        profile="black",
                     ),
                 )
                 logger.info(f"formatted: {file_path}")
