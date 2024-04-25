@@ -32,7 +32,12 @@ def format_python_files(target_dir: str) -> None:
                 formatted_code = black.format_str(raw_code, mode=black.FileMode())
                 with open(file_path, "w", encoding="utf-8") as f:
                     f.write(formatted_code)
-                isort.file(Path(file_path), config=isort.Config(profile="black"))
+                isort.file(
+                    Path(file_path),
+                    config=isort.Config(
+                        known_third_party=["api", "config"], profile="black"
+                    ),
+                )
                 logger.info(f"formatted: {file_path}")
 
 
