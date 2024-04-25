@@ -214,18 +214,18 @@ def get_code_modifiers(
     return list(modifiers)
 
 
-def get_csv_data(csv_name: str) -> List[List[str]]:
+def get_csv_data(csv_path: str) -> List[List[str]]:
     """
     Get the data from a CSV file.
 
     Args:
-        csv_name (str): Name of the CSV file (without the extension).
+        csv_path (str): Path of the CSV file.
 
     Returns:
         List[List[str]]: List of rows in the CSV file, where each row is a list of strings.
     """
     res = []
-    csv_path = os.path.abspath(os.path.join(data_dir, f"{csv_name}.csv"))
+    csv_path = os.path.abspath(os.path.join(data_dir, csv_path))
 
     if not os.path.exists(csv_path):
         logger.error(f"file not found: {csv_path}")
@@ -241,18 +241,18 @@ def get_csv_data(csv_name: str) -> List[List[str]]:
     return res
 
 
-def get_json_data(json_name: str) -> Union[dict, list]:
+def get_json_data(json_path: str) -> Union[dict, list]:
     """
     Get the data from a json file.
 
     Args:
-        json_name (str): Name of the json file (without the extension).
+        json_path (str): Name of the json file.
 
     Returns:
        Union[dict, list]: The data from the json file, which can be a dict or a list of dict.
     """
     res = {}
-    json_path = os.path.abspath(os.path.join(data_dir, f"{json_name}.json"))
+    json_path = os.path.abspath(os.path.join(data_dir, json_path))
 
     if not os.path.exists(json_path):
         logger.error(f"file not found: {json_path}")

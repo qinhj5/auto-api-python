@@ -39,10 +39,11 @@ auto-api-python/
 ├── config/
 │   ├── __init__.py
 │   ├── conf.py
-│   ├── conf_ext.yml
-│   └── conf_test.yml
+│   ├── conf_ext.yaml
+│   └── conf_test.yaml
 ├── data/
-│   └── keyword.csv
+│   └── google_search/
+│       └── keywords.csv
 ├── log/
 ├── report/
 ├── testcases/
@@ -50,7 +51,7 @@ auto-api-python/
 │   └── google_search/
 │       ├── __init__.py
 │       ├── conftest.py
-│       └── test_google_search_by_keyword.py
+│       └── test_get_search.py
 ├── utils/
 │   ├── __init__.py
 │   ├── api_coverage.py
