@@ -29,8 +29,8 @@ class SwaggerParser:
             None
         """
         self._swagger_url = swagger_url
+        self._swagger_dict = None
         self._paths_dict = None
-        self._definitions_dict = None
         self._api_dir = os.path.abspath(os.path.join(template_dir, "api"))
         self._testcases_dir = os.path.abspath(os.path.join(template_dir, "testcases"))
 
@@ -147,29 +147,29 @@ class SwaggerParser:
         pascal_name = "".join(word.capitalize() for word in words)
         return pascal_name
 
-    def _get_swagger_data(self) -> dict:
+    def _get_swagger_data(self) -> None:
         """
         Get swagger json data by making a request to the specified swagger url.
 
         Returns:
-            dict: Path data of swagger.
+            None
         """
         response = requests.get(self._swagger_url, headers=Global.CONSTANTS.HEADERS)
 
         if response.status_code == 200:
-            return response.json().get("paths", dict())
+            self._swagger_dict = response.json()
         else:
             logger.error("cannot request swagger url")
             sys.exit(1)
 
-    def _process_swagger_data(self) -> None:
+    def _process_paths_data(self) -> None:
         """
-        Processed path data of swagger.
+        Processed swagger paths data.
 
         Returns:
             None
         """
-        raw_paths_dict = self._get_swagger_data()
+        raw_paths_dict = self._swagger_dict.get("paths", {})
         paths_dict = {}
         for path, path_details in raw_paths_dict.items():
             for api_method, api_detail in path_details.items():
@@ -220,12 +220,10 @@ class SwaggerParser:
         for param in params:
             if param.get("name") is None:
                 continue
+
             if param.get("required") is None:
                 param.update({"required": False})
-            if param.get("schema") is None:
-                param.update({"use_schema": True})
-            else:
-                param.update({"use_schema": False})
+
             snake_name = SwaggerParser._pascal_to_snake(param["name"])
             if snake_name not in snake_names:
                 deduplicated_params.append(param)
@@ -290,7 +288,7 @@ class SwaggerParser:
             name = f"param_{name}"
         return name
 
-    def _generate_sample_data(self, schema: dict) -> Union[None, dict, list, int, str]:
+    def _generate_sample_data(self, schema: dict) -> Union[dict, list, int, str]:
         """
         Generate sample data based on the given schema.
 
@@ -298,14 +296,19 @@ class SwaggerParser:
             schema (dict): The schema to generate sample data from.
 
         Returns:
-            Union[None, dict, list, int, str]: The generated sample data.
+            Union[dict, list, int, str]: The generated sample data.
         """
-        if schema is None:
-            return None
+        if not schema:
+            return {}
+
         if schema.get("type") == "object":
             sample_data = {}
             for prop, prop_schema in schema.get("properties", {}).items():
                 sample_data[prop] = self._generate_sample_data(prop_schema)
+            if schema.get("additionalProperties"):
+                sample_data = self._generate_sample_data(
+                    schema.get("additionalProperties")
+                )
             return sample_data
         elif schema.get("type") == "array":
             return [self._generate_sample_data(schema["items"])]
@@ -316,11 +319,13 @@ class SwaggerParser:
         elif schema.get("type") == "boolean":
             return False
         elif schema.get("$ref"):
-            return self._generate_sample_data(
-                self._definitions_dict.get(schema.get("$ref").split("/")[-1])
-            )
+            keys = schema.get("$ref").split("/")[1:]
+            sub_schema = self._swagger_dict
+            for key in keys:
+                sub_schema = sub_schema.get(key)
+            return self._generate_sample_data(schema=sub_schema)
         else:
-            return None
+            return {}
 
     def _get_api_func(self, api: dict) -> Tuple[str, bool]:
         """
@@ -342,10 +347,23 @@ class SwaggerParser:
         uri = SwaggerParser._convert_path_params(api["uri"])
 
         params = api["detail"].get("parameters", [])
+
+        request_body = api["detail"].get("requestBody", {})
+        if request_body:
+            params.append(
+                {
+                    "in": "body",
+                    "name": "request_body",
+                    "required": request_body.get("required", False),
+                    "schema": request_body.get("content")
+                    .get("application/json")
+                    .get("schema"),
+                }
+            )
+
         if params:
             params = SwaggerParser._get_deduplicated_params(params)
             params = sorted(params, key=lambda x: x["required"], reverse=True)
-            params = sorted(params, key=lambda x: x["use_schema"], reverse=True)
 
         params_list = []
         params_dict = {}
@@ -367,7 +385,7 @@ class SwaggerParser:
             param_desc = param.get("description", "null")
             param_item = (
                 {param_name: {"type": param_type, "desc": param_desc}}
-                if param["required"] and param.get("schema") is None
+                if param["required"]
                 else {param_name: {"type": f"{param_type} = None", "desc": param_desc}}
             )
             params_list.append(param_item)
@@ -381,8 +399,8 @@ class SwaggerParser:
             elif param.get("in", "body") == "body":
                 json_dict.update({param["name"]: param_name})
 
-            if param.get("schema"):
-                schema_dict.update({param["name"]: param.get("schema")})
+                if param.get("schema"):
+                    schema_dict.update({param["name"]: param.get("schema")})
 
         params_header = ""
         if params_list:
@@ -542,10 +560,9 @@ class SwaggerParser:
         conf_code += """@pytest.fixture(scope="package")\n"""
         conf_code += f"def {module}_api():\n"
         conf_code += (
-            f"    {module}_api = {api_cls}(base_url=Global.CONSTANTS.BASE_URL, "
+            f"    return {api_cls}(base_url=Global.CONSTANTS.BASE_URL, "
             "headers=Global.CONSTANTS.HEADERS)\n"
         )
-        conf_code += f"    return {module}_api\n"
         return conf_code
 
     def _write_conf_file(self, module: str, conf_code: str) -> None:
@@ -611,6 +628,20 @@ class SwaggerParser:
         testcases_code += f"    @pytest.mark.{api_name}\n"
 
         params = api["detail"].get("parameters", [])
+
+        request_body = api["detail"].get("requestBody", {})
+        if request_body:
+            params.append(
+                {
+                    "in": "body",
+                    "name": "request_body",
+                    "required": request_body.get("required", False),
+                    "schema": request_body.get("content")
+                    .get("application/json")
+                    .get("schema"),
+                }
+            )
+
         if params:
             params = SwaggerParser._get_deduplicated_params(params)
             params = [param for param in params if param["required"]]
@@ -694,7 +725,8 @@ class SwaggerParser:
             None
         """
         SwaggerParser._clear_template_dir()
-        self._process_swagger_data()
+        self._get_swagger_data()
+        self._process_paths_data()
         self._generate_api_templates()
         self._generate_testcases_templates()
         logger.info(f"templates are generated to {template_dir}")

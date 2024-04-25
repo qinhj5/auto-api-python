@@ -10,7 +10,6 @@ class GoogleSearchAPI(BaseAPI):
         Get Google search results by keyword
 
         Args:
-            self
             keyword (str): The keyword to search for, multiple keywords separated by comma, e.g. keyword1,keyword2
 
         Returns:
