@@ -9,8 +9,8 @@ from utils.tunnel_shell import TunnelShell
 
 class Constants:
     _PORTAL_CONF = get_env_conf(name="portal")
-    BASE_URL = _PORTAL_CONF["base_url"]
-    HEADERS = _PORTAL_CONF["headers"]
+    BASE_URL = _PORTAL_CONF.get("base_url")
+    HEADERS = _PORTAL_CONF.get("headers")
 
 
 class Global:
