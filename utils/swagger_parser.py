@@ -557,7 +557,10 @@ class SwaggerParser:
 
         formatted_code = black.format_str(module_code, mode=black.FileMode())
         formatted_code = isort.code(
-            formatted_code, config=isort.Config(profile="black")
+            formatted_code,
+            config=isort.Config(
+                profile="black", known_first_party=["api", "config", "utils"]
+            ),
         )
         with open(
             os.path.abspath(os.path.join(module_dir, f"{module}_api.py")),
@@ -636,7 +639,10 @@ class SwaggerParser:
 
         formatted_code = black.format_str(conf_code, mode=black.FileMode())
         formatted_code = isort.code(
-            formatted_code, config=isort.Config(profile="black")
+            formatted_code,
+            config=isort.Config(
+                profile="black", known_first_party=["api", "config", "utils"]
+            ),
         )
         with open(
             os.path.abspath(os.path.join(module_dir, "conftest.py")),
@@ -750,7 +756,10 @@ class SwaggerParser:
 
         formatted_code = black.format_str(testcases_code, mode=black.FileMode())
         formatted_code = isort.code(
-            formatted_code, config=isort.Config(profile="black")
+            formatted_code,
+            config=isort.Config(
+                profile="black", known_first_party=["api", "config", "utils"]
+            ),
         )
         with open(
             os.path.abspath(os.path.join(module_dir, f"{file_name}.py")),
