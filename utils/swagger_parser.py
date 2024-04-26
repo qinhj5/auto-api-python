@@ -45,8 +45,16 @@ class SwaggerParser:
         Returns:
             str: Python type.
         """
-        python_type_mapping = {"string": "str", "integer": "int", "boolean": "bool"}
-        return python_type_mapping.get(java_type, "Any")
+        python_type_mapping = {
+            "string": "str",
+            "integer": "int",
+            "int": "int",
+            "long": "int",
+            "boolean": "bool",
+            "list": "list",
+            "object": "dict",
+        }
+        return python_type_mapping.get(java_type.lower(), "Any")
 
     @staticmethod
     def _clear_template_dir() -> None:
@@ -173,7 +181,7 @@ class SwaggerParser:
         paths_dict = {}
         for path, path_details in raw_paths_dict.items():
             for api_method, api_detail in path_details.items():
-                module_name = SwaggerParser._pascal_to_snake(api_detail["tags"][0])
+                module_name = SwaggerParser._pascal_to_snake(api_detail.get("tags")[0])
                 self._create_package_dir(module_name)
                 api = {"uri": path, "method": api_method, "detail": api_detail}
                 if module_name in paths_dict.keys():
@@ -204,32 +212,46 @@ class SwaggerParser:
         return path
 
     @staticmethod
-    def _get_deduplicated_params(params: list) -> list:
+    def _process_params(params: list) -> list:
         """
-        Deduplicate parameters by removing duplicates based on snake_case names.
+        Process parameters.
 
         Args:
             params (list): List of swagger API parameters.
 
         Returns:
-            list: Deduplicated list of swagger API parameters.
+            list: Processed list of swagger API parameters.
         """
         params.reverse()
-        deduplicated_params = []
+        processed_params = []
         snake_names = []
         for param in params:
-            if param.get("name") is None:
+            if not param.get("name"):
                 continue
 
-            if param.get("required") is None:
+            param_type = param.pop("type", None)
+            if param_type:
+                param.update({"schema": {"type": param_type}})
+
+                param_items = param.pop("items", None)
+                if param_items:
+                    param.get("schema").update({"items": param_items})
+
+            if not param.get("schema"):
+                param.update({"schema": {"type": "Any"}})
+
+            if not param.get("schema").get("type"):
+                param.get("schema").update({"type": "object"})
+
+            if not param.get("required"):
                 param.update({"required": False})
 
-            snake_name = SwaggerParser._pascal_to_snake(param["name"])
+            snake_name = SwaggerParser._pascal_to_snake(param.get("name"))
             if snake_name not in snake_names:
-                deduplicated_params.append(param)
+                processed_params.append(param)
                 snake_names.append(snake_name)
 
-        return deduplicated_params
+        return processed_params
 
     @staticmethod
     def _get_wrapped_string(
@@ -301,17 +323,8 @@ class SwaggerParser:
         if not schema:
             return {}
 
-        if schema.get("type") == "object":
-            sample_data = {}
-            for prop, prop_schema in schema.get("properties", {}).items():
-                sample_data[prop] = self._generate_sample_data(prop_schema)
-            if schema.get("additionalProperties"):
-                sample_data = self._generate_sample_data(
-                    schema.get("additionalProperties")
-                )
-            return sample_data
-        elif schema.get("type") == "array":
-            return [self._generate_sample_data(schema["items"])]
+        if schema.get("type") == "array":
+            return [self._generate_sample_data(schema.get("items"))]
         elif schema.get("type") == "integer":
             return 0
         elif schema.get("type") == "string":
@@ -324,6 +337,15 @@ class SwaggerParser:
             for key in keys:
                 sub_schema = sub_schema.get(key)
             return self._generate_sample_data(schema=sub_schema)
+        elif schema.get("type") == "object":
+            sample_data = {}
+            for prop, prop_schema in schema.get("properties", {}).items():
+                sample_data[prop] = self._generate_sample_data(prop_schema)
+            if schema.get("additionalProperties"):
+                sample_data[""] = self._generate_sample_data(
+                    schema.get("additionalProperties", {})
+                )
+            return sample_data
         else:
             return {}
 
@@ -337,24 +359,25 @@ class SwaggerParser:
         Returns:
             Tuple[str, bool]: The generated function code and a boolean indicating whether List is used in the function.
         """
-        method = api["method"]
-        snake_name = SwaggerParser._pascal_to_snake(api["uri"])
+        method = api.get("method")
+        snake_name = SwaggerParser._pascal_to_snake(api.get("uri"))
         api_name = f"{method}_{snake_name}"
 
-        summary = api["detail"].get("summary", "Null")
+        summary = api.get("detail").get("summary", "Null")
         summary = SwaggerParser._get_wrapped_string(summary, indent=8)
 
-        uri = SwaggerParser._convert_path_params(api["uri"])
+        uri = SwaggerParser._convert_path_params(api.get("uri"))
 
-        params = api["detail"].get("parameters", [])
+        params = api.get("detail").get("parameters", [])
 
-        request_body = api["detail"].get("requestBody", {})
+        request_body = api.get("detail").get("requestBody", {})
         if request_body:
             params.append(
                 {
                     "in": "body",
                     "name": "request_body",
                     "required": request_body.get("required", False),
+                    "description": request_body.get("description", "request body"),
                     "schema": request_body.get("content")
                     .get("application/json")
                     .get("schema"),
@@ -362,51 +385,61 @@ class SwaggerParser:
             )
 
         if params:
-            params = SwaggerParser._get_deduplicated_params(params)
-            params = sorted(params, key=lambda x: x["required"], reverse=True)
+            params = sorted(
+                SwaggerParser._process_params(params),
+                key=lambda x: x.get("required"),
+                reverse=True,
+            )
 
         params_list = []
         params_dict = {}
         header_dict = {}
         data_dict = {}
         json_dict = {}
-        schema_dict = {}
+        params_schema_dict = {}
+        json_schema_dict = {}
         use_list = False
         for param in params:
-            param_name = SwaggerParser._pascal_to_snake(param["name"])
-            param_name = SwaggerParser._avoid_keywords(param_name)
-            param_type = SwaggerParser._get_python_type(param.get("type"))
+            param_name = SwaggerParser._avoid_keywords(
+                SwaggerParser._pascal_to_snake(param.get("name"))
+            )
+            param_schema = param.get("schema")
+            raw_param_type = param_schema.get("type")
+            param_type = SwaggerParser._get_python_type(raw_param_type)
 
-            if param.get("type") == "array":
-                list_inner_type = SwaggerParser._get_python_type(param["items"]["type"])
+            if raw_param_type == "array":
+                list_inner_type = SwaggerParser._get_python_type(
+                    param_schema.get("items").get("type", "Any")
+                )
                 param_type = f"List[{list_inner_type}]"
                 use_list = True
 
             param_desc = param.get("description", "null")
             param_item = (
                 {param_name: {"type": param_type, "desc": param_desc}}
-                if param["required"]
+                if param.get("required")
                 else {param_name: {"type": f"{param_type} = None", "desc": param_desc}}
             )
             params_list.append(param_item)
 
             if param.get("in", "body") == "query":
-                params_dict.update({param["name"]: param_name})
-            elif param.get("in", "body") == "header":
-                header_dict.update({param["name"]: param_name})
-            elif param.get("in", "body") == "formData":
-                data_dict.update({param["name"]: param_name})
-            elif param.get("in", "body") == "body":
-                json_dict.update({param["name"]: param_name})
-
+                params_dict.update({param.get("name"): param_name})
                 if param.get("schema"):
-                    schema_dict.update({param["name"]: param.get("schema")})
+                    params_schema_dict.update({param.get("name"): param.get("schema")})
+            elif param.get("in", "body") == "header":
+                header_dict.update({param.get("name"): param_name})
+            elif param.get("in", "body") == "formData":
+                data_dict.update({param.get("name"): param_name})
+            elif param.get("in", "body") == "body":
+                json_dict.update({param.get("name"): param_name})
+                if param.get("schema"):
+                    json_schema_dict.update({param.get("name"): param.get("schema")})
 
         params_header = ""
         if params_list:
             params_header = ", " + ", ".join(
                 [
-                    f"""{next(iter(item.keys()))}: {item[next(iter(item.keys()))]["type"]}"""
+                    f"""{next(iter(item.keys()))}: {item[next(iter(item.keys()))].get("type")}"""
                     for item in params_list
                 ]
             )
@@ -416,9 +449,10 @@ class SwaggerParser:
         if params_list:
             func_body += "\n        Args:\n"
         for item in params_list:
-            desc_string = (
-                f"""{next(iter(item.keys()))} ({item[next(iter(item.keys()))]["type"]}): """
-                + item[next(iter(item.keys()))]["desc"]
+            desc_string = f"""{next(iter(item.keys()))} ({item[next(iter(item.keys()))].get("type")}): """ + item[
+                next(iter(item.keys()))
+            ].get(
+                "desc"
             )
             func_body += f"{SwaggerParser._get_wrapped_string(desc_string, indent=12, param_process=True)}\n"
 
@@ -430,8 +464,25 @@ class SwaggerParser:
 
         request_list = []
         if params_dict:
-            partial_str = ", ".join([f""""{k}": {v}""" for k, v in params_dict.items()])
-            func_body += """        params_dict = {%s}\n""" % partial_str
+            schema_type = next(iter(params_schema_dict.values())).get("type")
+            if (
+                len(params_schema_dict.keys()) == 1
+                and params_schema_dict.keys() == params_dict.keys()
+                and (schema_type == "object" or schema_type == "array")
+            ):
+                for k, v in params_dict.items():
+                    schema_sample = self._generate_sample_data(
+                        params_schema_dict.get(k)
+                    )
+                    if schema_sample == "":
+                        schema_sample = """\"\""""
+                    func_body += f"        {v}_sample = {schema_sample}\n"
+                    func_body += f"        params_dict = {v} if {v} else {v}_sample\n"
+            else:
+                partial_str = ", ".join(
+                    [f""""{k}": {v}""" for k, v in params_dict.items()]
+                )
+                func_body += """        params_dict = {%s}\n""" % partial_str
             request_list.append("params=params_dict")
         if header_dict:
             partial_str = ", ".join([f""""{k}": {v}""" for k, v in header_dict.items()])
@@ -442,9 +493,14 @@ class SwaggerParser:
             func_body += """        data_dict = {%s}\n""" % partial_str
             request_list.append("data=data_dict")
         if json_dict:
-            if len(schema_dict.keys()) == 1 and schema_dict.keys() == json_dict.keys():
+            schema_type = next(iter(json_schema_dict.values())).get("type")
+            if (
+                len(json_schema_dict.keys()) == 1
+                and json_schema_dict.keys() == json_dict.keys()
+                and (schema_type == "object" or schema_type == "array")
+            ):
                 for k, v in json_dict.items():
-                    schema_sample = self._generate_sample_data(schema_dict.get(k))
+                    schema_sample = self._generate_sample_data(json_schema_dict.get(k))
                     if schema_sample == "":
                         schema_sample = """\"\""""
                     func_body += f"        {v}_sample = {schema_sample}\n"
@@ -615,8 +671,8 @@ class SwaggerParser:
         header_code += "from utils.logger import logger\n"
         header_code += "from utils.common import set_allure_detail\n\n\n"
 
-        method = api["method"]
-        snake_name = SwaggerParser._pascal_to_snake(api["uri"])
+        method = api.get("method")
+        snake_name = SwaggerParser._pascal_to_snake(api.get("uri"))
         api_name = f"{method}_{snake_name}"
         test_name = f"test_{api_name}"
 
@@ -627,15 +683,16 @@ class SwaggerParser:
         testcases_code += "    @pytest.mark.smoke\n"
         testcases_code += f"    @pytest.mark.{api_name}\n"
 
-        params = api["detail"].get("parameters", [])
+        params = api.get("detail").get("parameters", [])
 
-        request_body = api["detail"].get("requestBody", {})
+        request_body = api.get("detail").get("requestBody", {})
         if request_body:
             params.append(
                 {
                     "in": "body",
                     "name": "request_body",
                     "required": request_body.get("required", False),
+                    "description": request_body.get("description", "request body"),
                     "schema": request_body.get("content")
                     .get("application/json")
                     .get("schema"),
@@ -643,13 +700,14 @@ class SwaggerParser:
             )
 
         if params:
-            params = SwaggerParser._get_deduplicated_params(params)
-            params = [param for param in params if param["required"]]
+            params = SwaggerParser._process_params(params)
+            params = [param for param in params if param.get("required")]
 
         name_list = []
         for param in params:
-            param_name = SwaggerParser._pascal_to_snake(param["name"])
-            param_name = SwaggerParser._avoid_keywords(param_name)
+            param_name = SwaggerParser._avoid_keywords(
+                SwaggerParser._pascal_to_snake(param.get("name"))
+            )
             name_list.append(param_name)
             testcases_code += (
                 f"""    @pytest.mark.parametrize("{param_name}", [None])\n"""
