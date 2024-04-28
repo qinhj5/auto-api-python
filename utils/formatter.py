@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
 import traceback
-from pathlib import Path
 
 import black
 import isort
