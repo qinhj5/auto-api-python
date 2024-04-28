@@ -7,6 +7,7 @@ import re
 import time
 import traceback
 
+import allure
 import filelock
 import pytest
 from openpyxl import Workbook, load_workbook
@@ -136,6 +137,10 @@ def testcase_information(request):
     func = request.function
     file_path = func.__code__.co_filename
     func_name = func.__name__
+
+    cls = request.cls
+    cls_name = cls.__name__ if cls else "None"
+
     source_code, start_line = inspect.getsourcelines(func)
     line_range = {
         "start_line": start_line,
@@ -143,7 +148,11 @@ def testcase_information(request):
     }
 
     set_allure_detail(name="file path", body=f"{file_path}", level=LogLevel.INFO)
-    set_allure_detail(name="function name", body=f"{func_name}", level=LogLevel.INFO)
+    set_allure_detail(
+        name="case name",
+        body=f"{cls_name}#{func_name}",
+        level=LogLevel.INFO,
+    )
     set_allure_detail(
         name="last modified by",
         body=get_code_modifiers(file_path, line_range),
@@ -153,6 +162,9 @@ def testcase_information(request):
     yield
 
     set_allure_detail(name="end time", body=get_current_datetime(), level=LogLevel.INFO)
+    allure.dynamic.title(
+        f"{request.node.name} - {json.dumps(get_code_modifiers(file_path, line_range))}"
+    )
 
 
 @pytest.fixture(scope="session", autouse=True)
