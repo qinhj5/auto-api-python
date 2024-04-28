@@ -23,7 +23,7 @@ class SwaggerParser:
         Initialize the class.
 
         Args:
-            swagger_url (str): The url of the swagger file.
+            swagger_url (str): The url of the swagger docs.
 
         Returns:
             None
@@ -35,181 +35,94 @@ class SwaggerParser:
         self._testcases_dir = os.path.abspath(os.path.join(template_dir, "testcases"))
 
     @staticmethod
-    def _get_python_type(java_type: str) -> str:
-        """
-        Get the Python type based on the Java type.
-
-        Args:
-            java_type (str): Java type.
-
-        Returns:
-            str: Python type.
-        """
-        python_type_mapping = {
-            "string": "str",
-            "integer": "int",
-            "int": "int",
-            "long": "int",
-            "boolean": "bool",
-            "list": "list",
-            "object": "dict",
-        }
-        return python_type_mapping.get(java_type.lower(), "Any")
-
-    @staticmethod
-    def _clear_template_dir() -> None:
-        """
-        Clears the template directory.
-
-        Returns:
-            None
-        """
-        if os.path.exists(template_dir):
-            shutil.rmtree(template_dir)
-
-        os.makedirs(template_dir, exist_ok=True)
-
-        with open(
-            os.path.abspath(os.path.join(template_dir, "__init__.py")),
-            "w",
-            encoding="utf-8",
-        ) as f:
-            f.write("# -*- coding: utf-8 -*-\n")
-
-    def _create_package_dir(self, name: str) -> None:
-        """
-        Creates package directories for API and testcases.
-
-        Args:
-            name (str): The name of the package.
-
-        Returns:
-            None
-        """
-        init_dir = os.path.abspath(os.path.join(self._api_dir, name))
-        os.makedirs(init_dir, exist_ok=True)
-
-        init_path = os.path.abspath(os.path.join(init_dir, "__init__.py"))
-        with open(init_path, "w", encoding="utf-8") as f:
-            f.write("# -*- coding: utf-8 -*-\n")
-
-        init_dir = os.path.abspath(os.path.join(self._testcases_dir, name))
-        os.makedirs(init_dir, exist_ok=True)
-
-        init_path = os.path.abspath(os.path.join(init_dir, "__init__.py"))
-        with open(init_path, "w", encoding="utf-8") as f:
-            f.write("# -*- coding: utf-8 -*-\n")
-
-    @staticmethod
-    def _remove_non_alphabet_from_start(string: str) -> str:
-        """
-        Remove all non-alphabetic characters from the start of a string until the first alphabet character.
-
-        Args:
-            string (str): The input string.
-
-        Returns:
-            str: The modified string with non-alphabetic characters removed from the start.
-        """
-        pattern = r"^[^a-zA-Z]+"
-        result = re.sub(pattern, "", string)
-        return result
-
-    @staticmethod
     def _pascal_to_snake(name: str) -> str:
         """
-        Converts pascal_case to snake_case.
+        Converts pascal case to snake case.
 
         Args:
-            name (str): The input pascal_case string.
+            name (str): The input pascal case string.
 
         Returns:
-            str: The converted snake_case string.
+            str: The converted snake case string.
         """
-        name = SwaggerParser._remove_non_alphabet_from_start(name.strip())
-        words = re.findall(r"[A-Z]+[a-z\d]*|[A-Z]?[a-z\d]*", name)
-        new_words = [word.lower() for word in words if word != ""]
-
-        result = []
-
-        for i, word in enumerate(new_words):
-            if i > 0 and word.isdigit():
-                result[-1] += word
-            else:
-                result.append(word)
-
-        return "_".join(result)
+        words = re.findall(r"[A-Z]+[a-z\d]*|[a-z]+\d*", name)
+        return "_".join(word.lower() for word in words)
 
     @staticmethod
-    def _snake_to_pascal(snake_name: str) -> str:
+    def _snake_to_pascal(name: str) -> str:
         """
-        Converts snake_case to pascal case.
+        Converts snake case to pascal case.
 
         Args:
-            snake_name (str): The input snake_case string.
+            name (str): The input snake case string.
 
         Returns:
             str: The converted pascal case string.
         """
-        words = snake_name.split("_")
-        pascal_name = "".join(word.capitalize() for word in words)
-        return pascal_name
-
-    def _get_swagger_data(self) -> None:
-        """
-        Get swagger json data by making a request to the specified swagger url.
-
-        Returns:
-            None
-        """
-        response = requests.get(self._swagger_url, headers=Global.CONSTANTS.HEADERS)
-
-        if response.status_code == 200:
-            self._swagger_dict = response.json()
-        else:
-            logger.error("cannot request swagger url")
-            sys.exit(1)
-
-    def _process_paths_data(self) -> None:
-        """
-        Processed swagger paths data.
-
-        Returns:
-            None
-        """
-        raw_paths_dict = self._swagger_dict.get("paths", {})
-        paths_dict = {}
-        for path, path_details in raw_paths_dict.items():
-            for api_method, api_detail in path_details.items():
-                module_name = SwaggerParser._pascal_to_snake(api_detail.get("tags")[0])
-                self._create_package_dir(module_name)
-                api = {"uri": path, "method": api_method, "detail": api_detail}
-                if module_name in paths_dict.keys():
-                    paths_dict[module_name].append(api)
-                else:
-                    paths_dict[module_name] = []
-                    paths_dict[module_name].append(api)
-
-        self._paths_dict = paths_dict
+        words = name.split("_")
+        return "".join(word.capitalize() for word in words)
 
     @staticmethod
     def _convert_path_params(path: str) -> str:
         """
-        Convert swagger path parameters to snake_case.
+        Convert swagger path parameters to snake case.
 
         Args:
             path (str): The swagger API path.
 
         Returns:
-            str: The converted path with parameters in snake_case.
+            str: The converted path with parameters in snake case.
         """
         matches = re.findall(r"{(.*?)}", path)
         for match in matches:
             path = path.replace(
-                match,
-                SwaggerParser._avoid_keywords(SwaggerParser._pascal_to_snake(match)),
+                "{%s}" % match,
+                "{%s}"
+                % SwaggerParser._avoid_keywords(SwaggerParser._pascal_to_snake(match)),
             )
         return path
+
+    @staticmethod
+    def _get_wrapped_string(
+        long_string: str, indent: int, param_process: bool = False
+    ) -> str:
+        """
+        Generate wrapped string by splitting a long string into smaller segments.
+
+        Args:
+            long_string (str): The long string to be split.
+            indent (int, optional): The number of spaces to indent each segment.
+            param_process (bool, optional): Whether to process parameter description. Defaults to False.
+
+        Returns:
+            str: The wrapped string with each segment smaller than the specified length.
+        """
+        length = 110 - indent
+        if param_process:
+            string_list = long_string.split(": ", 1)
+            key_string = string_list[0]
+            value_string = re.sub(
+                r"([,;])(?!\s)", r"\1 ", string_list[-1].replace(":", " - ")
+            )
+            long_string = f"{key_string}: {value_string}"
+        else:
+            long_string = re.sub(r"([,;])(?!\s)", r"\1 ", long_string)
+
+        words = long_string.split()
+        wrapped_strings = []
+
+        current_segment = ""
+        for word in words:
+            if len(current_segment + word) <= length:
+                current_segment += word + " "
+            else:
+                wrapped_strings.append(current_segment.strip())
+                current_segment = word + " "
+
+        if current_segment:
+            wrapped_strings.append(current_segment.strip())
+
+        return " " * indent + f"""\n{" " * indent}""".join(wrapped_strings)
 
     @staticmethod
     def _process_params(params: list) -> list:
@@ -223,6 +136,7 @@ class SwaggerParser:
             list: Processed list of swagger API parameters.
         """
         params.reverse()
+
         processed_params = []
         snake_names = []
         for param in params:
@@ -251,49 +165,13 @@ class SwaggerParser:
                 processed_params.append(param)
                 snake_names.append(snake_name)
 
+        processed_params = sorted(
+            processed_params,
+            key=lambda x: x.get("required"),
+            reverse=True,
+        )
+
         return processed_params
-
-    @staticmethod
-    def _get_wrapped_string(
-        long_string: str, indent: int, param_process: bool = False
-    ) -> str:
-        """
-        Generate wrapped string by splitting a long string into smaller segments.
-
-        Args:
-            long_string (str): The long string to be split.
-            indent (int, optional): The number of spaces to indent each segment.
-            param_process (bool, optional): Whether to process parameter description. Defaults to False.
-
-        Returns:
-            str: The wrapped string with each segment smaller than the specified length.
-        """
-        length = 116 - indent
-        if param_process:
-            string_list = long_string.split(": ", 1)
-            key_string = string_list[0]
-            value_string = string_list[-1]
-            value_string = value_string.replace(":", " - ")
-            value_string = re.sub(r"([,;])(?!\s)", r"\1 ", value_string)
-            long_string = f"{key_string}: {value_string}"
-        else:
-            long_string = re.sub(r"([,;])(?!\s)", r"\1 ", long_string)
-
-        words = long_string.split()
-        wrapped_strings = []
-
-        current_segment = ""
-        for word in words:
-            if len(current_segment + word) <= length:
-                current_segment += word + " "
-            else:
-                wrapped_strings.append(current_segment.strip())
-                current_segment = word + " "
-
-        if current_segment:
-            wrapped_strings.append(current_segment.strip())
-
-        return " " * indent + f"""\n{" " * indent}""".join(wrapped_strings)
 
     @staticmethod
     def _avoid_keywords(name: str) -> str:
@@ -309,6 +187,28 @@ class SwaggerParser:
         if keyword.iskeyword(name) or name in dir(builtins):
             name = f"param_{name}"
         return name
+
+    @staticmethod
+    def _get_python_type(java_type: str) -> str:
+        """
+        Get the Python type based on the Java type.
+
+        Args:
+            java_type (str): Java type.
+
+        Returns:
+            str: Python type.
+        """
+        python_type_mapping = {
+            "string": "str",
+            "integer": "int",
+            "int": "int",
+            "long": "int",
+            "boolean": "bool",
+            "list": "list",
+            "object": "dict",
+        }
+        return python_type_mapping.get(java_type.lower(), "Any")
 
     def _generate_sample_data(self, schema: dict) -> Union[dict, list, int, str]:
         """
@@ -349,28 +249,64 @@ class SwaggerParser:
         else:
             return {}
 
-    def _get_api_func(self, api: dict) -> Tuple[str, bool]:
+    def _write_testcases_file(
+        self, module: str, file_name: str, testcases_code: str
+    ) -> None:
         """
-        Generate API function code based on swagger API details.
+        Write the generated test function code to a file.
 
         Args:
+            module (str): The name of the module.
+            file_name (str): The name of the file.
+            testcases_code (str): The generated test function code.
+
+        Returns:
+            None
+        """
+        module_dir = os.path.abspath(os.path.join(self._testcases_dir, module))
+
+        formatted_code = black.format_str(testcases_code, mode=black.FileMode())
+        formatted_code = isort.code(
+            formatted_code,
+            config=isort.Config(
+                profile="black", known_first_party=["api", "config", "utils"]
+            ),
+        )
+        with open(
+            os.path.abspath(os.path.join(module_dir, f"{file_name}.py")),
+            "w",
+            encoding="utf-8",
+        ) as f:
+            f.write(formatted_code)
+
+    @staticmethod
+    def _get_testcases_code(module: str, api: dict) -> Tuple[str, str]:
+        """
+        Generate test function code for the specified API.
+
+        Args:
+            module (str): The name of the module.
             api (dict): swagger API details.
 
         Returns:
-            Tuple[str, bool]: The generated function code and a boolean indicating whether List is used in the function.
+            Tuple[str, str]: The generated test function code and the file name.
         """
+        header_code = ""
+        header_code += "# -*- coding: utf-8 -*-\n"
+        header_code += "import allure\n"
+        header_code += "import pytest\n"
+        header_code += "from utils.logger import logger\n"
+        header_code += "from utils.common import set_allure_detail\n\n\n"
+
         method = api.get("method")
-        snake_name = SwaggerParser._pascal_to_snake(api.get("uri"))
-        api_name = f"{method}_{snake_name}"
+        uri = api.get("uri")
+        detail = api.get("detail")
 
-        summary = api.get("detail").get("summary", "Null")
-        summary = SwaggerParser._get_wrapped_string(summary, indent=8)
+        api_name = f"{method}_{SwaggerParser._pascal_to_snake(uri)}"
+        test_name = f"test_{api_name}"
+        params = detail.get("parameters", [])
 
-        uri = SwaggerParser._convert_path_params(api.get("uri"))
-
-        params = api.get("detail").get("parameters", [])
-
-        request_body = api.get("detail").get("requestBody", {})
+        request_body = detail.get("requestBody", {})
         if request_body:
             params.append(
                 {
@@ -384,12 +320,212 @@ class SwaggerParser:
                 }
             )
 
-        if params:
-            params = sorted(
-                SwaggerParser._process_params(params),
-                key=lambda x: x.get("required"),
-                reverse=True,
+        params = SwaggerParser._process_params(params)
+        params = [param for param in params if param.get("required")]
+
+        testcases_code = ""
+        testcases_code += f"class {SwaggerParser._snake_to_pascal(test_name)}:\n"
+        testcases_code += """    @allure.severity(\"critical\")\n"""
+        testcases_code += "    @pytest.mark.critical\n"
+        testcases_code += "    @pytest.mark.smoke\n"
+        testcases_code += f"    @pytest.mark.{api_name}\n"
+
+        name_list = []
+        for param in params:
+            param_name = SwaggerParser._avoid_keywords(
+                SwaggerParser._pascal_to_snake(param.get("name"))
             )
+            name_list.append(param_name)
+            testcases_code += (
+                f"""    @pytest.mark.parametrize("{param_name}", [None])\n"""
+            )
+
+        param_str = (", " + ", ".join(name_list)) if name_list else ""
+        testcases_code += f"    def {test_name}(self, {module}_api{param_str}):\n"
+
+        param_str = (
+            ", ".join([f"{name}={name}" for name in name_list]) if name_list else ""
+        )
+        testcases_code += f"        res = {module}_api.{api_name}({param_str})\n"
+        testcases_code += """        actual_code = res[\"status_code\"]\n"""
+        testcases_code += (
+            """        logger.info(f\"%s status code: {actual_code}\")\n\n""" % api_name
+        )
+        testcases_code += "        expected_code = 200\n"
+        testcases_code += """        assert actual_code == expected_code, \
+                                set_allure_detail(f\"actual: {actual_code}, expected: {expected_code}\")\n"""
+
+        testcases_code = header_code + testcases_code
+
+        return testcases_code, test_name
+
+    def _write_conf_file(self, module: str, conf_code: str) -> None:
+        """
+        Write the generated conf test code to a file.
+
+        Args:
+            module (str): The name of the module.
+            conf_code (str): The generated conf test code.
+
+        Returns:
+            None
+        """
+        module_dir = os.path.abspath(os.path.join(self._testcases_dir, module))
+
+        formatted_code = black.format_str(conf_code, mode=black.FileMode())
+        formatted_code = isort.code(
+            formatted_code,
+            config=isort.Config(
+                profile="black", known_first_party=["api", "config", "utils"]
+            ),
+        )
+        with open(
+            os.path.abspath(os.path.join(module_dir, "conftest.py")),
+            "w",
+            encoding="utf-8",
+        ) as f:
+            f.write(formatted_code)
+
+        with open(
+            os.path.abspath(os.path.join(module_dir, "__init__.py")),
+            "w",
+            encoding="utf-8",
+        ) as f:
+            f.write("# -*- coding: utf-8 -*-\n")
+
+    @staticmethod
+    def _get_conf_code(module: str) -> str:
+        """
+        Generate conf test code for the specified module.
+
+        Args:
+            module (str): The name of the module.
+
+        Returns:
+            str: The generated conf test code.
+        """
+        api_cls = f"{SwaggerParser._snake_to_pascal(module)}API"
+        conf_code = ""
+        conf_code += "# -*- coding: utf-8 -*-\n"
+        conf_code += "import pytest\n"
+        conf_code += "from config.conf import Global\n"
+        conf_code += f"from template.api.{module}.{module}_api import {api_cls}\n\n\n"
+        conf_code += """@pytest.fixture(scope="package")\n"""
+        conf_code += f"def {module}_api():\n"
+        conf_code += (
+            f"    return {api_cls}(base_url=Global.CONSTANTS.BASE_URL, "
+            "headers=Global.CONSTANTS.HEADERS)\n"
+        )
+        return conf_code
+
+    def _generate_testcases_templates(self) -> None:
+        """
+        Generate testcases templates based on swagger and write them to files.
+
+        Returns:
+            None
+        """
+        for module in self._paths_dict.keys():
+            conf_code = SwaggerParser._get_conf_code(module)
+            self._write_conf_file(module, conf_code)
+            for api in self._paths_dict[module]:
+                testcases_code, file_name = SwaggerParser._get_testcases_code(
+                    module, api
+                )
+                self._write_testcases_file(module, file_name, testcases_code)
+
+    def _write_api_file(self, module: str, module_code: str) -> None:
+        """
+        Write the generated API code to a file.
+
+        Args:
+            module (str): The name of the module.
+            module_code (str): The generated API code.
+
+        Returns:
+            None
+        """
+        module_dir = os.path.abspath(os.path.join(self._api_dir, module))
+
+        formatted_code = black.format_str(module_code, mode=black.FileMode())
+        formatted_code = isort.code(
+            formatted_code,
+            config=isort.Config(
+                profile="black", known_first_party=["api", "config", "utils"]
+            ),
+        )
+        with open(
+            os.path.abspath(os.path.join(module_dir, f"{module}_api.py")),
+            "w",
+            encoding="utf-8",
+        ) as f:
+            f.write(formatted_code)
+
+        with open(
+            os.path.abspath(os.path.join(module_dir, "__init__.py")),
+            "w",
+            encoding="utf-8",
+        ) as f:
+            f.write("# -*- coding: utf-8 -*-\n")
+
+    @staticmethod
+    def _get_api_header(class_name: str, import_list: bool) -> str:
+        """
+        Generate the header code for the API class.
+
+        Args:
+            class_name (str): The name of the API class.
+            import_list (bool): Indicates whether List is used in the functions.
+
+        Returns:
+            str: The generated header code.
+        """
+        partial_str = ""
+        if import_list:
+            partial_str = ", List"
+        header_str = "# -*- coding: utf-8 -*-\n"
+        header_str += f"from typing import Dict, Any{partial_str}\n"
+        header_str += "from api.base_api import BaseAPI\n\n\n"
+        header_str += f"class {class_name}(BaseAPI):\n"
+
+        return header_str
+
+    def _get_api_func(self, api: dict) -> Tuple[str, bool]:
+        """
+        Generate API function code based on swagger API details.
+
+        Args:
+            api (dict): swagger API details.
+
+        Returns:
+            Tuple[str, bool]: The api function code and a boolean indicating whether List is used in the function.
+        """
+        method = api.get("method")
+        uri = api.get("uri")
+        detail = api.get("detail")
+
+        api_name = f"{method}_{SwaggerParser._pascal_to_snake(uri)}"
+        converted_uri = SwaggerParser._convert_path_params(uri)
+        summary = SwaggerParser._get_wrapped_string(
+            detail.get("summary", "Null"), indent=8
+        )
+        params = detail.get("parameters", [])
+
+        request_body = detail.get("requestBody", {})
+        if request_body:
+            params.append(
+                {
+                    "in": "body",
+                    "name": "request_body",
+                    "required": request_body.get("required", False),
+                    "description": request_body.get("description", "request body"),
+                    "schema": request_body.get("content")
+                    .get("application/json")
+                    .get("schema"),
+                }
+            )
+
+        params = SwaggerParser._process_params(params)
 
         params_list = []
         params_dict = {}
@@ -404,12 +540,11 @@ class SwaggerParser:
                 SwaggerParser._pascal_to_snake(param.get("name"))
             )
             param_schema = param.get("schema")
-            raw_param_type = param_schema.get("type")
-            param_type = SwaggerParser._get_python_type(raw_param_type)
+            param_type = SwaggerParser._get_python_type(param_schema.get("type"))
 
-            if raw_param_type == "array":
+            if param_type == "list":
                 list_inner_type = SwaggerParser._get_python_type(
-                    param_schema.get("items").get("type", "Any")
+                    param_schema.get("items", {}).get("type", "Any")
                 )
                 param_type = f"List[{list_inner_type}]"
                 use_list = True
@@ -484,14 +619,17 @@ class SwaggerParser:
                 )
                 func_body += """        params_dict = {%s}\n""" % partial_str
             request_list.append("params=params_dict")
+
         if header_dict:
             partial_str = ", ".join([f""""{k}": {v}""" for k, v in header_dict.items()])
             func_body += """        headers_dict = {%s}\n""" % partial_str
             request_list.append("headers=headers_dict")
+
         if data_dict:
             partial_str = ", ".join([f""""{k}": {v}""" for k, v in data_dict.items()])
             func_body += """        data_dict = {%s}\n""" % partial_str
             request_list.append("data=data_dict")
+
         if json_dict:
             schema_type = next(iter(json_schema_dict.values())).get("type")
             if (
@@ -516,69 +654,16 @@ class SwaggerParser:
         if len(request_list):
             request_str = ", " + ", ".join(request_list)
 
-        func_tail = f"""        return self._send_request(uri=f"{uri}", method="{method.upper()}"{request_str})\n"""
+        func_tail = (
+            f"""        return self._send_request(uri=f"{converted_uri}", """
+            f"""method="{method.upper()}"{request_str})\n"""
+        )
 
         return func_header + func_body + func_tail, use_list
 
-    @staticmethod
-    def _get_api_header(class_name: str, import_list: bool) -> str:
-        """
-        Generate the header code for the API class.
-
-        Args:
-            class_name (str): The name of the API class.
-            import_list (bool): Indicates whether List is used in the functions.
-
-        Returns:
-            str: The generated header code.
-        """
-        partial_str = ""
-        if import_list:
-            partial_str = ", List"
-        header_str = "# -*- coding: utf-8 -*-\n"
-        header_str += f"from typing import Dict, Any{partial_str}\n"
-        header_str += "from api.base_api import BaseAPI\n\n\n"
-        header_str += f"class {class_name}(BaseAPI):\n"
-
-        return header_str
-
-    def _write_api_file(self, module: str, module_code: str) -> None:
-        """
-        Write the generated API code to a file.
-
-        Args:
-            module (str): The name of the module.
-            module_code (str): The generated API code.
-
-        Returns:
-            None
-        """
-        module_dir = os.path.abspath(os.path.join(self._api_dir, module))
-
-        formatted_code = black.format_str(module_code, mode=black.FileMode())
-        formatted_code = isort.code(
-            formatted_code,
-            config=isort.Config(
-                profile="black", known_first_party=["api", "config", "utils"]
-            ),
-        )
-        with open(
-            os.path.abspath(os.path.join(module_dir, f"{module}_api.py")),
-            "w",
-            encoding="utf-8",
-        ) as f:
-            f.write(formatted_code)
-
-        with open(
-            os.path.abspath(os.path.join(module_dir, "__init__.py")),
-            "w",
-            encoding="utf-8",
-        ) as f:
-            f.write("# -*- coding: utf-8 -*-\n")
-
     def _generate_api_templates(self) -> None:
         """
-        Generate API templates based on swagger data and write them to files.
+        Generate api templates based on swagger and write them to files.
 
         Returns:
             None
@@ -599,190 +684,87 @@ class SwaggerParser:
             )
             self._write_api_file(module, module_code)
 
-    @staticmethod
-    def _get_conf_code(module: str) -> str:
+    def _create_package_dir(self, name: str) -> None:
         """
-        Generate conftest.py code for the specified module.
+        Creates package directories for api and testcases.
 
         Args:
-            module (str): The name of the module.
-
-        Returns:
-            str: The generated conftest.py code.
-        """
-        api_cls = f"{SwaggerParser._snake_to_pascal(module)}API"
-        conf_code = ""
-        conf_code += "# -*- coding: utf-8 -*-\n"
-        conf_code += "import pytest\n"
-        conf_code += "from config.conf import Global\n"
-        conf_code += f"from template.api.{module}.{module}_api import {api_cls}\n\n\n"
-        conf_code += """@pytest.fixture(scope="package")\n"""
-        conf_code += f"def {module}_api():\n"
-        conf_code += (
-            f"    return {api_cls}(base_url=Global.CONSTANTS.BASE_URL, "
-            "headers=Global.CONSTANTS.HEADERS)\n"
-        )
-        return conf_code
-
-    def _write_conf_file(self, module: str, conf_code: str) -> None:
-        """
-        Write the generated conftest.py code to a file.
-
-        Args:
-            module (str): The name of the module.
-            conf_code (str): The generated conftest.py code.
+            name (str): The name of the package.
 
         Returns:
             None
         """
-        module_dir = os.path.abspath(os.path.join(self._testcases_dir, module))
+        init_dir = os.path.abspath(os.path.join(self._api_dir, name))
+        os.makedirs(init_dir, exist_ok=True)
 
-        formatted_code = black.format_str(conf_code, mode=black.FileMode())
-        formatted_code = isort.code(
-            formatted_code,
-            config=isort.Config(
-                profile="black", known_first_party=["api", "config", "utils"]
-            ),
-        )
-        with open(
-            os.path.abspath(os.path.join(module_dir, "conftest.py")),
-            "w",
-            encoding="utf-8",
-        ) as f:
-            f.write(formatted_code)
+        init_path = os.path.abspath(os.path.join(init_dir, "__init__.py"))
+        with open(init_path, "w", encoding="utf-8") as f:
+            f.write("# -*- coding: utf-8 -*-\n")
+
+        init_dir = os.path.abspath(os.path.join(self._testcases_dir, name))
+        os.makedirs(init_dir, exist_ok=True)
+
+        init_path = os.path.abspath(os.path.join(init_dir, "__init__.py"))
+        with open(init_path, "w", encoding="utf-8") as f:
+            f.write("# -*- coding: utf-8 -*-\n")
+
+    def _reformat_paths_dict(self) -> None:
+        """
+        Reformatted swagger paths dict.
+
+        Returns:
+            None
+        """
+        raw_paths_dict = self._swagger_dict.get("paths", {})
+        paths_dict = {}
+        for path, path_details in raw_paths_dict.items():
+            for api_method, api_detail in path_details.items():
+                module_name = SwaggerParser._pascal_to_snake(api_detail.get("tags")[-1])
+                self._create_package_dir(module_name)
+
+                api = {"uri": path, "method": api_method, "detail": api_detail}
+                if module_name in paths_dict.keys():
+                    paths_dict[module_name].append(api)
+                else:
+                    paths_dict[module_name] = []
+                    paths_dict[module_name].append(api)
+
+        self._paths_dict = paths_dict
+
+    def _get_swagger_data(self) -> None:
+        """
+        Get swagger json data by making a request to the specified swagger docs url.
+
+        Returns:
+            None
+        """
+        response = requests.get(self._swagger_url, headers=Global.CONSTANTS.HEADERS)
+
+        if response.status_code == 200:
+            self._swagger_dict = response.json()
+        else:
+            logger.error("cannot request swagger url")
+            sys.exit(1)
+
+    @staticmethod
+    def _clear_template_dir() -> None:
+        """
+        Clears the template directory.
+
+        Returns:
+            None
+        """
+        if os.path.exists(template_dir):
+            shutil.rmtree(template_dir)
+
+        os.makedirs(template_dir, exist_ok=True)
 
         with open(
-            os.path.abspath(os.path.join(module_dir, "__init__.py")),
+            os.path.abspath(os.path.join(template_dir, "__init__.py")),
             "w",
             encoding="utf-8",
         ) as f:
             f.write("# -*- coding: utf-8 -*-\n")
-
-    @staticmethod
-    def _get_testcases_code(module: str, api: dict) -> Tuple[str, str]:
-        """
-        Generate test function code for the specified API.
-
-        Args:
-            module (str): The name of the module.
-            api (dict): swagger API details.
-
-        Returns:
-            Tuple[str, str]: The generated test function code and the file name.
-        """
-        header_code = ""
-        header_code += "# -*- coding: utf-8 -*-\n"
-        header_code += "import allure\n"
-        header_code += "import pytest\n"
-        header_code += "from utils.logger import logger\n"
-        header_code += "from utils.common import set_allure_detail\n\n\n"
-
-        method = api.get("method")
-        snake_name = SwaggerParser._pascal_to_snake(api.get("uri"))
-        api_name = f"{method}_{snake_name}"
-        test_name = f"test_{api_name}"
-
-        testcases_code = ""
-        testcases_code += f"class {SwaggerParser._snake_to_pascal(test_name)}:\n"
-        testcases_code += """    @allure.severity(\"critical\")\n"""
-        testcases_code += "    @pytest.mark.critical\n"
-        testcases_code += "    @pytest.mark.smoke\n"
-        testcases_code += f"    @pytest.mark.{api_name}\n"
-
-        params = api.get("detail").get("parameters", [])
-
-        request_body = api.get("detail").get("requestBody", {})
-        if request_body:
-            params.append(
-                {
-                    "in": "body",
-                    "name": "request_body",
-                    "required": request_body.get("required", False),
-                    "description": request_body.get("description", "request body"),
-                    "schema": request_body.get("content")
-                    .get("application/json")
-                    .get("schema"),
-                }
-            )
-
-        if params:
-            params = SwaggerParser._process_params(params)
-            params = [param for param in params if param.get("required")]
-
-        name_list = []
-        for param in params:
-            param_name = SwaggerParser._avoid_keywords(
-                SwaggerParser._pascal_to_snake(param.get("name"))
-            )
-            name_list.append(param_name)
-            testcases_code += (
-                f"""    @pytest.mark.parametrize("{param_name}", [None])\n"""
-            )
-
-        param_str = (", " + ", ".join(name_list)) if name_list else ""
-        testcases_code += f"    def {test_name}(self, {module}_api{param_str}):\n"
-
-        param_str = (
-            ", ".join([f"{name}={name}" for name in name_list]) if name_list else ""
-        )
-        testcases_code += f"        res = {module}_api.{api_name}({param_str})\n"
-        testcases_code += """        actual_code = res[\"status_code\"]\n"""
-        testcases_code += (
-            """        logger.info(f\"%s status code: {actual_code}\")\n\n""" % api_name
-        )
-        testcases_code += "        expected_code = 200\n"
-        testcases_code += """        assert actual_code == expected_code, \
-                                set_allure_detail(f\"actual: {actual_code}, expected: {expected_code}\")\n"""
-
-        testcases_code = header_code + testcases_code
-
-        return testcases_code, test_name
-
-    def _write_testcases_file(
-        self, module: str, file_name: str, testcases_code: str
-    ) -> None:
-        """
-        Write the generated test function code to a file.
-
-        Args:
-            module (str): The name of the module.
-            file_name (str): The name of the file.
-            testcases_code (str): The generated test function code.
-
-        Returns:
-            None
-        """
-        module_dir = os.path.abspath(os.path.join(self._testcases_dir, module))
-
-        formatted_code = black.format_str(testcases_code, mode=black.FileMode())
-        formatted_code = isort.code(
-            formatted_code,
-            config=isort.Config(
-                profile="black", known_first_party=["api", "config", "utils"]
-            ),
-        )
-        with open(
-            os.path.abspath(os.path.join(module_dir, f"{file_name}.py")),
-            "w",
-            encoding="utf-8",
-        ) as f:
-            f.write(formatted_code)
-
-    def _generate_testcases_templates(self) -> None:
-        """
-        Generate test function templates based on swagger data and write them to files.
-
-        Returns:
-            None
-        """
-        for module in self._paths_dict.keys():
-            conf_code = SwaggerParser._get_conf_code(module)
-            self._write_conf_file(module, conf_code)
-            for api in self._paths_dict[module]:
-                testcases_code, file_name = SwaggerParser._get_testcases_code(
-                    module, api
-                )
-                self._write_testcases_file(module, file_name, testcases_code)
 
     def generate_templates(self) -> None:
         """
@@ -793,7 +775,7 @@ class SwaggerParser:
         """
         SwaggerParser._clear_template_dir()
         self._get_swagger_data()
-        self._process_paths_data()
+        self._reformat_paths_dict()
         self._generate_api_templates()
         self._generate_testcases_templates()
         logger.info(f"templates are generated to {template_dir}")
@@ -801,7 +783,7 @@ class SwaggerParser:
 
 if __name__ == "__main__":
     try:
-        # swagger_url is the link to the swagger api-docs
+        # swagger_url is the link to the swagger v2/v3 api-docs
         SwaggerParser(swagger_url="").generate_templates()
     except Exception as e:
         logger.error(f"{e}\n{traceback.format_exc()}")
