@@ -28,12 +28,12 @@ def format_python_files(target_dir: str) -> None:
             if file_path.endswith(".py"):
                 with open(file_path, "r", encoding="utf-8") as f:
                     raw_code = f.read()
+
                 formatted_code = black.format_str(raw_code, mode=black.FileMode())
-                with open(file_path, "w", encoding="utf-8") as f:
-                    f.write(formatted_code)
-                isort.file(
-                    Path(file_path),
+                formatted_code = isort.code(
+                    formatted_code,
                     config=isort.Config(
+                        profile="black",
                         known_first_party=[
                             "api",
                             "page",
@@ -41,9 +41,12 @@ def format_python_files(target_dir: str) -> None:
                             "testcases",
                             "utils",
                         ],
-                        profile="black",
                     ),
                 )
+
+                with open(file_path, "w", encoding="utf-8") as f:
+                    f.write(formatted_code)
+
                 logger.info(f"formatted: {file_path}")
 
 
