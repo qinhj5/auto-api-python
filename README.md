@@ -19,7 +19,7 @@
 * 支持pytest-xdist多进程加速
 * 提供mail通知发送功能
 * 提供Dockerfile以支持在自定义镜像中执行测试
-* 提供Jenkinsfile以支持自动构建并运行测试项目
+* 提供pipeline script以支持Jenkins自动构建并运行测试
 * 提供基于swagger一键生成api和testcases模版的脚本
 * 提供基于swagger和log一键统计api覆盖情况的脚本
 * ...
