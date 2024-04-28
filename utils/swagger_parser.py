@@ -253,12 +253,12 @@ class SwaggerParser:
         self, module: str, file_name: str, testcases_code: str
     ) -> None:
         """
-        Write the generated test function code to a file.
+        Write the generated testcases code to a file.
 
         Args:
             module (str): The name of the module.
             file_name (str): The name of the file.
-            testcases_code (str): The generated test function code.
+            testcases_code (str): The generated testcases code.
 
         Returns:
             None
@@ -359,20 +359,20 @@ class SwaggerParser:
 
         return testcases_code, test_name
 
-    def _write_conf_file(self, module: str, conf_code: str) -> None:
+    def _write_conftest_file(self, module: str, conftest_code: str) -> None:
         """
-        Write the generated conf test code to a file.
+        Write the generated conftest code to a file.
 
         Args:
             module (str): The name of the module.
-            conf_code (str): The generated conf test code.
+            conftest_code (str): The generated conftest code.
 
         Returns:
             None
         """
         module_dir = os.path.abspath(os.path.join(self._testcases_dir, module))
 
-        formatted_code = black.format_str(conf_code, mode=black.FileMode())
+        formatted_code = black.format_str(conftest_code, mode=black.FileMode())
         formatted_code = isort.code(
             formatted_code,
             config=isort.Config(
@@ -394,29 +394,31 @@ class SwaggerParser:
             f.write("# -*- coding: utf-8 -*-\n")
 
     @staticmethod
-    def _get_conf_code(module: str) -> str:
+    def _get_conftest_code(module: str) -> str:
         """
-        Generate conf test code for the specified module.
+        Generate conftest code for the specified module.
 
         Args:
             module (str): The name of the module.
 
         Returns:
-            str: The generated conf test code.
+            str: The generated conftest code.
         """
         api_cls = f"{SwaggerParser._snake_to_pascal(module)}API"
-        conf_code = ""
-        conf_code += "# -*- coding: utf-8 -*-\n"
-        conf_code += "import pytest\n"
-        conf_code += "from config.conf import Global\n"
-        conf_code += f"from template.api.{module}.{module}_api import {api_cls}\n\n\n"
-        conf_code += """@pytest.fixture(scope="package")\n"""
-        conf_code += f"def {module}_api():\n"
-        conf_code += (
+        conftest_code = ""
+        conftest_code += "# -*- coding: utf-8 -*-\n"
+        conftest_code += "import pytest\n"
+        conftest_code += "from config.conf import Global\n"
+        conftest_code += (
+            f"from template.api.{module}.{module}_api import {api_cls}\n\n\n"
+        )
+        conftest_code += """@pytest.fixture(scope="package")\n"""
+        conftest_code += f"def {module}_api():\n"
+        conftest_code += (
             f"    return {api_cls}(base_url=Global.CONSTANTS.BASE_URL, "
             "headers=Global.CONSTANTS.HEADERS)\n"
         )
-        return conf_code
+        return conftest_code
 
     def _generate_testcases_templates(self) -> None:
         """
@@ -426,28 +428,28 @@ class SwaggerParser:
             None
         """
         for module in self._paths_dict.keys():
-            conf_code = SwaggerParser._get_conf_code(module)
-            self._write_conf_file(module, conf_code)
+            conftest_code = SwaggerParser._get_conftest_code(module)
+            self._write_conftest_file(module, conftest_code)
             for api in self._paths_dict[module]:
                 testcases_code, file_name = SwaggerParser._get_testcases_code(
                     module, api
                 )
                 self._write_testcases_file(module, file_name, testcases_code)
 
-    def _write_api_file(self, module: str, module_code: str) -> None:
+    def _write_api_file(self, module: str, api_code: str) -> None:
         """
-        Write the generated API code to a file.
+        Write the generated api code to a file.
 
         Args:
             module (str): The name of the module.
-            module_code (str): The generated API code.
+            api_code (str): The generated api code.
 
         Returns:
             None
         """
         module_dir = os.path.abspath(os.path.join(self._api_dir, module))
 
-        formatted_code = black.format_str(module_code, mode=black.FileMode())
+        formatted_code = black.format_str(api_code, mode=black.FileMode())
         formatted_code = isort.code(
             formatted_code,
             config=isort.Config(
@@ -669,20 +671,20 @@ class SwaggerParser:
             None
         """
         for module in self._paths_dict.keys():
-            module_code = ""
+            api_code = ""
             import_list = False
             for api in self._paths_dict[module]:
                 func_code, use_list = self._get_api_func(api)
                 if use_list:
                     import_list = True
-                module_code += func_code
-            module_code = (
+                api_code += func_code
+            api_code = (
                 SwaggerParser._get_api_header(
                     SwaggerParser._snake_to_pascal(module) + "API", import_list
                 )
-                + module_code
+                + api_code
             )
-            self._write_api_file(module, module_code)
+            self._write_api_file(module, api_code)
 
     def _create_package_dir(self, name: str) -> None:
         """
