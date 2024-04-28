@@ -3,6 +3,7 @@ from http import HTTPStatus
 from json import JSONDecodeError, loads
 from typing import Any, Dict
 
+import allure
 import curlify
 import requests
 
@@ -55,11 +56,15 @@ class BaseAPI:
             total_headers.update(headers)
 
         url = f"{self._base_url}{uri}"
+        allure.dynamic.description(url)
         set_allure_detail(name="url", body=url, level=LogLevel.INFO)
         set_allure_detail(name="headers", body=total_headers, level=LogLevel.INFO)
-        set_allure_detail(
-            name="request body", body=params or data or json, level=LogLevel.INFO
-        )
+        if params:
+            set_allure_detail(name="request params", body=params, level=LogLevel.INFO)
+        if data:
+            set_allure_detail(name="request data", body=data, level=LogLevel.INFO)
+        if json:
+            set_allure_detail(name="request json", body=json, level=LogLevel.INFO)
 
         request = requests.Request(
             url=url,
