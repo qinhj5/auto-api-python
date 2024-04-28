@@ -135,11 +135,12 @@ def testcase_information(request):
     )
 
     func = request.function
-    file_path = func.__code__.co_filename
     func_name = func.__name__
+    file_path = func.__code__.co_filename
+    file_name = os.path.basename(file_path)
 
     cls = request.cls
-    cls_name = cls.__name__ if cls else "None"
+    cls_name = cls.__name__ if cls else ""
 
     source_code, start_line = inspect.getsourcelines(func)
     line_range = {
@@ -149,8 +150,10 @@ def testcase_information(request):
 
     set_allure_detail(name="file path", body=f"{file_path}", level=LogLevel.INFO)
     set_allure_detail(
-        name="case name",
-        body=f"{cls_name}#{func_name}",
+        name="case path",
+        body=f"{file_name}::{cls_name}::{func_name}"
+        if cls_name
+        else f"{file_name}::{func_name}",
         level=LogLevel.INFO,
     )
     set_allure_detail(
