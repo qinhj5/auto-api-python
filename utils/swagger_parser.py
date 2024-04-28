@@ -205,6 +205,7 @@ class SwaggerParser:
             "int": "int",
             "long": "int",
             "boolean": "bool",
+            "array": "list",
             "list": "list",
             "object": "dict",
         }
@@ -545,9 +546,13 @@ class SwaggerParser:
             param_type = SwaggerParser._get_python_type(param_schema.get("type"))
 
             if param_type == "list":
-                list_inner_type = SwaggerParser._get_python_type(
-                    param_schema.get("items", {}).get("type", "Any")
-                )
+                if param_schema.get("items", {}).get("$ref"):
+                    list_inner_type = "dict"
+                else:
+                    list_inner_type = SwaggerParser._get_python_type(
+                        param_schema.get("items", {}).get("type", "Any")
+                    )
+
                 param_type = f"List[{list_inner_type}]"
                 use_list = True
 
