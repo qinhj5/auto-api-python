@@ -337,8 +337,8 @@ class ChromeBrowser:
         ]
 
         if len(cookie_values) == 0:
-            logger.error(f"no such cookie ({name}) for host ({host})")
-            sys.exit(1)
+            logger.warning(f"no such cookie ({name}) for host ({host})")
+            return ""
 
         if all(not cookie["is_expired"] for cookie in cookie_values):
             cookie_strings = [
@@ -346,8 +346,8 @@ class ChromeBrowser:
             ]
             return ";".join(cookie_strings)
         else:
-            logger.error("cookie value expired")
-            sys.exit(1)
+            logger.warning("cookie value expired")
+            return ""
 
     def get_local_storage_item_value(self, name: str, host: str = None) -> bytearray:
         """
@@ -377,11 +377,7 @@ class ChromeBrowser:
 
         if len(item_values) == 0:
             logger.error(f"no such local storage item ({name}) for host ({host})")
-            sys.exit(1)
-
-        if len(item_values) != 1:
-            logger.error(f"too many local storage items ({name}) for host ({host})")
-            sys.exit(1)
+            return bytearray()
 
         return item_values[0].get("value", bytearray())
 
