@@ -129,7 +129,7 @@ class ForwarderSetting:
         for server in self._servers_list:
             if sys.platform == "darwin":
                 command = ["sudo", "ifconfig", "lo0", "-alias", server.get("ip")]
-            else:
+            elif sys.platform == "linux":
                 command = [
                     "sudo",
                     "ip",
@@ -139,6 +139,9 @@ class ForwarderSetting:
                     "dev",
                     "lo",
                 ]
+            else:
+                logger.error("only support macOS and Linux")
+                sys.exit(1)
 
             proc = subprocess.Popen(
                 ["sudo", "-S"] + command,
@@ -162,7 +165,7 @@ class ForwarderSetting:
         for server in self._servers_list:
             if sys.platform == "darwin":
                 command = ["sudo", "ifconfig", "lo0", "alias", server.get("ip")]
-            else:
+            elif sys.platform == "linux":
                 command = [
                     "sudo",
                     "ip",
@@ -172,6 +175,9 @@ class ForwarderSetting:
                     "dev",
                     "lo",
                 ]
+            else:
+                logger.error("only support macOS and Linux")
+                sys.exit(1)
 
             proc = subprocess.Popen(
                 ["sudo", "-S"] + command,
