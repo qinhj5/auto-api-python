@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 import getpass
+import os
 import subprocess
 import sys
 import traceback
 
-from utils.common import get_env_conf
-from utils.logger import logger
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 
 class ForwarderSetting:
@@ -206,6 +206,9 @@ class ForwarderSetting:
 
 
 if __name__ == "__main__":
+    from utils.common import get_env_conf
+    from utils.logger import logger
+
     try:
         ForwarderSetting().activate_forwarder()
     except Exception as e:
