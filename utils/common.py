@@ -11,7 +11,6 @@ import allure
 import filelock
 import git
 import yaml
-from git import NoSuchPathError
 from openpyxl.styles import Alignment
 from openpyxl.worksheet.worksheet import Worksheet
 
@@ -183,8 +182,9 @@ def get_code_modifiers(
 
     try:
         repo = git.Repo(project_dir)
-    except NoSuchPathError:
-        modifiers.add(f"git.not.found")
+    except Exception as e:
+        logger.warning(f"git.not.found: {e}")
+        modifiers.add("git.not.found")
     else:
         commit_blames = repo.blame(file=file_path, rev=None)
         row_blames = []
