@@ -5,12 +5,13 @@ import json
 import os
 import random
 import shutil
-import subprocess
 from typing import Any, List, Union
 
 import allure
 import filelock
+import git
 import yaml
+from git import NoSuchPathError
 from openpyxl.styles import Alignment
 from openpyxl.worksheet.worksheet import Worksheet
 
@@ -20,6 +21,7 @@ from utils.dirs import (
     lock_dir,
     log_request_dir,
     log_summary_dir,
+    project_dir,
     report_dir,
 )
 from utils.enums import LogLevel
@@ -179,18 +181,34 @@ def get_code_modifiers(
 
     modifiers = set()
 
-    is_installed = False
     try:
-        result = subprocess.run(["git", "--version"], capture_output=True, text=True)
-        output = result.stdout.strip()
-        if output.startswith("git version"):
-            is_installed = True
-        else:
-            modifiers.add(f"git.not.found")
-    except FileNotFoundError:
+        repo = git.Repo(project_dir)
+    except NoSuchPathError:
         modifiers.add(f"git.not.found")
+    else:
+        commit_blames = repo.blame(file=file_path, rev=None)
+        row_blames = []
+        for commit_blame in commit_blames:
+            rows = commit_blame[-1]
+            git_commit = commit_blame[0]
+            for row in rows:
+                print(git_commit.hexsha)
+                row_blames.append(
+                    {
+                        "code": row,
+                        "date": git_commit.committed_datetime.strftime(
+                            "%Y-%m-%d %H:%M:%S"
+                        )
+                        if git_commit.hexsha
+                        != "0000000000000000000000000000000000000000"
+                        else "not.committed.yet",
+                        "author": git_commit.author.email
+                        if git_commit.hexsha
+                        != "0000000000000000000000000000000000000000"
+                        else "not.committed.yet",
+                    }
+                )
 
-    if is_installed:
         if line_number:
             start_line = line_number
             end_line = line_number
@@ -198,20 +216,10 @@ def get_code_modifiers(
             start_line = line_range.get("start_line")
             end_line = line_range.get("end_line")
 
-        command = f"git blame --line-porcelain -L {start_line},{end_line} {file_path}"
-        result = subprocess.run(command, shell=True, capture_output=True)
-
-        if result.returncode != 0:
-            modifiers.add(f"execute.command.error")
-        else:
-            output = result.stdout.decode("utf-8")
-            lines = output.split("\n")
-
-            for line in lines:
-                if line.startswith("author-mail"):
-                    modifiers.add(line.split()[1][1:-1])
-
-    return list(modifiers)
+        for idx in range(start_line, end_line + 1):
+            modifiers.add(row_blames[idx]["author"])
+    finally:
+        return list(modifiers)
 
 
 def get_csv_data(csv_path: str) -> List[List[str]]:
