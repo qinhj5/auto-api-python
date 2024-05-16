@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 import inspect
 import os
+from datetime import datetime
 from typing import Callable
 
 import filelock
+import pytz
 
 from utils.dirs import lock_dir
 
@@ -22,10 +24,12 @@ def log_locker(func: Callable) -> Callable:
     """
 
     def wrapper(*args, **kwargs):
-        frame = inspect.currentframe().f_back
-        file_path, line_number, _, _ = inspect.getframeinfo(frame)[:4]
-        file_name = os.path.basename(file_path)
-        extra = {"file": file_name, "line": line_number}
+        file_path, line_number = inspect.getframeinfo(inspect.currentframe().f_back)[:2]
+        extra = {
+            "file": os.path.basename(file_path),
+            "line": line_number,
+            "time": datetime.now(pytz.timezone("Asia/Shanghai")),
+        }
         with filelock.FileLock(LOCK_PATH):
             return func(*args, **kwargs, extra=extra)
 

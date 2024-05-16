@@ -8,7 +8,7 @@ import colorlog
 from utils.decorators import log_locker
 
 ENV = os.environ.get("ENV", "test")
-LOG_FORMAT = "%(asctime)s - PID:%(process)s - TID:%(thread)s - [%(levelname)s] - %(file)s:%(line)d - %(message)s"
+LOG_FORMAT = "%(time)s - PID:%(process)s - TID:%(thread)s - [%(levelname)s] - %(file)s:%(line)d - %(message)s"
 
 CONSOLE_HANDLER = logging.StreamHandler()
 CONSOLE_HANDLER.setLevel(logging.INFO)
