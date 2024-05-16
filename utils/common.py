@@ -6,7 +6,7 @@ import os
 import random
 import shutil
 import subprocess
-from typing import Any, List, Tuple, Union
+from typing import Any, List, Union
 
 import allure
 import filelock
