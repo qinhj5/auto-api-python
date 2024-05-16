@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 import os
-import subprocess
 import traceback
 
 from locust import HttpUser, TaskSet, between, task
 
 from config.conf import Global
-from utils.common import get_env_conf
+from utils.common import execute_local_command, get_env_conf
 from utils.dirs import report_locust_dir, venv_bin_dir
 from utils.logger import logger
 
@@ -62,9 +61,7 @@ def main():
         locust_command.extend(["-n", f"""{LOCUST_CONF.get("num_requests")}"""])
 
     command = " ".join(locust_command)
-    logger.info(f"executed: {command}")
-    process = subprocess.Popen(command, shell=True)
-    process.wait()
+    execute_local_command(command)
 
 
 if __name__ == "__main__":
