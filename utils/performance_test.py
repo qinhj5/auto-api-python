@@ -44,8 +44,9 @@ class WebsiteUser(HttpUser):
 
 def main():
     os.makedirs(report_locust_dir, exist_ok=True)
+    locust_bin_dir = os.path.abspath(os.path.join(venv_bin_dir, "locust"))
     locust_command = [
-        os.path.abspath(os.path.join(venv_bin_dir, "locust")),
+        locust_bin_dir,
         f"--locustfile={__file__}",
         f"--host={Global.CONSTANTS.BASE_URL}",
         f"""--csv={os.path.abspath(os.path.join(report_locust_dir, "locust_report"))}""",
@@ -60,6 +61,7 @@ def main():
     if LOCUST_CONF.get("num_requests"):
         locust_command.extend(["-n", f"""{LOCUST_CONF.get("num_requests")}"""])
 
+    logger.info(f"{locust_bin_dir} running...")
     command = " ".join(locust_command)
     execute_local_command(command)
 
