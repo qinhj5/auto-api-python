@@ -5,7 +5,8 @@ import json
 import os
 import random
 import shutil
-from typing import Any, List, Union
+import subprocess
+from typing import Any, List, Tuple, Union
 
 import allure
 import filelock
@@ -335,3 +336,35 @@ def set_column_max_width(worksheet: Worksheet) -> None:
                 max_length = length
 
         worksheet.column_dimensions[column].width = max_length + 10
+
+
+def execute_local_command(cmd: str, inp: str = None) -> str:
+    """
+    Execute a local command and optionally provide input to it.
+
+    Args:
+        cmd (str): The command to be executed.
+        inp (str): The input to be provided to the command. Defaults to None.
+
+    Returns:
+        str: The stdout output of the command.
+
+    """
+    proc = subprocess.Popen(
+        cmd,
+        shell=True,
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        universal_newlines=True,
+    )
+    stdout, stderr = proc.communicate(input=f"{inp}\n") if inp else proc.communicate()
+    return_code = proc.returncode
+
+    if return_code == 0:
+        logger.info(f"execute command success: {cmd}")
+    else:
+        logger.warning(f"execute command failed: {cmd}")
+        logger.error(f"stderr:\n{stderr}")
+
+    return stdout
