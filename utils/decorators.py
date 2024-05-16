@@ -26,9 +26,9 @@ def log_locker(func: Callable) -> Callable:
     def wrapper(*args, **kwargs):
         file_path, line_number = inspect.getframeinfo(inspect.currentframe().f_back)[:2]
         extra = {
+            "time": datetime.now(pytz.timezone("Asia/Shanghai")),
             "file": os.path.basename(file_path),
             "line": line_number,
-            "time": datetime.now(pytz.timezone("Asia/Shanghai")),
         }
         with filelock.FileLock(LOCK_PATH):
             return func(*args, **kwargs, extra=extra)
