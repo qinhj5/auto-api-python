@@ -41,8 +41,8 @@ def exe_test(
     pytest.main(args)
 
     if generate_report:
-        cmd = f"allure generate {report_raw_dir} -o {report_html_dir} --clean"
-        os.system(cmd)
+        command = f"allure generate {report_raw_dir} -o {report_html_dir} --clean"
+        execute_local_command(command)
 
 
 def get_parse_args():
@@ -134,7 +134,7 @@ def main():
 
 
 if __name__ == "__main__":
-    from utils.common import clean_logs_and_reports
+    from utils.common import clean_logs_and_reports, execute_local_command
     from utils.dirs import report_html_dir, report_raw_dir
     from utils.email_notification import send_email
     from utils.logger import logger
