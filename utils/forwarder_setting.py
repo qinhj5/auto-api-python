@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import getpass
 import os
-import subprocess
 import sys
 import traceback
 
@@ -30,12 +29,12 @@ class ForwarderSetting:
         self._ssh_conf = get_env_conf(name=ssh_conf_name)
         self._use_loopback = use_loopback
 
-    def _build_command(self) -> list:
+    def _build_command(self) -> str:
         """
         Build the SSH command with port forwarding.
 
         Returns:
-            list: The SSH command with port forwarding.
+            str: The SSH command with port forwarding.
         """
         forwards = []
         for server in self._servers_list:
@@ -46,7 +45,7 @@ class ForwarderSetting:
             else:
                 forwards += ["-L", f"{port}:{ip}:{port}"]
 
-        command = (
+        command_list = (
             ["ssh"]
             + forwards
             + [
@@ -56,29 +55,26 @@ class ForwarderSetting:
             ]
         )
 
-        return command
+        return " ".join(command_list)
 
     @staticmethod
-    def _get_command_pids(command: list) -> list:
+    def _get_command_pids(command: str) -> list:
         """
         Get the process IDs (PIDs) of the running processes that match the specified command.
 
         Args:
-            command (list): The command to match.
+            command (str): The command to match.
 
         Returns:
             list: The list of process IDs (PIDs) of the matching processes.
         """
-        target_cmd = " ".join(command)
-        grep_cmd = f"""ps aux | grep "{target_cmd}" """
-        process = subprocess.Popen(grep_cmd, shell=True, stdout=subprocess.PIPE)
-        logger.info(f"executed: {grep_cmd}")
-        output, _ = process.communicate()
+        grep_cmd = f"""ps aux | grep "{command}" """
+        stdout = execute_local_command(grep_cmd)
 
         pids = []
-        lines = output.strip().decode().split("\n")
+        lines = stdout.strip().split("\n")
         for line in lines:
-            if target_cmd in line and "grep" not in line:
+            if command in line and "grep" not in line:
                 pids.append(line.split()[1])
 
         return pids
@@ -95,10 +91,10 @@ class ForwarderSetting:
         pids = ForwarderSetting._get_command_pids(command)
         if pids:
             for pid in pids:
-                subprocess.call(f"kill {pid}", shell=True)
-            logger.info(f"""killed: {" ".join(command)}""")
+                execute_local_command(f"kill {pid}")
+            logger.info(f"""killed: {command}""")
         else:
-            logger.warning(f"""no result for {" ".join(command)}""")
+            logger.warning(f"""no result for {command}""")
 
     def _connect_ssh_tunnel(self) -> None:
         """
@@ -111,10 +107,9 @@ class ForwarderSetting:
 
         pids = ForwarderSetting._get_command_pids(command)
         if len(pids) == 0:
-            subprocess.call(command)
-            logger.info(f"""executed: {" ".join(command)}""")
+            execute_local_command(command)
         else:
-            logger.warning(f"""existed for {" ".join(command)}""")
+            logger.warning(f"""existed for {command}""")
 
     def _remove_local_interfaces(self) -> None:
         """
@@ -128,9 +123,9 @@ class ForwarderSetting:
         )
         for server in self._servers_list:
             if sys.platform == "darwin":
-                command = ["sudo", "ifconfig", "lo0", "-alias", server.get("ip")]
+                command_list = ["sudo", "ifconfig", "lo0", "-alias", server.get("ip")]
             elif sys.platform == "linux":
-                command = [
+                command_list = [
                     "sudo",
                     "ip",
                     "addr",
@@ -143,14 +138,8 @@ class ForwarderSetting:
                 logger.error("only support macOS and Linux")
                 sys.exit(1)
 
-            proc = subprocess.Popen(
-                ["sudo", "-S"] + command,
-                stdin=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                universal_newlines=True,
-            )
-            proc.communicate(password + "\n")
-            logger.info(f"""executed: {" ".join(command)}""")
+            command = " ".join(["sudo", "-S"] + command_list)
+            execute_local_command(command, inp=password)
 
     def _add_local_interfaces(self) -> None:
         """
@@ -164,9 +153,9 @@ class ForwarderSetting:
         )
         for server in self._servers_list:
             if sys.platform == "darwin":
-                command = ["sudo", "ifconfig", "lo0", "alias", server.get("ip")]
+                command_list = ["sudo", "ifconfig", "lo0", "alias", server.get("ip")]
             elif sys.platform == "linux":
-                command = [
+                command_list = [
                     "sudo",
                     "ip",
                     "addr",
@@ -179,14 +168,8 @@ class ForwarderSetting:
                 logger.error("only support macOS and Linux")
                 sys.exit(1)
 
-            proc = subprocess.Popen(
-                ["sudo", "-S"] + command,
-                stdin=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                universal_newlines=True,
-            )
-            proc.communicate(password + "\n")
-            logger.info(f"""executed: {" ".join(command)}""")
+            command = " ".join(["sudo", "-S"] + command_list)
+            execute_local_command(command, inp=password)
 
     def deactivate_forwarder(self) -> None:
         """
@@ -212,7 +195,7 @@ class ForwarderSetting:
 
 
 if __name__ == "__main__":
-    from utils.common import get_env_conf
+    from utils.common import execute_local_command, get_env_conf
     from utils.logger import logger
 
     try:
