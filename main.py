@@ -103,6 +103,13 @@ def get_parse_args():
         help="Rerun failed testcases",
     )
 
+    parser.add_argument(
+        "--key",
+        type=str,
+        default=None,
+        help="The key to decrypt config files",
+    )
+
     return parser.parse_args()
 
 
@@ -119,8 +126,13 @@ def main():
     pre_action()
 
     args = get_parse_args()
+
     os.environ["ENV"] = args.env
     logger.info(f"current env is {args.env}")
+
+    if args.key:
+        os.environ["KEY"] = args.key
+        decrypt_config()
 
     exe_test(
         cases_dir=args.cases_dir,
@@ -135,6 +147,7 @@ def main():
 
 if __name__ == "__main__":
     from utils.common import clean_logs_and_reports, execute_local_command
+    from utils.cryptor import decrypt_config
     from utils.dirs import report_html_dir, report_raw_dir
     from utils.email_notification import send_email
     from utils.logger import logger

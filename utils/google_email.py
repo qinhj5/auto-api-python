@@ -97,10 +97,13 @@ class GoogleEmail:
             if credentials and credentials.expired and credentials.refresh_token:
                 credentials.refresh(Request())
             else:
+                cred_oauth_client_path = os.path.abspath(
+                    os.path.join(config_dir, "cred_oauth_client.json")
+                )
                 flow = InstalledAppFlow.from_client_secrets_file(
-                    client_secrets_file=os.path.abspath(
-                        os.path.join(config_dir, "cred_oauth_client.json")
-                    ),
+                    client_secrets_file=cred_oauth_client_path
+                    if not os.environ.get("KEY")
+                    else f"{cred_oauth_client_path}.decrypted",
                     scopes=["https://www.googleapis.com/auth/gmail.send"],
                 )
                 credentials = flow.run_local_server(port=0)

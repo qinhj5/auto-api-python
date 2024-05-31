@@ -40,22 +40,18 @@ def get_env_conf(name: str = None) -> Union[dict, str, list]:
     Returns:
         Union[dict, str, list]: Configuration item if name is provided, otherwise the entire configuration.
     """
-    conf = {}
     conf_path = os.path.abspath(
         os.path.join(config_dir, f"""conf_{os.environ.get("ENV", "test")}.yaml""")
     )
 
-    if not os.path.exists(conf_path):
-        logger.error(f"file not found: {conf_path}")
-        return conf
-
-    with open(conf_path, "r", encoding="utf-8") as f:
+    with open(
+        conf_path if not os.environ.get("KEY") else f"{conf_path}.decrypted",
+        "r",
+        encoding="utf-8",
+    ) as f:
         conf = yaml.safe_load(f)
 
-    if name:
-        conf = conf.get(name)
-
-    return conf
+    return conf.get(name) if name else conf
 
 
 def get_ext_conf(name: str = None) -> Union[dict, str, list]:
@@ -68,20 +64,16 @@ def get_ext_conf(name: str = None) -> Union[dict, str, list]:
     Returns:
         Union[dict, str, list]: Configuration item if name is provided, otherwise the entire configuration.
     """
-    conf = {}
     conf_path = os.path.abspath(os.path.join(config_dir, f"conf_ext.yaml"))
 
-    if not os.path.exists(conf_path):
-        logger.error(f"file not found: {conf_path}")
-        return conf
-
-    with open(conf_path, "r", encoding="utf-8") as f:
+    with open(
+        conf_path if not os.environ.get("KEY") else f"{conf_path}.decrypted",
+        "r",
+        encoding="utf-8",
+    ) as f:
         conf = yaml.safe_load(f)
 
-    if name:
-        conf = conf.get(name)
-
-    return conf
+    return conf.get(name) if name else conf
 
 
 def get_current_datetime() -> str:

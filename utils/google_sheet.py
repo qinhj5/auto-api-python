@@ -79,10 +79,13 @@ class GoogleSheet:
         Returns:
             None
         """
+        cred_service_account_path = os.path.abspath(
+            os.path.join(config_dir, "cred_service_account.json")
+        )
         self._gspread_client = gspread.service_account(
-            filename=os.path.abspath(
-                os.path.join(config_dir, "cred_service_account.json")
-            ),
+            filename=cred_service_account_path
+            if not os.environ.get("KEY")
+            else f"{cred_service_account_path}.decrypted",
             scopes=[
                 "https://www.googleapis.com/auth/drive",
                 "https://www.googleapis.com/auth/spreadsheets",

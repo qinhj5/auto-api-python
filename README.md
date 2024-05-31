@@ -40,7 +40,9 @@ auto-api-python/
 │   ├── __init__.py
 │   ├── conf.py
 │   ├── conf_ext.yaml
-│   └── conf_test.yaml
+│   ├── conf_test.yaml
+│   ├── cred_oauth_client.json
+│   └── cred_service_account.json
 ├── data/
 │   └── google_search/
 │       └── keywords.csv
@@ -59,6 +61,7 @@ auto-api-python/
 │   ├── chrome_browser.py
 │   ├── clickhouse_connection.py
 │   ├── common.py
+│   ├── cryptor.py
 │   ├── decorators.py
 │   ├── dirs.py
 │   ├── driver_shell.py
