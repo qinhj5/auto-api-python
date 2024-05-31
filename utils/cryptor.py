@@ -70,9 +70,12 @@ def encrypt_config() -> None:
     os.makedirs(tmp_dir, exist_ok=True)
 
     key_path = os.path.abspath(os.path.join(tmp_dir, "key"))
-    with open(key_path, "w", encoding="utf-8") as f:
-        f.write(key_str)
-    logger.info(f"key is saved to {key_path}")
+    if not os.path.exists(key_path):
+        with open(key_path, "w", encoding="utf-8") as f:
+            f.write(key_str)
+        logger.info(f"new key is saved to {key_path}")
+    else:
+        logger.info(f"key path: {key_path}")
 
     for root, dirs, files in os.walk(config_dir):
         for file in files:
