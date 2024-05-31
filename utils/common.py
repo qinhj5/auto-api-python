@@ -193,19 +193,16 @@ def get_code_modifiers(
             rows = commit_blame[-1]
             git_commit = commit_blame[0]
             for row in rows:
-                print(git_commit.hexsha)
                 row_blames.append(
                     {
                         "code": row,
                         "date": git_commit.committed_datetime.strftime(
                             "%Y-%m-%d %H:%M:%S"
                         )
-                        if git_commit.hexsha
-                        != "0000000000000000000000000000000000000000"
+                        if bool(int(git_commit.hexsha, 16))
                         else "not.committed.yet",
                         "author": git_commit.author.email
-                        if git_commit.hexsha
-                        != "0000000000000000000000000000000000000000"
+                        if bool(int(git_commit.hexsha, 16))
                         else "not.committed.yet",
                     }
                 )
