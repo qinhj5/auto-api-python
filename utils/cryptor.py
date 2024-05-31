@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
 import binascii
 import os
+import sys
 import traceback
 
 from Crypto.Cipher import AES
 from Crypto.Random import get_random_bytes
 from Crypto.Util.Padding import pad, unpad
 
-from utils.dirs import config_dir, tmp_dir
-from utils.logger import logger
+project_dir = os.path.dirname(os.path.dirname(__file__))
+sys.path.append(project_dir)
 
 
 def encrypt_file(plaintext_file_path: str, encrypted_file_path: str, key: str) -> None:
@@ -108,6 +109,9 @@ def decrypt_config() -> None:
 
 
 if __name__ == "__main__":
+    from utils.dirs import config_dir, tmp_dir
+    from utils.logger import logger
+
     try:
         encrypt_config()
     except Exception as e:
