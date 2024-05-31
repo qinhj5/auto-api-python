@@ -155,6 +155,5 @@ if __name__ == "__main__":
 
     try:
         main()
-        # test
     except Exception as e:
         logger.error(f"{e}\n{traceback.format_exc()}")
