@@ -15,11 +15,3 @@ repos:
     rev: 23.3.0
     hooks:
       - id: black
-
-  - repo: local
-    hooks:
-    - id: generate-encrypted-config
-      name: Generate Encrypted Config Hook
-      entry: venv/bin/python utils/cryptor.py
-      language: system
-      types: [python]
