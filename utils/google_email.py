@@ -15,7 +15,7 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 
 from utils.common import get_ext_conf
-from utils.dirs import lock_dir, tmp_dir
+from utils.dirs import config_dir, lock_dir, tmp_dir
 from utils.logger import logger
 
 
@@ -97,8 +97,10 @@ class GoogleEmail:
             if credentials and credentials.expired and credentials.refresh_token:
                 credentials.refresh(Request())
             else:
-                flow = InstalledAppFlow.from_client_config(
-                    client_config=self._conf.get("client_config"),
+                flow = InstalledAppFlow.from_client_secrets_file(
+                    client_secrets_file=os.path.abspath(
+                        os.path.join(config_dir, "cred_oauth_client.json")
+                    ),
                     scopes=["https://www.googleapis.com/auth/gmail.send"],
                 )
                 credentials = flow.run_local_server(port=0)

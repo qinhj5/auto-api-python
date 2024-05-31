@@ -9,7 +9,7 @@ import filelock as filelock
 import gspread
 
 from utils.common import get_ext_conf
-from utils.dirs import lock_dir
+from utils.dirs import config_dir, lock_dir
 from utils.logger import logger
 
 
@@ -79,8 +79,10 @@ class GoogleSheet:
         Returns:
             None
         """
-        self._gspread_client = gspread.service_account_from_dict(
-            info=self._conf.get("service_info"),
+        self._gspread_client = gspread.service_account(
+            filename=os.path.abspath(
+                os.path.join(config_dir, "cred_service_account.json")
+            ),
             scopes=[
                 "https://www.googleapis.com/auth/drive",
                 "https://www.googleapis.com/auth/spreadsheets",

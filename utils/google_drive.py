@@ -10,7 +10,7 @@ from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
 
 from utils.common import get_ext_conf
-from utils.dirs import lock_dir, tmp_dir
+from utils.dirs import config_dir, lock_dir, tmp_dir
 from utils.logger import logger
 
 
@@ -78,8 +78,10 @@ class GoogleDrive:
         Returns:
             None
         """
-        credentials = service_account.Credentials.from_service_account_info(
-            info=self._conf.get("service_info"),
+        credentials = service_account.Credentials.from_service_account_file(
+            filename=os.path.abspath(
+                os.path.join(config_dir, "cred_service_account.json")
+            ),
             scopes=[
                 "https://www.googleapis.com/auth/drive",
                 "https://www.googleapis.com/auth/drive.metadata",
