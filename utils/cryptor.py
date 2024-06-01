@@ -66,6 +66,9 @@ def encrypt_config() -> None:
     and then encrypts each configuration file using the AES-256-CBC algorithm and the generated key.
     The encrypted files are saved with the ".encrypted" extension in the same directory as the original files.
     """
+    from utils.dirs import config_dir, tmp_dir
+    from utils.logger import logger
+    
     key_str = binascii.hexlify(get_random_bytes(32)).decode("utf-8")
     os.makedirs(tmp_dir, exist_ok=True)
 
@@ -96,6 +99,9 @@ def decrypt_config() -> None:
     encrypted configuration file using the AES-256-CBC algorithm and the key. The decrypted files are
     saved with the ".decrypted" extension in the same directory as the encrypted files.
     """
+    from utils.dirs import config_dir, tmp_dir
+    from utils.logger import logger
+    
     logger.info("using key to decrypt config files")
     key_str = os.environ.get("KEY")
     os.makedirs(tmp_dir, exist_ok=True)
@@ -112,7 +118,6 @@ def decrypt_config() -> None:
 
 
 if __name__ == "__main__":
-    from utils.dirs import config_dir, tmp_dir
     from utils.logger import logger
 
     try:
