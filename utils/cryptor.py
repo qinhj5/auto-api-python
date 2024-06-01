@@ -69,15 +69,17 @@ def encrypt_config() -> None:
     from utils.dirs import config_dir, tmp_dir
     from utils.logger import logger
     
-    key_str = binascii.hexlify(get_random_bytes(32)).decode("utf-8")
     os.makedirs(tmp_dir, exist_ok=True)
 
     key_path = os.path.abspath(os.path.join(tmp_dir, "key"))
     if not os.path.exists(key_path):
+        key_str = binascii.hexlify(get_random_bytes(32)).decode("utf-8")
         with open(key_path, "w", encoding="utf-8") as f:
             f.write(key_str)
         logger.info(f"new key is saved to {key_path}")
     else:
+        with open(key_path, "r", encoding="utf-8") as f:
+            key_str = f.read()
         logger.info(f"key path: {key_path}")
 
     for root, dirs, files in os.walk(config_dir):
