@@ -8,8 +8,10 @@ import sys
 import traceback
 from typing import Any, Dict, List, Optional, Tuple
 
+import filelock
+
 from utils.common import get_env_conf, load_json
-from utils.dirs import tmp_dir
+from utils.dirs import lock_dir, tmp_dir
 from utils.logger import logger
 
 
@@ -24,6 +26,9 @@ class ChromeBrowser:
         Returns:
             None
         """
+        self._lock = filelock.FileLock(
+            os.path.abspath(os.path.join(lock_dir, f"{conf_name}.lock"))
+        )
         self._conf = get_env_conf(name=conf_name)
         self._host = self._conf.get("host")
         self._data_dir = self._conf.get("data_dir")
@@ -33,7 +38,8 @@ class ChromeBrowser:
         self._platform = sys.platform
         self._cookies = list()
         self._local_storage_items = list()
-        self._init()
+        with self._lock:
+            self._init()
 
     def _init(self) -> None:
         """
