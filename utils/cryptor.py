@@ -109,11 +109,13 @@ def decrypt_config() -> None:
 
     for root, dirs, files in os.walk(config_dir):
         for file in files:
-            if file.endswith(".yaml") or file.endswith(".json"):
-                file_path = os.path.abspath(os.path.join(root, file))
+            if file.endswith(".encrypted"):
+                encrypted_file_path = os.path.abspath(os.path.join(root, file))
+                filename_idx = encrypted_file_path.rfind(".")
+                decrypted_file_path = encrypted_file_path[:filename_idx]
                 decrypt_file(
-                    encrypted_file_path=file_path + ".encrypted",
-                    decrypted_file_path=file_path + ".decrypted",
+                    encrypted_file_path=encrypted_file_path,
+                    decrypted_file_path=decrypted_file_path,
                     key=key_str,
                 )
 
