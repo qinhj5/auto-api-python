@@ -112,10 +112,10 @@ def decrypt_config() -> None:
             if file.endswith(".encrypted"):
                 encrypted_file_path = os.path.abspath(os.path.join(root, file))
                 filename_idx = encrypted_file_path.rfind(".")
-                decrypted_file_path = encrypted_file_path[:filename_idx]
+                raw_file_path = encrypted_file_path[:filename_idx]
                 decrypt_file(
                     encrypted_file_path=encrypted_file_path,
-                    decrypted_file_path=decrypted_file_path,
+                    decrypted_file_path=raw_file_path + ".decrypted",
                     key=key_str,
                 )
 
