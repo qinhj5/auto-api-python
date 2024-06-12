@@ -106,7 +106,6 @@ def decrypt_config() -> None:
     
     logger.info("using key to decrypt config files")
     key_str = os.environ.get("KEY")
-    os.makedirs(tmp_dir, exist_ok=True)
 
     for root, dirs, files in os.walk(config_dir):
         for file in files:
