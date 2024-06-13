@@ -101,7 +101,7 @@ def decrypt_config() -> None:
     encrypted configuration file using the AES-256-CBC algorithm and the key. The decrypted files are
     saved with the ".decrypted" extension in the same directory as the encrypted files.
     """
-    from utils.dirs import config_dir, tmp_dir
+    from utils.dirs import config_dir
     from utils.logger import logger
     
     logger.info("using key to decrypt config files")
