@@ -10,6 +10,7 @@ import pytz
 from utils.dirs import lock_dir
 
 LOCK_PATH = os.path.abspath(os.path.join(lock_dir, "log.lock"))
+TIME_ZONE = "Asia/Shanghai"
 
 
 def log_locker(func: Callable) -> Callable:
@@ -26,7 +27,7 @@ def log_locker(func: Callable) -> Callable:
     def wrapper(*args, **kwargs):
         file_path, line_number = inspect.getframeinfo(inspect.currentframe().f_back)[:2]
         extra = {
-            "time": datetime.now(pytz.timezone("Asia/Shanghai")),
+            "time": datetime.now(pytz.timezone(TIME_ZONE)),
             "file": os.path.basename(file_path),
             "line": line_number,
         }
