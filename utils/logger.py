@@ -19,6 +19,7 @@ CONSOLE_FORMATTER = colorlog.ColoredFormatter(
         "INFO": "bold_green",
         "WARNING": "bold_yellow",
         "ERROR": "bold_red",
+        "CRITICAL": "bold_purple",
     },
 )
 CONSOLE_HANDLER.setFormatter(CONSOLE_FORMATTER)
@@ -43,3 +44,10 @@ logger.debug = log_locker(logger.debug)
 logger.info = log_locker(logger.info)
 logger.warning = log_locker(logger.warning)
 logger.error = log_locker(logger.error)
+logger.critical = log_locker(logger.critical)
+
+logger.debug("debug")
+logger.info("info")
+logger.warning("warning")
+logger.error("error")
+logger.critical("critical")
