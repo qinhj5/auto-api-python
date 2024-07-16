@@ -152,4 +152,4 @@ class TunnelShell:
             None
         """
         if self._tunnel_client:
-            self._tunnel_client.stop()
+            self._tunnel_client.close()
