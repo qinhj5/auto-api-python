@@ -53,7 +53,6 @@ locust:
   max_wait: 2
   users: 10
   spawn_rate: 1
-  num_requests: ""
   run_time: "1m"
 
 chrome_browser:
