@@ -2,7 +2,7 @@
 import os
 import traceback
 
-from locust import HttpUser, TaskSet, between, task
+from locust import HttpUser, TaskSet, between, task, events
 
 from config.conf import Global
 from utils.common import execute_local_command, get_env_conf
@@ -10,6 +10,21 @@ from utils.dirs import report_locust_dir, venv_bin_dir
 from utils.logger import logger
 
 LOCUST_CONF = get_env_conf(name="locust")
+
+
+@events.quitting.add_listener
+def _(environment):
+    if environment.stats.total.fail_ratio > 0.01:
+        logger.error("failed due to failure ratio > 1%")
+        environment.process_exit_code = 1
+    elif environment.stats.total.avg_response_time > 200:
+        logger.error("failed due to average response time ratio > 200 ms")
+        environment.process_exit_code = 1
+    elif environment.stats.total.get_response_time_percentile(0.95) > 800:
+        logger.error("failed due to 95th percentile response time > 800 ms")
+        environment.process_exit_code = 1
+    else:
+        environment.process_exit_code = 0
 
 
 class WebsiteTask(TaskSet):
@@ -47,19 +62,16 @@ def main():
     locust_bin_dir = os.path.abspath(os.path.join(venv_bin_dir, "locust"))
     locust_command = [
         locust_bin_dir,
+        "--headless",
         f"--locustfile={__file__}",
         f"--host={Global.CONSTANTS.BASE_URL}",
-        f"""--csv={os.path.abspath(os.path.join(report_locust_dir, "locust_report"))}""",
         f"""--users={LOCUST_CONF.get("users")}""",
         f"""--spawn-rate={LOCUST_CONF.get("spawn_rate")}""",
         f"""--run-time={LOCUST_CONF.get("run_time")}""",
         f"""--html={os.path.abspath(os.path.join(report_locust_dir, "locust_report.html"))}""",
-        "--headless",
+        f"""--csv={os.path.abspath(os.path.join(report_locust_dir, "locust_report"))}""",
         "--csv-full-history",
     ]
-
-    if LOCUST_CONF.get("num_requests"):
-        locust_command.extend(["-n", f"""{LOCUST_CONF.get("num_requests")}"""])
 
     logger.info(f"{locust_bin_dir} running...")
     command = " ".join(locust_command)
