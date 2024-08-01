@@ -2,7 +2,7 @@
 import os
 import traceback
 
-from locust import HttpUser, TaskSet, between, task, events
+from locust import HttpUser, TaskSet, between, events, task
 
 from config.conf import Global
 from utils.common import execute_local_command, get_env_conf
@@ -27,30 +27,35 @@ def _(environment):
         environment.process_exit_code = 0
 
 
-class WebsiteTask(TaskSet):
+class GetAboutTask(TaskSet):
     _count_failure = 0
     _count_success = 0
 
     @task
-    def request_api(self):
+    def get_about(self):
         uri = LOCUST_CONF.get("uri")
         method = LOCUST_CONF.get("method")
-        response = self.client.request(method=method, url=uri)
-        url = Global.CONSTANTS.BASE_URL + uri
-        if response.status_code != 200:
-            WebsiteTask._count_failure += 1
-            logger.warning(
-                f"failure ({method} {url}) [{str(WebsiteTask._count_failure).center(7)}]"
-            )
-        else:
-            WebsiteTask._count_success += 1
-            logger.info(
-                f"success ({method} {url}) [{str(WebsiteTask._count_success).center(7)}]"
-            )
+        with self.client.request(
+            method=method, url=uri, catch_response=True
+        ) as response:
+            response.request_meta["name"] = "get_about"
+            if response.status_code != 200:
+                GetAboutTask._count_failure += 1
+                response.failure(
+                    f"failure ({method} {uri}) [{str(GetAboutTask._count_failure).center(7)}]"
+                )
+                logger.warning(
+                    f"failure ({method} {uri}) [{str(GetAboutTask._count_failure).center(7)}]"
+                )
+            else:
+                GetAboutTask._count_success += 1
+                logger.info(
+                    f"success ({method} {uri}) [{str(GetAboutTask._count_success).center(7)}]"
+                )
 
 
-class WebsiteUser(HttpUser):
-    tasks = [WebsiteTask]
+class TestUser(HttpUser):
+    tasks = {GetAboutTask: 1}
     wait_time = between(LOCUST_CONF.get("min_wait"), LOCUST_CONF.get("max_wait"))
 
     def on_start(self):
