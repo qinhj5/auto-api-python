@@ -9,6 +9,7 @@ import traceback
 from typing import Any, Dict, List, Optional, Tuple
 
 import filelock
+from Crypto.Cipher import AES
 
 from utils.common import get_env_conf, load_json
 from utils.dirs import lock_dir, tmp_dir
@@ -126,22 +127,13 @@ class ChromeBrowser:
 
             password = keyring.get_password("Chrome Safe Storage", "Chrome")
 
-            if isinstance(password, str):
-                password = password.encode("utf8")
+            import hashlib
 
-            from cryptography.hazmat.backends import default_backend
-            from cryptography.hazmat.primitives.hashes import SHA1
-            from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
-
-            kdf = PBKDF2HMAC(
-                algorithm=SHA1(),
-                backend=default_backend(),
-                iterations=1003,
-                length=16,
-                salt=b"saltysalt",
+            key = hashlib.pbkdf2_hmac(
+                "sha1", password.encode("utf-8"), b"saltysalt", 1003, 16
             )
 
-            return kdf.derive(password)
+            return key
         elif self._platform == "win32":
             base64_encrypted_key = (
                 load_json(self._local_state_path).get("os_crypt").get("encrypted_key")
@@ -172,14 +164,14 @@ class ChromeBrowser:
             return ""
 
         last = decrypted[-1]
-        return decrypted[:-last].decode("utf8")
+        return decrypted[16:-last].decode("utf-8", errors="ignore")
 
-    def _decrypt_cookie_value(self, encrypted_value: bytes) -> str:
+    def _decrypt_cookie_value(self, encrypted_bytes: bytes, cookie_version: int) -> str:
         """
         Decrypt the encrypted cookie value.
 
         Args:
-            encrypted_value (bytes): The encrypted cookie value.
+            encrypted_bytes (bytes): The encrypted cookie value.
 
         Returns:
             str: The decrypted cookie value.
@@ -188,32 +180,31 @@ class ChromeBrowser:
 
         if self._platform == "darwin":
             init_vector = b" " * 16
-            encrypted_value = encrypted_value[3:]
 
-            from cryptography.hazmat.backends import default_backend
-            from cryptography.hazmat.primitives.ciphers import Cipher
-            from cryptography.hazmat.primitives.ciphers.algorithms import AES
-            from cryptography.hazmat.primitives.ciphers.modes import CBC
+            if encrypted_bytes.startswith(b"v10"):
+                encrypted_bytes = encrypted_bytes[3:]
+                if cookie_version >= 24:
+                    encrypted_bytes = encrypted_bytes[16:]
+            else:
+                return encrypted_bytes.decode("utf-8")
 
-            cipher = Cipher(
-                algorithm=AES(encryption_key),
-                mode=CBC(init_vector),
-                backend=default_backend(),
-            )
-            de_cryptor = cipher.decryptor()
-            decrypted = de_cryptor.update(encrypted_value) + de_cryptor.finalize()
+            cipher = AES.new(encryption_key, AES.MODE_CBC, init_vector)
+            decrypted_bytes = cipher.decrypt(encrypted_bytes)
 
-            return ChromeBrowser._clean_bytes(decrypted)
+            return ChromeBrowser._clean_bytes(decrypted_bytes)
         else:
-            init_vector = encrypted_value[3:15]
-            cipher_bytes = encrypted_value[15:]
+            if encrypted_bytes.startswith(b"v10"):
+                init_vector = encrypted_bytes[3:15]
+                encrypted_bytes = encrypted_bytes[15:]
+                if cookie_version >= 24:
+                    encrypted_bytes = encrypted_bytes[16:]
+            else:
+                return encrypted_bytes.decode("utf-8")
 
-            from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+            cipher = AES.new(encryption_key, AES.MODE_GCM, init_vector)
+            decrypted_bytes = cipher.decrypt(encrypted_bytes)
 
-            aes_gcm = AESGCM(encryption_key)
-            plain_bytes = aes_gcm.decrypt(init_vector, cipher_bytes, None)
-
-            return plain_bytes.decode("utf-8")
+            return decrypted_bytes.decode("utf-8")
 
     @staticmethod
     def _is_expired(microseconds: int) -> bool:
@@ -243,23 +234,42 @@ class ChromeBrowser:
         cursor = conn.cursor()
 
         cursor.execute(
-            "SELECT host_key, \
-                                    name, \
-                                    encrypted_value, \
-                                    expires_utc, \
-                                    has_expires, \
-                                    last_update_utc FROM cookies;"
+            """
+                SELECT
+                    host_key,
+                    name,
+                    encrypted_value,
+                    expires_utc,
+                    has_expires,
+                    last_update_utc
+                FROM
+                    cookies;
+            """
         )
         raw_cookies = cursor.fetchall()
+
+        cursor.execute(
+            """
+                SELECT
+                    value
+                FROM
+                    meta
+                WHERE key='version';
+            """
+        )
+        cookie_version = cursor.fetchone()
 
         for cookie in raw_cookies:
             last_update_time = datetime.datetime.fromtimestamp(
                 cookie["last_update_utc"] / 10**6 - 11644473600
             )
+
             self._cookies.append(
                 {
                     "name": cookie["name"],
-                    "value": self._decrypt_cookie_value(cookie["encrypted_value"]),
+                    "value": self._decrypt_cookie_value(
+                        cookie["encrypted_value"], int(cookie_version["value"])
+                    ),
                     "host": cookie["host_key"],
                     "is_expired": ChromeBrowser._is_expired(cookie["expires_utc"])
                     if cookie["has_expires"]
