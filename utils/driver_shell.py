@@ -139,7 +139,7 @@ class DriverShell:
                     self._driver_client,
                 ) = DriverShell._create_driver_client(self._ssh_conf, self._ip)
         except Exception as exception:
-            logger.error(exception)
+            logger.error(f"{exception}\n{traceback.format_exc()}")
             self.close()
         else:
             stdin, stdout, stderr = self._driver_client.exec_command(command)

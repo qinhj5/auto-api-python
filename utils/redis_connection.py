@@ -140,7 +140,7 @@ class RedisConnection:
                     self._redis_conf, self._ssh_conf, self._use_tunnel
                 )
         except Exception as exception:
-            logger.error(exception)
+            logger.error(f"{exception}\n{traceback.format_exc()}")
             self.close()
 
     def set(self, name: str, value: str) -> None:

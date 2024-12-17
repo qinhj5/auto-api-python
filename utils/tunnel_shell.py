@@ -117,7 +117,7 @@ class TunnelShell:
             if self._tunnel_client is None:
                 self._tunnel_client = TunnelShell._create_tunnel_client(self._conf)
         except Exception as exception:
-            logger.error(exception)
+            logger.error(f"{exception}\n{traceback.format_exc()}")
             self.close()
         else:
             stdin, stdout, stderr = self._tunnel_client.exec_command(command)

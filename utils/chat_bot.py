@@ -117,7 +117,8 @@ class ChatBot:
             None
         """
         context = [{"role": "system", "content": "You are a helpful assistant."}]
-        context.extend(self._contexts[-self._history * 2 :])
+        context_num = self._history * 2
+        context.extend(self._contexts[-context_num:])
         context.append({"role": "user", "content": prompt})
 
         try:
@@ -126,7 +127,7 @@ class ChatBot:
             )
             response_text = completion.choices[0].message.content
         except Exception as exception:
-            logger.error(exception)
+            logger.error(f"{exception}\n{traceback.format_exc()}")
             raise KeyboardInterrupt
         else:
             self._contexts.extend(
