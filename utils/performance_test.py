@@ -55,7 +55,9 @@ class GetAboutTask(TaskSet):
 
 
 class TestUser(HttpUser):
+    # the weight for executing a task by user
     tasks = {GetAboutTask: 1}
+    # wait time for sending each request by user
     wait_time = between(LOCUST_CONF.get("min_wait"), LOCUST_CONF.get("max_wait"))
 
     def on_start(self):
@@ -63,6 +65,17 @@ class TestUser(HttpUser):
 
 
 def main():
+    """
+    --headless: disable the web interface
+    --locustfile: the file that contains your test
+    --host: the target host for test
+    --users: the total users used for test
+    --spawn-rate: created users per second
+    --run-time: total running time
+    --html: store html report to file path specified
+    --csv: store request stats to files in csv format
+    --csv-full-history: store each statistics entry to csv file
+    """
     os.makedirs(report_locust_dir, exist_ok=True)
     locust_bin_dir = os.path.abspath(os.path.join(venv_bin_dir, "locust"))
     locust_command = [
