@@ -72,6 +72,7 @@ auto-api-python/
 │   ├── google_drive.py
 │   ├── google_email.py
 │   ├── google_sheet.py
+│   ├── hbase_client.py
 │   ├── kafka_client.py
 │   ├── logger.py
 │   ├── message_notification.py
