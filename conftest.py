@@ -22,6 +22,7 @@ from utils.common import (
 from utils.dirs import lock_dir, log_request_dir, log_summary_dir, report_sheet_dir
 from utils.driver_shell import DriverShell
 from utils.enums import LogLevel
+from utils.lazy_loader import LazyLoader
 from utils.mysql_connection import MysqlConnection
 from utils.redis_connection import RedisConnection
 from utils.tunnel_shell import TunnelShell
@@ -34,35 +35,35 @@ conftest_lock = filelock.FileLock(
 
 @pytest.fixture(scope="session")
 def tunnel():
-    tunnel = TunnelShell()
+    tunnel = LazyLoader(lambda: TunnelShell())
     yield tunnel
     tunnel.close()
 
 
 @pytest.fixture(scope="session")
 def driver():
-    driver = DriverShell()
+    driver = LazyLoader(lambda: DriverShell())
     yield driver
     driver.close()
 
 
 @pytest.fixture(scope="session")
 def db():
-    db = MysqlConnection()
+    db = LazyLoader(lambda: MysqlConnection())
     yield db
     db.close()
 
 
 @pytest.fixture(scope="session")
 def sr():
-    sr = RedisConnection()
+    sr = LazyLoader(lambda: RedisConnection())
     yield sr
     sr.close()
 
 
 @pytest.fixture(scope="session")
 def ck():
-    ck = ClickhouseConnection()
+    ck = LazyLoader(lambda: ClickhouseConnection())
     yield ck
     ck.close()
 
