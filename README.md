@@ -89,6 +89,7 @@ auto-api-python/
 ├── .pre-commit-config.yaml
 ├── allure.sh
 ├── conftest.py
+├── docker-compose.yaml
 ├── Dockerfile
 ├── Jenkinsfile
 ├── main.py

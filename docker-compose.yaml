@@ -1,0 +1,13 @@
+version: "1"
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - TZ=Asia/Shanghai
+      - LANG=C.UTF-8
+    volumes:
+      - .:/code
+    command: python3.8 main.py
